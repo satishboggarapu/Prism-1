@@ -10,7 +10,7 @@
 .idea/misc.xml
 app/build.gradle
 app/google-services.json
-.idea/libraries
+.idea/libraries/*
 .gradle/*/*/.bin
 .gradle/*/*/.lock
 app/app.iml
