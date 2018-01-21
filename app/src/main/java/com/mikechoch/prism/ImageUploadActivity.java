@@ -1,8 +1,11 @@
 package com.mikechoch.prism;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +13,7 @@ import android.support.v7.widget.CardView;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.FileNotFoundException;
@@ -24,20 +28,27 @@ public class ImageUploadActivity extends AppCompatActivity {
     private final int GALLERY_INTENT_REQUEST = 1;
 
     private float scale;
+    private Typeface sourceSansProLight;
+    private Typeface sourceSansProBold;
 
     private ImageView uploadedImageImageView;
     private EditText imageDescriptionEditText;
+    private TextView uploadButtonTextView;
     private CardView uploadButton;
 
+    @SuppressLint("NewApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.image_upload_activity_layout);
 
         scale = getResources().getDisplayMetrics().density;
+        sourceSansProLight = Typeface.createFromAsset(getAssets(),  "fonts/SourceSansPro-Light.ttf");
+        sourceSansProBold = Typeface.createFromAsset(getAssets(),  "fonts/SourceSansPro-Black.ttf");
         int displayHeight = getWindowManager().getDefaultDisplay().getHeight();
 
         uploadedImageImageView = findViewById(R.id.uploaded_image_image_view);
+        uploadedImageImageView.setForeground(getResources().getDrawable(R.drawable.upload_selector));
         uploadedImageImageView.getLayoutParams().height = (int) (displayHeight * 0.6);
         uploadedImageImageView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -45,6 +56,9 @@ public class ImageUploadActivity extends AppCompatActivity {
                 selectImageFromGallery();
             }
         });
+
+        uploadButtonTextView = findViewById(R.id.upload_button_text_view);
+        uploadButtonTextView.setTypeface(sourceSansProBold);
 
         uploadButton = findViewById(R.id.upload_button_card_view);
         uploadButton.setForeground(getResources().getDrawable(R.drawable.upload_selector));
@@ -61,6 +75,7 @@ public class ImageUploadActivity extends AppCompatActivity {
         });
 
         imageDescriptionEditText = findViewById(R.id.image_description_edit_text);
+        imageDescriptionEditText.setTypeface(sourceSansProLight);
 
         selectImageFromGallery();
     }
@@ -92,11 +107,12 @@ public class ImageUploadActivity extends AppCompatActivity {
                     }
 
                     String imagePath = FileChooser.getPath(this, selectedImageUri);
-                    System.out.println(imagePath);
                     bitmap = ExifUtil.rotateBitmap(imagePath, bitmap);
                     uploadedImageImageView.setImageBitmap(bitmap);
                 } else {
-                    finish();
+                    if (uploadedImageImageView.getDrawable() == null) {
+                        finish();
+                    }
                 }
                 break;
             default:

@@ -47,7 +47,6 @@ public class MainActivity extends AppCompatActivity {
                     // Code here for allowing write permission
                 }
                 break;
-
             default:
                 break;
         }
