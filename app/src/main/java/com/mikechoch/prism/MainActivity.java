@@ -21,6 +21,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity_layout);
 
+        uploadImageFab = findViewById(R.id.upload_image_fab);
+
         // Ask user for write permissions to external storage
         int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
@@ -28,7 +30,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Initialize uploadImageFab and OnClickListener to take you to ImageUploadActivity
-        uploadImageFab = findViewById(R.id.upload_image_fab);
         uploadImageFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -36,6 +37,9 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(imageUploadIntent);
             }
         });
+
+
+
 
     }
 
