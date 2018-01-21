@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context="com.mikechoch.imageuploader.MainActivity">
+    tools:context="com.mikechoch.prism.MainActivity">
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/upload_image_fab"
