@@ -8,18 +8,32 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.StorageReference;
 
 public class MainActivity extends AppCompatActivity {
 
     private final int MY_PERMISSIONS_REQUEST_READ_MEDIA = 1;
 
     private FloatingActionButton uploadImageFab;
+    private FirebaseAuth auth;
+    private DatabaseReference databaseReference;
+    private StorageReference storageReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity_layout);
+
+        databaseReference = FirebaseDatabase.getInstance().getReference().child("wallpapers");
 
         uploadImageFab = findViewById(R.id.upload_image_fab);
 
@@ -39,6 +53,21 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    for (DataSnapshot snapshot: dataSnapshot.getChildren()) {
+                        System.out.println(snapshot);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
 
 
     }
