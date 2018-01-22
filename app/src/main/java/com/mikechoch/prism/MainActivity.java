@@ -158,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * TODO populate cardviews with images from listOfImages
+     * TODO populate card views with images from listOfImages
      */
     private void refreshPageWithImages() {
         System.out.println(listOfImages);
