@@ -1,21 +1,26 @@
 package com.mikechoch.prism;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
+import android.support.v7.widget.Toolbar;
+import android.text.Html;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,6 +31,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+
+import org.w3c.dom.Text;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -48,9 +55,30 @@ public class ImageUploadActivity extends AppCompatActivity {
     private EditText imageDescriptionEditText;
     private TextView uploadButtonTextView;
     private CardView uploadButton;
+    private ProgressBar progressBar;
+    private Toolbar toolbar;
 
     private StorageReference storageReference;
     private DatabaseReference databaseReference;
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+//        getMenuInflater().inflate(R.menu.expense_detail_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case android.R.id.home:
+                finish();
+                break;
+            default:
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
     @SuppressLint("NewApi")
     @Override
@@ -58,10 +86,20 @@ public class ImageUploadActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.image_upload_activity_layout);
 
+        toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         scale = getResources().getDisplayMetrics().density;
         int displayHeight = getWindowManager().getDefaultDisplay().getHeight();
         sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
+
+        progressBar = findViewById(R.id.progress_bar);
+        TextView uploadImageTitle = findViewById(R.id.uploaded_image_text_view_title);
+        uploadImageTitle.setTypeface(sourceSansProLight);
+        TextInputLayout textInputLayout = findViewById(R.id.image_description_title_text_input_layout);
+        textInputLayout.setTypeface(sourceSansProLight);
 
         uploadedImageImageView = findViewById(R.id.uploaded_image_image_view);
         uploadedImageImageView.getLayoutParams().height = (int) (displayHeight * 0.6);
@@ -87,13 +125,14 @@ public class ImageUploadActivity extends AppCompatActivity {
                 toast("Uploading image..."); // TODO: show loading spinner in future
                 final String imageDescription = imageDescriptionEditText.getText().toString().trim();
                 if (!imageDescription.isEmpty()) {
-                    uploadImageToCloud(imageDescription);
+                    String[] imageDescriptions = {imageDescription};
+                    new ImageUploadTask().execute(imageDescriptions);
                 }
             }
         });
 
         uploadButtonTextView = findViewById(R.id.upload_button_text_view);
-        uploadButtonTextView.setTypeface(sourceSansProBold);
+        uploadButtonTextView.setTypeface(sourceSansProLight);
 
         imageDescriptionEditText = findViewById(R.id.image_description_edit_text);
         imageDescriptionEditText.setTypeface(sourceSansProLight);
@@ -173,6 +212,30 @@ public class ImageUploadActivity extends AppCompatActivity {
         inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
         String path = MediaStore.Images.Media.insertImage(getContentResolver(), inImage, "Title", null);
         return Uri.parse(path);
+    }
+
+    private class ImageUploadTask extends AsyncTask<String, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            uploadedImageImageView.setVisibility(View.INVISIBLE);
+            imageDescriptionEditText.setVisibility(View.INVISIBLE);
+            uploadButton.setVisibility(View.INVISIBLE);
+            progressBar.setVisibility(View.VISIBLE);
+        }
+
+
+        @Override
+        protected Void doInBackground(String... imageDescription) {
+            uploadImageToCloud(imageDescription[0]);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void v) {
+            super.onPostExecute(v);
+        }
     }
 
     private void toast(String message) {
