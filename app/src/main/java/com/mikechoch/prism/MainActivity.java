@@ -45,8 +45,11 @@ public class MainActivity extends AppCompatActivity {
     private Toolbar toolbar;
     private RecyclerView recyclerView;
     private LayoutInflater layoutInflater;
+    private RecyclerViewAdapter recyclerViewAdapter;
 
     private ArrayList<Wallpaper> listOfImages;
+    private int displayHeight;
+    private int displayWidth;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -73,7 +76,29 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity_layout);
+
+        displayHeight = getWindowManager().getDefaultDisplay().getHeight();
+        displayWidth = getWindowManager().getDefaultDisplay().getWidth();
+
+        sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
+        sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
+
         listOfImages = new ArrayList<>();
+
+        toolbar = findViewById(R.id.toolbar);
+        TextView toolbarTextView = findViewById(R.id.toolbar_text_view);
+        toolbarTextView.setTypeface(sourceSansProBold);
+        setSupportActionBar(toolbar);
+
+        layoutInflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        recyclerView = findViewById(R.id.my_recycler_view);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerViewAdapter = new RecyclerViewAdapter(this, listOfImages, null, displayWidth, displayHeight);
+        recyclerView.setAdapter(recyclerViewAdapter);
+
+        uploadImageFab = findViewById(R.id.upload_image_fab);
+
         auth = FirebaseAuth.getInstance();
         if (auth.getCurrentUser() == null) {
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
@@ -94,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
                                 String caption = (String) snapshot.child("caption").getValue();
                                 String imageUri = (String) snapshot.child("image").getValue();
                                 listOfImages.add(new Wallpaper(caption, imageUri));
+                                recyclerViewAdapter.notifyItemInserted(listOfImages.size() - 1);
                             }
                         }
                         refreshPageWithImages();
@@ -106,35 +132,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-
-        sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
-        sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
-
-        toolbar = findViewById(R.id.toolbar);
-        TextView toolbarTextView = findViewById(R.id.toolbar_text_view);
-        toolbarTextView.setTypeface(sourceSansProBold);
-        setSupportActionBar(toolbar);
-
-        layoutInflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-        recyclerView = findViewById(R.id.my_recycler_view);
-
-        final ArrayList<String> arrayList = new ArrayList<>();
-        arrayList.add("Hello");
-        arrayList.add("Hello");
-        arrayList.add("Hello");
-        arrayList.add("Hello");
-        arrayList.add("Hello");
-        arrayList.add("Hello");
-        arrayList.add("Hello");
-        arrayList.add("Hello");
-        arrayList.add("Hello");
-
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        RecyclerViewAdapter recyclerViewAdapter = new RecyclerViewAdapter(this, arrayList, null);
-        recyclerView.setAdapter(recyclerViewAdapter);
-
-        uploadImageFab = findViewById(R.id.upload_image_fab);
 
         // Ask user for write permissions to external storage
         int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
@@ -151,10 +148,6 @@ public class MainActivity extends AppCompatActivity {
                 overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
             }
         });
-
-
-
-
     }
 
     /**
