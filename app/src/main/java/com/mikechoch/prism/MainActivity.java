@@ -18,12 +18,21 @@ import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Adapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.StorageReference;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -33,6 +42,9 @@ public class MainActivity extends AppCompatActivity {
     private Typeface sourceSansProBold;
 
     private FloatingActionButton uploadImageFab;
+    private FirebaseAuth auth;
+    private DatabaseReference databaseReference;
+    private StorageReference storageReference;
 
     private Toolbar toolbar;
     private RecyclerView recyclerView;
@@ -105,6 +117,21 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    for (DataSnapshot snapshot: dataSnapshot.getChildren()) {
+                        System.out.println(snapshot);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
 
 
     }
