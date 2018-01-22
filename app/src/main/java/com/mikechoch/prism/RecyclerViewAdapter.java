@@ -2,11 +2,9 @@ package com.mikechoch.prism;
 
 import android.content.Context;
 import android.graphics.Typeface;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.widget.RecyclerView;
-import android.util.LayoutDirection;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,11 +13,9 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
-import java.util.Random;
 
 /**
  * Created by mikechoch on 1/21/18.
@@ -101,7 +97,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         public void setData(final Wallpaper wallpaper) {
             this.wallpaper = wallpaper;
             wallpaperUserTextView.setText("username");
-            wallpaperCaptionTextView.setText(wallpaper.getImageCaption());
+            wallpaperCaptionTextView.setText(wallpaper.getCaption());
             Handler uiHandler = new Handler(Looper.getMainLooper());
             uiHandler.post(new Runnable(){
                 @Override

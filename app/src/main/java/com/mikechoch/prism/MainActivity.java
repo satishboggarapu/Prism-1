@@ -20,6 +20,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -48,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerViewAdapter recyclerViewAdapter;
 
     private ArrayList<Wallpaper> listOfImages;
+    private HashSet<Wallpaper> setOfImages;
     private int displayHeight;
     private int displayWidth;
 
@@ -84,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
         sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
 
         listOfImages = new ArrayList<>();
+        setOfImages = new HashSet<>();
 
         toolbar = findViewById(R.id.toolbar);
         TextView toolbarTextView = findViewById(R.id.toolbar_text_view);
@@ -112,13 +115,19 @@ public class MainActivity extends AppCompatActivity {
                     if (dataSnapshot.exists()) {
                         listOfImages.clear(); // clearing arrayList so that
                         // for each user
-                        for (DataSnapshot user: dataSnapshot.getChildren()) {
-                            System.out.println(user);
-                            // for pics for each user
-                            for (DataSnapshot snapshot : user.getChildren()) {
-                                String caption = (String) snapshot.child("caption").getValue();
-                                String imageUri = (String) snapshot.child("image").getValue();
-                                listOfImages.add(new Wallpaper(caption, imageUri));
+                        for (DataSnapshot dsUser: dataSnapshot.getChildren()) {
+                            System.out.println(dsUser);
+
+                            // for pics for each dsUser
+                            for (DataSnapshot snapshot : dsUser.getChildren()) {
+                                String imageUri = (String) snapshot.child(Key.POST_IMAGE_URI).getValue();
+                                String caption = (String) snapshot.child(Key.POST_DESC).getValue();
+                                String date = (String) snapshot.child(Key.POST_DATE).getValue();
+                                String time = (String) snapshot.child(Key.POST_TIME).getValue();
+                                String userName = (String) snapshot.child(Key.POST_USER).getValue();
+                                Wallpaper wallpaper = new Wallpaper(caption, imageUri, date, time, userName);
+                                listOfImages.add(wallpaper);
+                                setOfImages.add(wallpaper);
                                 recyclerViewAdapter.notifyItemInserted(listOfImages.size() - 1);
                             }
                         }
