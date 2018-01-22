@@ -5,23 +5,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
-import android.support.design.widget.BottomSheetBehavior;
-import android.support.design.widget.CoordinatorLayout;
+import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Adapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -117,21 +112,21 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-        databaseReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    for (DataSnapshot snapshot: dataSnapshot.getChildren()) {
-                        System.out.println(snapshot);
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
+//        databaseReference.addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                if (dataSnapshot.exists()) {
+//                    for (DataSnapshot snapshot: dataSnapshot.getChildren()) {
+//                        System.out.println(snapshot);
+//                    }
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//
+//            }
+//        });
 
 
     }
