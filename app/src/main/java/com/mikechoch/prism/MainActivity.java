@@ -5,8 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
-import android.support.design.widget.BottomSheetBehavior;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -18,10 +16,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Adapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -43,12 +38,15 @@ public class MainActivity extends AppCompatActivity {
 
     private FloatingActionButton uploadImageFab;
     private FirebaseAuth auth;
+    private FirebaseAuth.AuthStateListener authStateListener;
     private DatabaseReference databaseReference;
     private StorageReference storageReference;
 
     private Toolbar toolbar;
     private RecyclerView recyclerView;
     private LayoutInflater layoutInflater;
+
+    private ArrayList<Wallpaper> listOfImages;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -62,6 +60,10 @@ public class MainActivity extends AppCompatActivity {
         switch (id) {
             case R.id.action_settings:
                 break;
+            case R.id.action_logout:
+                auth.signOut();
+                finish();
+                break;
         }
 
         return super.onOptionsItemSelected(item);
@@ -71,6 +73,39 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity_layout);
+        listOfImages = new ArrayList<>();
+        auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) {
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+        } else {
+            databaseReference = FirebaseDatabase.getInstance().getReference().child("Users");//.child(auth.getCurrentUser().getUid());
+            databaseReference.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.exists()) {
+                        listOfImages.clear(); // clearing arrayList so that
+                        // for each user
+                        for (DataSnapshot user: dataSnapshot.getChildren()) {
+                            System.out.println(user);
+                            // for pics for each user
+                            for (DataSnapshot snapshot : user.getChildren()) {
+                                String caption = (String) snapshot.child("caption").getValue();
+                                String imageUri = (String) snapshot.child("image").getValue();
+                                listOfImages.add(new Wallpaper(caption, imageUri));
+                            }
+                        }
+                        refreshPageWithImages();
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+        }
 
         sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
@@ -83,6 +118,7 @@ public class MainActivity extends AppCompatActivity {
         layoutInflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         recyclerView = findViewById(R.id.my_recycler_view);
+
         final ArrayList<String> arrayList = new ArrayList<>();
         arrayList.add("Hello");
         arrayList.add("Hello");
@@ -117,23 +153,15 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-        databaseReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    for (DataSnapshot snapshot: dataSnapshot.getChildren()) {
-                        System.out.println(snapshot);
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
 
 
+    }
+
+    /**
+     * TODO populate cardviews with images from listOfImages
+     */
+    private void refreshPageWithImages() {
+        System.out.println(listOfImages);
     }
 
     @Override

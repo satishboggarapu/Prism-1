@@ -8,6 +8,8 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 
+import com.google.firebase.auth.FirebaseAuth;
+
 /**
  * Created by mikechoch on 1/21/18.
  */
@@ -48,10 +50,16 @@ public class SplashActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
 
-            Intent intent = new Intent(SplashActivity.this, MainActivity.class);
-            startActivity(intent);
+            if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+                Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+            } else {
+                Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+                startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            }
             finish();
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
             return null;
         }
 
