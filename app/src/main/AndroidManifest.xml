@@ -3,7 +3,7 @@
     package="com.mikechoch.prism">
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -11,8 +11,8 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
-        <activity android:name="com.mikechoch.prism.SplashActivity"
+        <activity
+            android:name=".SplashActivity"
             android:screenOrientation="portrait"
             android:theme="@style/SplashTheme">
             <intent-filter>
@@ -21,15 +21,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name="com.mikechoch.prism.MainActivity"
-            android:screenOrientation="portrait">
-        </activity>
-
-        <activity android:name="com.mikechoch.prism.ImageUploadActivity"
-            android:screenOrientation="portrait">
-        </activity>
-
+        <activity
+            android:name=".MainActivity"
+            android:screenOrientation="portrait"></activity>
+        <activity
+            android:name=".ImageUploadActivity"
+            android:screenOrientation="portrait"></activity>
+        <activity android:name=".LoginActivity"></activity>
     </application>
 
 </manifest>

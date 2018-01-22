@@ -26,6 +26,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
@@ -60,6 +61,7 @@ public class ImageUploadActivity extends AppCompatActivity {
 
     private StorageReference storageReference;
     private DatabaseReference databaseReference;
+    private FirebaseAuth auth;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -85,6 +87,8 @@ public class ImageUploadActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.image_upload_activity_layout);
+
+        ;
 
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -137,8 +141,9 @@ public class ImageUploadActivity extends AppCompatActivity {
         imageDescriptionEditText = findViewById(R.id.image_description_edit_text);
         imageDescriptionEditText.setTypeface(sourceSansProLight);
 
+        auth = FirebaseAuth.getInstance();
         storageReference = FirebaseStorage.getInstance().getReference();
-        databaseReference = FirebaseDatabase.getInstance().getReference().child("wallpapers");
+        databaseReference = FirebaseDatabase.getInstance().getReference().child("Users").child(auth.getCurrentUser().getUid());
 
         selectImageFromGallery();
     }
