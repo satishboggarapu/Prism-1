@@ -3,27 +3,66 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_marginTop="12dp"
     android:layout_marginBottom="4dp"
-    android:layout_marginTop="4dp"
     android:layout_marginStart="8dp"
     android:layout_marginEnd="8dp"
-    app:cardElevation="5dp"
-    app:cardBackgroundColor="@color/colorPrimary">
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="@android:color/transparent">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:paddingTop="20dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="8dp">
+
+        <RelativeLayout
+            android:id="@+id/recycler_view_frame"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/recycler_view_image_image_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentStart="true"
+                android:scaleType="fitCenter"
+                android:adjustViewBounds="true" />
+
+            <TextView
+                android:id="@+id/recycler_view_user_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/recycler_view_image_image_view"
+                android:layout_alignStart="@id/recycler_view_image_image_view"
+                android:layout_marginTop="4dp"
+                android:layout_marginStart="4dp"
+                android:textSize="16sp"
+                android:textColor="@android:color/white"/>
+
+            <ProgressBar
+                android:id="@+id/image_progress_bar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_above="@id/recycler_view_user_text_view"
+                android:layout_centerHorizontal="true"
+                android:visibility="gone"/>
+
+        </RelativeLayout>
 
         <TextView
-            android:id="@+id/recycler_view_item_text_view"
+            android:id="@+id/recycler_view_caption_text_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"
+            android:layout_marginStart="4dp"
             android:layout_marginBottom="16dp"
-            android:textSize="20sp"
-            android:textColor="@android:color/white"/>
+            android:textSize="18sp"
+            android:textColor="@android:color/white"
+            android:visibility="gone"/>
 
     </RelativeLayout>
 
