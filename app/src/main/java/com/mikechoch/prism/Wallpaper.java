@@ -13,6 +13,15 @@ public class Wallpaper {
     private String date;
     private String time;
     private String userName;
+    private String userFullName;
+
+    public String getUserFullName() {
+        return userFullName;
+    }
+
+    public void setUserFullName(String userFullName) {
+        this.userFullName = userFullName;
+    }
 
     public String getDate() {
         return date;
@@ -56,12 +65,13 @@ public class Wallpaper {
         this.caption = caption;
     }
 
-    public Wallpaper(String caption, String imageUri, String date, String time, String userName) {
+    public Wallpaper(String caption, String imageUri, String date, String time, String userName, String userFullName) {
         this.caption = caption;
         this.imageUri = imageUri;
         this.date = date;
         this.time = time;
         this.userName = userName;
+        this.userFullName = userFullName;
     }
 
     @Override

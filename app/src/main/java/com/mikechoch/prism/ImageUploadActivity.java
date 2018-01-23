@@ -159,13 +159,11 @@ public class ImageUploadActivity extends AppCompatActivity {
                 Calendar cal = Calendar.getInstance();
                 String imageUri = downloadUrl.toString();
                 String description = imageDescriptionEditText.getText().toString().trim();
-                String userName = auth.getCurrentUser().getDisplayName();
                 String date = Default.DATE_FORMAT.format(cal.getTime());
                 String time = Default.TIME_FORMAT.format(cal.getTime());
 
                 reference.child(Key.POST_IMAGE_URI).setValue(imageUri);
                 reference.child(Key.POST_DESC).setValue(description);
-                reference.child(Key.POST_USER).setValue(userName);
                 reference.child(Key.POST_DATE).setValue(date);
                 reference.child(Key.POST_TIME).setValue(time);
 

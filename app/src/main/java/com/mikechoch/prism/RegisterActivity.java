@@ -61,9 +61,9 @@ public class RegisterActivity extends AppCompatActivity {
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
                                 String uid = auth.getCurrentUser().getUid();
-                                DatabaseReference profileReference = databaseReference.child(uid).child("Profile");
-                                profileReference.child("name").setValue(fullName);
-                                profileReference.child("username").setValue(userName);
+                                DatabaseReference profileReference = databaseReference.child(uid).child(Key.DB_USERS_PROFILE_REF);
+                                profileReference.child(Key.DB_USERS_PROFILE_NAME).setValue(fullName);
+                                profileReference.child(Key.DB_USERS_PROFILE_USERNAME).setValue(userName);
 
                                 startActivity(new Intent(RegisterActivity.this, MainActivity.class));
                                 finish();

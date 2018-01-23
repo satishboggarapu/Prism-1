@@ -20,6 +20,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -39,7 +40,6 @@ public class MainActivity extends AppCompatActivity {
 
     private FloatingActionButton uploadImageFab;
     private FirebaseAuth auth;
-    private FirebaseAuth.AuthStateListener authStateListener;
     private DatabaseReference databaseReference;
     private StorageReference storageReference;
 
@@ -49,7 +49,8 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerViewAdapter recyclerViewAdapter;
 
     private ArrayList<Wallpaper> listOfImages;
-    private HashSet<Wallpaper> setOfImages;
+    private HashMap<String, Wallpaper> mapOfImages;
+    private ArrayList<String> listOfPostIDs; // todo sort this by date in future
     private int displayHeight;
     private int displayWidth;
 
@@ -86,7 +87,8 @@ public class MainActivity extends AppCompatActivity {
         sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
 
         listOfImages = new ArrayList<>();
-        setOfImages = new HashSet<>();
+        listOfPostIDs = new ArrayList<>();
+        mapOfImages = new HashMap<>();
 
         toolbar = findViewById(R.id.toolbar);
         TextView toolbarTextView = findViewById(R.id.toolbar_text_view);
@@ -109,26 +111,35 @@ public class MainActivity extends AppCompatActivity {
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
         } else {
-            databaseReference = FirebaseDatabase.getInstance().getReference().child("Users");//.child(auth.getCurrentUser().getUid());
+            databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_USERS_REF);//.child(auth.getCurrentUser().getUid());
             databaseReference.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     if (dataSnapshot.exists()) {
                         listOfImages.clear(); // clearing arrayList so that
+                        mapOfImages.clear();
+                        listOfPostIDs.clear();
                         // for each user
                         for (DataSnapshot dsUser: dataSnapshot.getChildren()) {
-                            System.out.println(dsUser);
+
+                            DataSnapshot profileSnap = dsUser.child(Key.DB_USERS_PROFILE_REF);
+                            String userFullName = (String) profileSnap.child(Key.DB_USERS_PROFILE_NAME).getValue();
+                            String userName = (String) profileSnap.child(Key.DB_USERS_PROFILE_USERNAME).getValue();
 
                             // for pics for each dsUser
                             for (DataSnapshot snapshot : dsUser.getChildren()) {
+                                String postId = snapshot.getKey();
+                                if (postId.equals(Key.DB_USERS_PROFILE_REF)) {
+                                    continue;
+                                }
                                 String imageUri = (String) snapshot.child(Key.POST_IMAGE_URI).getValue();
                                 String caption = (String) snapshot.child(Key.POST_DESC).getValue();
                                 String date = (String) snapshot.child(Key.POST_DATE).getValue();
                                 String time = (String) snapshot.child(Key.POST_TIME).getValue();
-                                String userName = (String) snapshot.child(Key.POST_USER).getValue();
-                                Wallpaper wallpaper = new Wallpaper(caption, imageUri, date, time, userName);
+                                Wallpaper wallpaper = new Wallpaper(caption, imageUri, date, time, userName, userFullName);
                                 listOfImages.add(wallpaper);
-                                setOfImages.add(wallpaper);
+                                listOfPostIDs.add(postId);
+                                mapOfImages.put(postId, wallpaper);
                                 recyclerViewAdapter.notifyItemInserted(listOfImages.size() - 1);
                             }
                         }

@@ -13,5 +13,10 @@ public class Key {
     public static final String POST_USER = "username";
 
     public static final String IMAGE_REF = "PostImage";
+
     public static final String DB_USERS_REF = "Users";
+    public static final String DB_USERS_PROFILE_REF = "Profile";
+    public static final String DB_USERS_PROFILE_NAME = "name";
+    public static final String DB_USERS_PROFILE_USERNAME = "username";
+
 }
