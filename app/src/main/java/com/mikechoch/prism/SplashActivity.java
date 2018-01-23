@@ -45,27 +45,22 @@ public class SplashActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... v) {
             try {
-                Thread.sleep(1500);
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
-            if (FirebaseAuth.getInstance().getCurrentUser() == null) {
-                Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
-            } else {
-                Intent intent = new Intent(SplashActivity.this, MainActivity.class);
-                startActivity(intent);
-                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-            }
-            finish();
             return null;
         }
 
         @Override
         protected void onPostExecute(Void v) {
             super.onPostExecute(v);
+            Intent intent = new Intent(SplashActivity.this,
+                    FirebaseAuth.getInstance().getCurrentUser() == null ?
+                            LoginActivity.class : MainActivity.class);
+            startActivity(intent);
+            finish();
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
         }
     }
 }
