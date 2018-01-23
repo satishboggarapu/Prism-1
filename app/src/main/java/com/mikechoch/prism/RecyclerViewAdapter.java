@@ -67,17 +67,14 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         private Wallpaper wallpaper;
-        private TextView wallpaperCaptionTextView;
         private TextView wallpaperUserTextView;
         private ImageView wallpaperImageView;
-        private FrameLayout imageFrameLayout;
         private ProgressBar progressBar;
 
         public ViewHolder(View itemView) {
             super(itemView);
             itemView.setOnClickListener(this);
 
-            imageFrameLayout = itemView.findViewById(R.id.image_frame_layout);
             progressBar = itemView.findViewById(R.id.image_progress_bar);
             progressBar.setVisibility(View.VISIBLE);
 
@@ -90,7 +87,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         public void setData(final Wallpaper wallpaper) {
             this.wallpaper = wallpaper;
             wallpaperUserTextView.setText("username");
-            wallpaperCaptionTextView.setText(wallpaper.getCaption());
             Handler uiHandler = new Handler(Looper.getMainLooper());
             uiHandler.post(new Runnable(){
                 @Override
