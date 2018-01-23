@@ -6,10 +6,12 @@ package com.mikechoch.prism;
 
 public class Key {
 
-    public static String POST_IMAGE_URI = "image";
-    public static String POST_DESC = "caption";
-    public static String POST_DATE = "date";
-    public static String POST_TIME = "time";
-    public static String POST_USER = "username";
+    public static final String POST_IMAGE_URI = "image";
+    public static final String POST_DESC = "caption";
+    public static final String POST_DATE = "date";
+    public static final String POST_TIME = "time";
+    public static final String POST_USER = "username";
 
+    public static final String IMAGE_REF = "PostImage";
+    public static final String DB_USERS_REF = "Users";
 }

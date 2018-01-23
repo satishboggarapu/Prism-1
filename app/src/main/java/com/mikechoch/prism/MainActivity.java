@@ -99,7 +99,8 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewAdapter = new RecyclerViewAdapter(this, listOfImages, null, displayWidth, displayHeight);
         recyclerView.setAdapter(recyclerViewAdapter);
-
+        recyclerView.setItemViewCacheSize(20);
+        recyclerView.setDrawingCacheEnabled(true);
         uploadImageFab = findViewById(R.id.upload_image_fab);
 
         auth = FirebaseAuth.getInstance();
