@@ -56,6 +56,7 @@ public class MainContentFragment extends Fragment {
 
         // TODO: Create a HashMap<String, Wallpaper> from cloud database and an ArrayList<String> of keys by date order
         // TODO: Populate RecyclerViewAdapter with HashMap<String, WallPaper> and ArrayList<String>
+        
         new MainContentTask().execute();
     }
 

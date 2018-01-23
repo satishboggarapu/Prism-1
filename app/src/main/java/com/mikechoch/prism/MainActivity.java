@@ -25,6 +25,9 @@ import android.view.animation.ScaleAnimation;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashMap;
+import java.util.HashSet;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -40,7 +43,6 @@ public class MainActivity extends FragmentActivity {
 
     private FloatingActionButton uploadImageFab;
     private FirebaseAuth auth;
-    private FirebaseAuth.AuthStateListener authStateListener;
     private DatabaseReference databaseReference;
     private StorageReference storageReference;
 
@@ -48,6 +50,11 @@ public class MainActivity extends FragmentActivity {
     private ViewPager viewPager;
 
 //    private Toolbar toolbar;
+    private ArrayList<Wallpaper> listOfImages;
+    private HashMap<String, Wallpaper> mapOfImages;
+    private ArrayList<String> listOfPostIDs; // todo sort this by date in future
+    private int displayHeight;
+    private int displayWidth;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -81,6 +88,10 @@ public class MainActivity extends FragmentActivity {
 //        TextView toolbarTextView = findViewById(R.id.toolbar_text_view);
 //        toolbarTextView.setTypeface(sourceSansProBold);
 //        setSupportActionBar(toolbar);
+
+        listOfImages = new ArrayList<>();
+        listOfPostIDs = new ArrayList<>();
+        mapOfImages = new HashMap<>();
 
         tabLayout = findViewById(R.id.tab_layout);
         viewPager = findViewById(R.id.view_pager);
@@ -180,49 +191,64 @@ public class MainActivity extends FragmentActivity {
             }
         });
 
-//        auth = FirebaseAuth.getInstance();
-//        if (auth.getCurrentUser() == null) {
-//            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-//            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-//            startActivity(intent);
-//        } else {
-//            databaseReference = FirebaseDatabase.getInstance().getReference().child("Users");//.child(auth.getCurrentUser().getUid());
-//            databaseReference.addValueEventListener(new ValueEventListener() {
-//                @Override
-//                public void onDataChange(DataSnapshot dataSnapshot) {
-//                    if (dataSnapshot.exists()) {
-//                        listOfImages.clear(); // clearing arrayList so that
-//                        // for each user
-//                        for (DataSnapshot user: dataSnapshot.getChildren()) {
-//                            System.out.println(user);
-//                            // for pics for each user
-//                            for (DataSnapshot snapshot : user.getChildren()) {
-//                                String caption = (String) snapshot.child("caption").getValue();
-//                                String imageUri = (String) snapshot.child("image").getValue();
-//                                listOfImages.add(new Wallpaper(caption, imageUri));
-////                                recyclerViewAdapter.notifyItemInserted(listOfImages.size() - 1);
-//                            }
-//                        }
-//                        refreshPageWithImages();
-//                    }
-//                }
-//
-//                @Override
-//                public void onCancelled(DatabaseError databaseError) {
-//
-//                }
-//            });
-//        }
-//
-//        // Ask user for write permissions to external storage
-//        int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-//        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_READ_MEDIA);
-//        }
+        auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) {
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+        } else {
+            databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_USERS_REF);//.child(auth.getCurrentUser().getUid());
+            databaseReference.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.exists()) {
+                        listOfImages.clear(); // clearing arrayList so that
+                        mapOfImages.clear();
+                        listOfPostIDs.clear();
+                        // for each user
+                        for (DataSnapshot dsUser: dataSnapshot.getChildren()) {
+
+                            DataSnapshot profileSnap = dsUser.child(Key.DB_USERS_PROFILE_REF);
+                            String userFullName = (String) profileSnap.child(Key.DB_USERS_PROFILE_NAME).getValue();
+                            String userName = (String) profileSnap.child(Key.DB_USERS_PROFILE_USERNAME).getValue();
+
+                            // for pics for each dsUser
+                            for (DataSnapshot snapshot : dsUser.getChildren()) {
+                                String postId = snapshot.getKey();
+                                if (postId.equals(Key.DB_USERS_PROFILE_REF)) {
+                                    continue;
+                                }
+                                String imageUri = (String) snapshot.child(Key.POST_IMAGE_URI).getValue();
+                                String caption = (String) snapshot.child(Key.POST_DESC).getValue();
+                                String date = (String) snapshot.child(Key.POST_DATE).getValue();
+                                String time = (String) snapshot.child(Key.POST_TIME).getValue();
+                                Wallpaper wallpaper = new Wallpaper(caption, imageUri, date, time, userName, userFullName);
+                                listOfImages.add(wallpaper);
+                                listOfPostIDs.add(postId);
+                                mapOfImages.put(postId, wallpaper);
+//                                recyclerViewAdapter.notifyItemInserted(listOfImages.size() - 1);
+                            }
+                        }
+                        refreshPageWithImages();
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+        }
+
+        // Ask user for write permissions to external storage
+        int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_READ_MEDIA);
+        }
     }
 
     /**
-     * TODO populate cardviews with images from listOfImages
+     * TODO populate card views with images from listOfImages
      */
     private void refreshPageWithImages() {
 //        System.out.println(listOfImages);

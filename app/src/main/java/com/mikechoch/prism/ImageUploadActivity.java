@@ -38,6 +38,8 @@ import org.w3c.dom.Text;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 /**
  * Created by mikechoch on 1/21/18.
@@ -127,11 +129,8 @@ public class ImageUploadActivity extends AppCompatActivity {
                 // Bitmap image
                 // ... and so on
                 toast("Uploading image..."); // TODO: show loading spinner in future
-                final String imageDescription = imageDescriptionEditText.getText().toString().trim();
-                if (!imageDescription.isEmpty()) {
-                    String[] imageDescriptions = {imageDescription};
-                    new ImageUploadTask().execute(imageDescriptions);
-                }
+                new ImageUploadTask().execute();
+
             }
         });
 
@@ -143,20 +142,31 @@ public class ImageUploadActivity extends AppCompatActivity {
 
         auth = FirebaseAuth.getInstance();
         storageReference = FirebaseStorage.getInstance().getReference();
-        databaseReference = FirebaseDatabase.getInstance().getReference().child("Users").child(auth.getCurrentUser().getUid());
+        databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_USERS_REF).child(auth.getCurrentUser().getUid());
 
         selectImageFromGallery();
     }
 
-    private void uploadImageToCloud(final String imageDescription) {
-        StorageReference filePath = storageReference.child("PostImage").child(imageUri.getLastPathSegment());
+    @SuppressLint("SimpleDateFormat")
+    private void uploadImageToCloud() {
+        StorageReference filePath = storageReference.child(Key.IMAGE_REF).child(imageUri.getLastPathSegment());
         filePath.putFile(imageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Uri downloadUrl = taskSnapshot.getDownloadUrl();
                 DatabaseReference reference = databaseReference.push();
-                reference.child("caption").setValue(imageDescription);
-                reference.child("image").setValue(downloadUrl.toString());
+
+                Calendar cal = Calendar.getInstance();
+                String imageUri = downloadUrl.toString();
+                String description = imageDescriptionEditText.getText().toString().trim();
+                String date = Default.DATE_FORMAT.format(cal.getTime());
+                String time = Default.TIME_FORMAT.format(cal.getTime());
+
+                reference.child(Key.POST_IMAGE_URI).setValue(imageUri);
+                reference.child(Key.POST_DESC).setValue(description);
+                reference.child(Key.POST_DATE).setValue(date);
+                reference.child(Key.POST_TIME).setValue(time);
+
                 toast("Image successfully uploaded");
                 finish();
             }
@@ -219,7 +229,7 @@ public class ImageUploadActivity extends AppCompatActivity {
         return Uri.parse(path);
     }
 
-    private class ImageUploadTask extends AsyncTask<String, Void, Void> {
+    private class ImageUploadTask extends AsyncTask<Void, Void, Void> {
 
         @Override
         protected void onPreExecute() {
@@ -232,8 +242,8 @@ public class ImageUploadActivity extends AppCompatActivity {
 
 
         @Override
-        protected Void doInBackground(String... imageDescription) {
-            uploadImageToCloud(imageDescription[0]);
+        protected Void doInBackground(Void... params) {
+            uploadImageToCloud();
             return null;
         }
 

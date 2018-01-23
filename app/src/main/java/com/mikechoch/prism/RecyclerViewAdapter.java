@@ -90,6 +90,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         public void setData(final Wallpaper wallpaper) {
             this.wallpaper = wallpaper;
             wallpaperUserTextView.setText("username");
+            wallpaperCaptionTextView.setText(wallpaper.getCaption());
             Handler uiHandler = new Handler(Looper.getMainLooper());
             uiHandler.post(new Runnable(){
                 @Override
