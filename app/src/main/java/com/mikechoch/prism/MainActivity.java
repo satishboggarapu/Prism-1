@@ -185,9 +185,9 @@ public class MainActivity extends FragmentActivity {
         uploadImageFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                Intent imageUploadIntent = new Intent( MainActivity.this, ImageUploadActivity.class);
-//                startActivity(imageUploadIntent);
-//                overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+                Intent imageUploadIntent = new Intent( MainActivity.this, ImageUploadActivity.class);
+                startActivity(imageUploadIntent);
+                overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
             }
         });
 
@@ -196,48 +196,6 @@ public class MainActivity extends FragmentActivity {
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
-        } else {
-            databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_USERS_REF);//.child(auth.getCurrentUser().getUid());
-            databaseReference.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.exists()) {
-                        listOfImages.clear(); // clearing arrayList so that
-                        mapOfImages.clear();
-                        listOfPostIDs.clear();
-                        // for each user
-                        for (DataSnapshot dsUser: dataSnapshot.getChildren()) {
-
-                            DataSnapshot profileSnap = dsUser.child(Key.DB_USERS_PROFILE_REF);
-                            String userFullName = (String) profileSnap.child(Key.DB_USERS_PROFILE_NAME).getValue();
-                            String userName = (String) profileSnap.child(Key.DB_USERS_PROFILE_USERNAME).getValue();
-
-                            // for pics for each dsUser
-                            for (DataSnapshot snapshot : dsUser.getChildren()) {
-                                String postId = snapshot.getKey();
-                                if (postId.equals(Key.DB_USERS_PROFILE_REF)) {
-                                    continue;
-                                }
-                                String imageUri = (String) snapshot.child(Key.POST_IMAGE_URI).getValue();
-                                String caption = (String) snapshot.child(Key.POST_DESC).getValue();
-                                String date = (String) snapshot.child(Key.POST_DATE).getValue();
-                                String time = (String) snapshot.child(Key.POST_TIME).getValue();
-                                Wallpaper wallpaper = new Wallpaper(caption, imageUri, date, time, userName, userFullName);
-                                listOfImages.add(wallpaper);
-                                listOfPostIDs.add(postId);
-                                mapOfImages.put(postId, wallpaper);
-//                                recyclerViewAdapter.notifyItemInserted(listOfImages.size() - 1);
-                            }
-                        }
-                        refreshPageWithImages();
-                    }
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
-            });
         }
 
         // Ask user for write permissions to external storage

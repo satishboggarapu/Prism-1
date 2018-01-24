@@ -13,10 +13,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.Key;
 import com.mikechoch.prism.R;
@@ -25,6 +27,7 @@ import com.mikechoch.prism.Wallpaper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by mikechoch on 1/22/18.
@@ -62,14 +65,19 @@ public class MainContentFragment extends Fragment {
         dateOrderWallpaperKeys = new ArrayList<>();
         wallpaperHashMap = new HashMap<>();
 
-        databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_USERS_REF);//.child(auth.getCurrentUser().getUid());
-        databaseReference.addValueEventListener(new ValueEventListener() {
+        databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_REF_ALL_POSTS);
+        refreshData();
+
+    }
+
+    private void refreshData() {
+        Query query = databaseReference.orderByChild("timestamp");//.limitToFirst(20);
+        query.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    DataSnapshot[] dataSnapshots = {dataSnapshot};
-                    new MainContentTask().execute(dataSnapshots);
-                }
+                System.out.println(dataSnapshot.toString());
+                DataSnapshot[] dataSnapshots = {dataSnapshot};
+                new MainContentTask().execute(dataSnapshots);
             }
 
             @Override
@@ -88,6 +96,7 @@ public class MainContentFragment extends Fragment {
         mainContentRecyclerView = view.findViewById(R.id.main_content_recycler_view);
         mainContentRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mainContentRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        mainContentRecyclerView.setItemViewCacheSize(20);
         mainContentRecyclerView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
             @Override
             public void onScrollChange(View view, int i, int i1, int i2, int i3) {
@@ -104,7 +113,7 @@ public class MainContentFragment extends Fragment {
             @Override
             public void onRefresh() {
                 // TODO: Pull data with ASync
-                new MainContentTask().execute();
+                refreshData();
             }
         });
 
@@ -120,53 +129,71 @@ public class MainContentFragment extends Fragment {
 
 
         @Override
-        protected Void doInBackground(DataSnapshot... v) {
-            if (v.length != 0) {
-                // TODO: Create a HashMap<String, Wallpaper> from cloud database and an ArrayList<String> of keys by date order
-                // TODO: Populate RecyclerViewAdapter with HashMap<String, WallPaper> and ArrayList<String>
-                dateOrderWallpaperKeys.clear();
-                wallpaperHashMap.clear();
-                // for each user
-                for (DataSnapshot dsUser : v[0].getChildren()) {
-
-                    DataSnapshot profileSnap = dsUser.child(Key.DB_USERS_PROFILE_REF);
-                    String userFullName = (String) profileSnap.child(Key.DB_USERS_PROFILE_NAME).getValue();
-                    String userName = (String) profileSnap.child(Key.DB_USERS_PROFILE_USERNAME).getValue();
-
-                    // for pics for each dsUser
-                    for (DataSnapshot snapshot : dsUser.getChildren()) {
-                        String postId = snapshot.getKey();
-                        if (postId.equals(Key.DB_USERS_PROFILE_REF)) {
-                            continue;
-                        }
-                        String imageUri = (String) snapshot.child(Key.POST_IMAGE_URI).getValue();
-                        String caption = (String) snapshot.child(Key.POST_DESC).getValue();
-                        String date = (String) snapshot.child(Key.POST_DATE).getValue();
-                        String time = (String) snapshot.child(Key.POST_TIME).getValue();
-                        Wallpaper wallpaper = new Wallpaper(caption, imageUri, date, time, userName, userFullName);
-                        dateOrderWallpaperKeys.add(postId);
-                        wallpaperHashMap.put(postId, wallpaper);
-                        getActivity().runOnUiThread(new Runnable() {
-                            public void run() {
-                                mainContentRecyclerViewAdapter.notifyItemInserted(dateOrderWallpaperKeys.size() - 1);
-                            }
-                        });
-                    }
-                }
-            } else {
+        protected Void doInBackground(DataSnapshot... snapshots) {
+            if (snapshots.length == 0) {
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                return null;
             }
-            return null;
+            // TODO: Create a HashMap<String, Wallpaper> from cloud database and an ArrayList<String> of keys by date order
+            // TODO: Populate RecyclerViewAdapter with HashMap<String, WallPaper> and ArrayList<String>
+            // dateOrderWallpaperKeys.clear();
+            // wallpaperHashMap.clear();
+            // for each user
+
+//            Object mapOfPosts = snapshots[0].getValue();
+//            for (Object entry : ((HashMap) mapOfPosts).entrySet()) {
+//                Map.Entry<String, Object> post = (Map.Entry<String, Object>) entry;
+//                String postKey = post.getKey();
+//                if (!dateOrderWallpaperKeys.contains(postKey)) {
+//                    dateOrderWallpaperKeys.add(postKey);
+//
+//                    HashMap<String, Object> postDetails = (HashMap<String, Object>) post.getValue();
+//                    Wallpaper wallpaper = new Wallpaper((String) postDetails.get(Key.POST_IMAGE_URI),
+//                            (String) postDetails.get(Key.POST_DESC),
+//                            (String) postDetails.get(Key.POST_USERNAME),
+//                            (String) postDetails.get(Key.POST_UID),
+//                            Long.parseLong(postDetails.get(Key.POST_TIMESTAMP).toString()));
+//
+//                    wallpaperHashMap.put(postKey, wallpaper);
+//                }
+//            }
+
+
+            for (DataSnapshot postSnapshot : snapshots[0].getChildren()) {
+                String postKey = postSnapshot.getKey();
+                if (!dateOrderWallpaperKeys.contains(postKey)) {
+                    String imageUri = (String) postSnapshot.child(Key.POST_IMAGE_URI).getValue();
+                    String description = (String) postSnapshot.child(Key.POST_DESC).getValue();
+                    String username = (String) postSnapshot.child(Key.POST_USERNAME).getValue();
+                    String userId = (String) postSnapshot.child(Key.POST_UID).getValue();
+                    Long timestamp = Long.parseLong(postSnapshot.child(Key.POST_TIMESTAMP).getValue().toString());
+
+                    Wallpaper wallpaper = postSnapshot.getValue(Wallpaper.class);
+
+//                    Wallpaper wallpaper = new Wallpaper(imageUri, description, username, userId, timestamp);
+                    dateOrderWallpaperKeys.add(postKey);
+                    wallpaperHashMap.put(postKey, wallpaper);
+
+//                    getActivity().runOnUiThread(new Runnable() {
+//                        public void run() {
+//                            mainContentRecyclerViewAdapter.notifyItemInserted(dateOrderWallpaperKeys.size() - 1);
+//                        }
+//                    });
+                }
+
+            }
+        return null;
         }
 
         @Override
         protected void onPostExecute(Void v) {
             super.onPostExecute(v);
             mainContentSwipeRefreshLayout.setRefreshing(false);
+            mainContentRecyclerViewAdapter.notifyDataSetChanged();
         }
     }
 }

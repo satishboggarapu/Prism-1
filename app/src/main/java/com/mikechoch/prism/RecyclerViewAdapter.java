@@ -8,7 +8,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -91,7 +90,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             uiHandler.post(new Runnable(){
                 @Override
                 public void run() {
-                    Picasso.with(context).load(wallpaper.getImageUri()).into(wallpaperImageView, new Callback() {
+                    Picasso.with(context).load(wallpaper.getImage()).into(wallpaperImageView, new Callback() {
                         @Override
                         public void onSuccess() {
                             progressBar.setVisibility(View.GONE);

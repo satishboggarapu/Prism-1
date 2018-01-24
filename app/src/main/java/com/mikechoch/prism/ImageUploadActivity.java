@@ -14,7 +14,6 @@ import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
-import android.text.Html;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -33,12 +32,9 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
-import org.w3c.dom.Text;
-
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 /**
@@ -90,7 +86,6 @@ public class ImageUploadActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.image_upload_activity_layout);
 
-        ;
 
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -142,33 +137,43 @@ public class ImageUploadActivity extends AppCompatActivity {
 
         auth = FirebaseAuth.getInstance();
         storageReference = FirebaseStorage.getInstance().getReference();
-        databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_USERS_REF).child(auth.getCurrentUser().getUid());
+        databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_REF_ALL_POSTS);
 
         selectImageFromGallery();
     }
 
     @SuppressLint("SimpleDateFormat")
     private void uploadImageToCloud() {
-        StorageReference filePath = storageReference.child(Key.IMAGE_REF).child(imageUri.getLastPathSegment());
+        StorageReference filePath = storageReference.child(Key.STORAGE_IMAGE_REF).child(imageUri.getLastPathSegment());
         filePath.putFile(imageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Uri downloadUrl = taskSnapshot.getDownloadUrl();
                 DatabaseReference reference = databaseReference.push();
 
-                Calendar cal = Calendar.getInstance();
                 String imageUri = downloadUrl.toString();
                 String description = imageDescriptionEditText.getText().toString().trim();
-                String date = Default.DATE_FORMAT.format(cal.getTime());
-                String time = Default.TIME_FORMAT.format(cal.getTime());
+                String username = FirebaseDatabase.getInstance().getReference().child(Key.DB_REF_USER_PROFILES).child(auth.getCurrentUser().getUid()).child(Key.DB_REF_USER_PROFILE_USERNAME).toString();
+                String userId = auth.getCurrentUser().getUid();
+                Long timestamp = -1 * Calendar.getInstance().getTimeInMillis();
 
-                reference.child(Key.POST_IMAGE_URI).setValue(imageUri);
-                reference.child(Key.POST_DESC).setValue(description);
-                reference.child(Key.POST_DATE).setValue(date);
-                reference.child(Key.POST_TIME).setValue(time);
+                Wallpaper wallpaper = new Wallpaper(imageUri, description, username, userId, timestamp);
+                reference.setValue(wallpaper).addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        toast("Image successfully uploaded");
+                        finish();
+                    }
+                });
 
-                toast("Image successfully uploaded");
-                finish();
+//                reference.child(Key.POST_IMAGE_URI).setValue(imageUri);
+//                reference.child(Key.POST_DESC).setValue(description);
+//                reference.child(Key.POST_USERNAME).setValue(username);
+//                reference.child(Key.POST_UID).setValue(userId);
+//                reference.child(Key.POST_TIMESTAMP).setValue(timestamp);
+
+//                toast("Image successfully uploaded");
+//                finish();
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
