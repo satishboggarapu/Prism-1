@@ -1,4 +1,4 @@
-package com.mikechoch.prism;
+package com.mikechoch.prism.activity;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
@@ -14,9 +13,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,8 +22,6 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashMap;
-import java.util.HashSet;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -36,6 +30,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.StorageReference;
+import com.mikechoch.prism.Key;
+import com.mikechoch.prism.R;
+import com.mikechoch.prism.ViewPagerAdapter;
+import com.mikechoch.prism.Wallpaper;
 
 public class MainActivity extends FragmentActivity {
 
@@ -53,8 +51,6 @@ public class MainActivity extends FragmentActivity {
     private ArrayList<Wallpaper> listOfImages;
     private HashMap<String, Wallpaper> mapOfImages;
     private ArrayList<String> listOfPostIDs; // todo sort this by date in future
-    private int displayHeight;
-    private int displayWidth;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -225,6 +221,9 @@ public class MainActivity extends FragmentActivity {
         }
     }
 
+    /**
+     * Shortcut for toasting a message
+     */
     private void toast(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }

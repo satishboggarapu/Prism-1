@@ -1,14 +1,19 @@
-package com.mikechoch.prism;
+package com.mikechoch.prism.activity;
 
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.transition.Fade;
+import android.transition.Transition;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.mikechoch.prism.R;
+import com.mikechoch.prism.helper.TransitionUtils;
 
 /**
  * Created by mikechoch on 1/21/18.
@@ -23,6 +28,8 @@ public class SplashActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.splash_activity_layout);
+
+        getWindow().setEnterTransition(TransitionUtils.makeEnterTransition());
 
         iconImageView = findViewById(R.id.icon_image_view);
         rotateAnimation = AnimationUtils.loadAnimation(this, R.anim.icon_rotate);
@@ -55,12 +62,26 @@ public class SplashActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void v) {
             super.onPostExecute(v);
-            Intent intent = new Intent(SplashActivity.this,
-                    FirebaseAuth.getInstance().getCurrentUser() == null ?
-                            LoginActivity.class : MainActivity.class);
-            startActivity(intent);
-            finish();
-            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+            boolean isSignedIn = FirebaseAuth.getInstance().getCurrentUser() != null;
+            Intent intent = new Intent(SplashActivity.this, isSignedIn ?
+                    MainActivity.class : LoginActivity.class);
+            int enterAnim = isSignedIn ? R.anim.fade_in : 0;
+            int exitAnim = isSignedIn ? R.anim.fade_out : 0;
+            ActivityOptionsCompat options = ActivityOptionsCompat.
+                    makeSceneTransitionAnimation(SplashActivity.this, iconImageView, "icon");
+            iconImageView.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    startActivity(intent, options.toBundle());
+                    overridePendingTransition(enterAnim, exitAnim);
+                    iconImageView.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            finish();
+                        }
+                    }, 1000);
+                }
+            }, 250);
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.mikechoch.prism;
+package com.mikechoch.prism.activity;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
@@ -31,6 +31,11 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.mikechoch.prism.Default;
+import com.mikechoch.prism.Key;
+import com.mikechoch.prism.R;
+import com.mikechoch.prism.helper.ExifUtil;
+import com.mikechoch.prism.helper.FileChooser;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -181,7 +186,8 @@ public class ImageUploadActivity extends AppCompatActivity {
     private void selectImageFromGallery() {
         Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT);
         galleryIntent.setType("image/*");
-        startActivityForResult(Intent.createChooser(galleryIntent, "Select Picture"), GALLERY_INTENT_REQUEST);
+        startActivityForResult(Intent.createChooser(galleryIntent, "Select a picture"), GALLERY_INTENT_REQUEST);
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
     }
 
     /**
@@ -249,6 +255,9 @@ public class ImageUploadActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Shortcut for toasting a message
+     */
     private void toast(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
