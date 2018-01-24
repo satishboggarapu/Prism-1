@@ -13,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -62,7 +63,8 @@ public class MainContentFragment extends Fragment {
         dateOrderWallpaperKeys = new ArrayList<>();
         wallpaperHashMap = new HashMap<>();
 
-        databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_USERS_REF);//.child(auth.getCurrentUser().getUid());
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_USERS_REF).child(auth.getCurrentUser().getUid());
         databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -88,13 +90,6 @@ public class MainContentFragment extends Fragment {
         mainContentRecyclerView = view.findViewById(R.id.main_content_recycler_view);
         mainContentRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mainContentRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        mainContentRecyclerView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
-            @Override
-            public void onScrollChange(View view, int i, int i1, int i2, int i3) {
-                ViewPager viewPager = (ViewPager) mainContentRecyclerView.getParent().getParent().getParent();
-                viewPager.invalidate();
-            }
-        });
         mainContentRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), dateOrderWallpaperKeys, wallpaperHashMap, null);
         mainContentRecyclerView.setAdapter(mainContentRecyclerViewAdapter);
 

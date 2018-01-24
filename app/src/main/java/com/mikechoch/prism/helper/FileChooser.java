@@ -1,4 +1,4 @@
-package com.mikechoch.prism;
+package com.mikechoch.prism.helper;
 
 
 import android.content.ContentUris;

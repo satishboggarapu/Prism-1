@@ -1,4 +1,4 @@
-package com.mikechoch.prism;
+package com.mikechoch.prism.helper;
 
 /**
  * Created by mikechoch on 1/21/18.
