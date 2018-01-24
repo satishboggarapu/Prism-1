@@ -28,6 +28,7 @@ import com.mikechoch.prism.Wallpaper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 /**
@@ -44,6 +45,8 @@ public class MainContentFragment extends Fragment {
 
     private ArrayList<String> dateOrderWallpaperKeys;
     private HashMap<String, Wallpaper> wallpaperHashMap;
+
+    private boolean clearCurrentData = false;
 
     private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
 
@@ -71,9 +74,30 @@ public class MainContentFragment extends Fragment {
 
     }
 
+
+    private void fetchOldData() {
+        clearCurrentData = false;
+        String lastPostId = dateOrderWallpaperKeys.get(dateOrderWallpaperKeys.size() - 1);
+        long lastPostTimestamp = wallpaperHashMap.get(lastPostId).getTimestamp();
+        Query query = databaseReference.orderByChild("timestamp").startAt(lastPostTimestamp).limitToFirst(20);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                System.out.println(dataSnapshot.toString());
+                DataSnapshot[] dataSnapshots = {dataSnapshot};
+                new MainContentTask().execute(dataSnapshots);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+    }
+
     private void refreshData() {
-        Query query = databaseReference.orderByChild("timestamp");//.limitToFirst(20);
-        query.addValueEventListener(new ValueEventListener() {
+        clearCurrentData = true;
+        Query query = databaseReference.orderByChild("timestamp").limitToFirst(20);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 System.out.println(dataSnapshot.toString());
@@ -142,8 +166,10 @@ public class MainContentFragment extends Fragment {
 
             // TODO: Create a HashMap<String, Wallpaper> from cloud database and an ArrayList<String> of keys by date order
             // TODO: Populate RecyclerViewAdapter with HashMap<String, WallPaper> and ArrayList<String>
-            // dateOrderWallpaperKeys.clear();
-            // wallpaperHashMap.clear();
+            if (clearCurrentData) {
+                dateOrderWallpaperKeys.clear();
+                wallpaperHashMap.clear();
+            }
 
             for (DataSnapshot postSnapshot : snapshots[0].getChildren()) {
                 String postKey = postSnapshot.getKey();
@@ -160,6 +186,7 @@ public class MainContentFragment extends Fragment {
         @Override
         protected void onPostExecute(Void v) {
             super.onPostExecute(v);
+            clearCurrentData = false;
             mainContentSwipeRefreshLayout.setRefreshing(false);
             mainContentRecyclerViewAdapter.notifyDataSetChanged();
         }

@@ -34,6 +34,7 @@ import com.google.firebase.storage.UploadTask;
 import com.mikechoch.prism.Default;
 import com.mikechoch.prism.Key;
 import com.mikechoch.prism.R;
+import com.mikechoch.prism.Wallpaper;
 import com.mikechoch.prism.helper.ExifUtil;
 import com.mikechoch.prism.helper.FileChooser;
 
