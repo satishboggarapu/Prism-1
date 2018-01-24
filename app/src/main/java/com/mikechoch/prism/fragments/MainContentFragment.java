@@ -138,51 +138,18 @@ public class MainContentFragment extends Fragment {
                 }
                 return null;
             }
+
             // TODO: Create a HashMap<String, Wallpaper> from cloud database and an ArrayList<String> of keys by date order
             // TODO: Populate RecyclerViewAdapter with HashMap<String, WallPaper> and ArrayList<String>
             // dateOrderWallpaperKeys.clear();
             // wallpaperHashMap.clear();
-            // for each user
-
-//            Object mapOfPosts = snapshots[0].getValue();
-//            for (Object entry : ((HashMap) mapOfPosts).entrySet()) {
-//                Map.Entry<String, Object> post = (Map.Entry<String, Object>) entry;
-//                String postKey = post.getKey();
-//                if (!dateOrderWallpaperKeys.contains(postKey)) {
-//                    dateOrderWallpaperKeys.add(postKey);
-//
-//                    HashMap<String, Object> postDetails = (HashMap<String, Object>) post.getValue();
-//                    Wallpaper wallpaper = new Wallpaper((String) postDetails.get(Key.POST_IMAGE_URI),
-//                            (String) postDetails.get(Key.POST_DESC),
-//                            (String) postDetails.get(Key.POST_USERNAME),
-//                            (String) postDetails.get(Key.POST_UID),
-//                            Long.parseLong(postDetails.get(Key.POST_TIMESTAMP).toString()));
-//
-//                    wallpaperHashMap.put(postKey, wallpaper);
-//                }
-//            }
-
 
             for (DataSnapshot postSnapshot : snapshots[0].getChildren()) {
                 String postKey = postSnapshot.getKey();
                 if (!dateOrderWallpaperKeys.contains(postKey)) {
-                    String imageUri = (String) postSnapshot.child(Key.POST_IMAGE_URI).getValue();
-                    String description = (String) postSnapshot.child(Key.POST_DESC).getValue();
-                    String username = (String) postSnapshot.child(Key.POST_USERNAME).getValue();
-                    String userId = (String) postSnapshot.child(Key.POST_UID).getValue();
-                    Long timestamp = Long.parseLong(postSnapshot.child(Key.POST_TIMESTAMP).getValue().toString());
-
                     Wallpaper wallpaper = postSnapshot.getValue(Wallpaper.class);
-
-//                    Wallpaper wallpaper = new Wallpaper(imageUri, description, username, userId, timestamp);
                     dateOrderWallpaperKeys.add(postKey);
                     wallpaperHashMap.put(postKey, wallpaper);
-
-//                    getActivity().runOnUiThread(new Runnable() {
-//                        public void run() {
-//                            mainContentRecyclerViewAdapter.notifyItemInserted(dateOrderWallpaperKeys.size() - 1);
-//                        }
-//                    });
                 }
 
             }

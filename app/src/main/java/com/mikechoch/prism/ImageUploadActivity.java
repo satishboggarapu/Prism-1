@@ -165,15 +165,6 @@ public class ImageUploadActivity extends AppCompatActivity {
                         finish();
                     }
                 });
-
-//                reference.child(Key.POST_IMAGE_URI).setValue(imageUri);
-//                reference.child(Key.POST_DESC).setValue(description);
-//                reference.child(Key.POST_USERNAME).setValue(username);
-//                reference.child(Key.POST_UID).setValue(userId);
-//                reference.child(Key.POST_TIMESTAMP).setValue(timestamp);
-
-//                toast("Image successfully uploaded");
-//                finish();
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
