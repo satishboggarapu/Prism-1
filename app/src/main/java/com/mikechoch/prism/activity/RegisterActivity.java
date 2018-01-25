@@ -19,6 +19,8 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.mikechoch.prism.Key;
@@ -44,6 +46,8 @@ public class RegisterActivity extends AppCompatActivity {
     private Typeface sourceSansProBold;
 
     private FirebaseAuth auth;
+    private FirebaseAuth.AuthStateListener authStateListener;
+
     private DatabaseReference databaseReference;
 
     @Override
@@ -205,9 +209,14 @@ public class RegisterActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             String uid = auth.getCurrentUser().getUid();
-                            DatabaseReference profileReference = databaseReference.child(uid).child(Key.DB_REF_USER_PROFILES);
+                            DatabaseReference profileReference = databaseReference.child(uid);
                             profileReference.child(Key.DB_REF_USER_PROFILE_FULL_NAME).setValue(fullName);
                             profileReference.child(Key.DB_REF_USER_PROFILE_USERNAME).setValue(userName);
+                            FirebaseUser user = auth.getCurrentUser();
+                            if (user != null) {
+                                UserProfileChangeRequest profile = new UserProfileChangeRequest.Builder().setDisplayName(userName).build();
+                                user.updateProfile(profile);
+                            }
 
                             startActivity(new Intent(RegisterActivity.this, MainActivity.class));
                             finish();
@@ -219,6 +228,9 @@ public class RegisterActivity extends AppCompatActivity {
                         }
                     }
                 });
+
+
+
             }
         });
 
