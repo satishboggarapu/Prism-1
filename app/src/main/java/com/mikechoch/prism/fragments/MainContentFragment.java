@@ -41,8 +41,6 @@ public class MainContentFragment extends Fragment {
     private ArrayList<String> dateOrderWallpaperKeys;
     private HashMap<String, Wallpaper> wallpaperHashMap;
 
-    private boolean clearCurrentData = false;
-
     private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
 
     private boolean isLoading = false;
@@ -71,7 +69,6 @@ public class MainContentFragment extends Fragment {
 
 
     private void fetchOldData() {
-        clearCurrentData = false;
         String lastPostId = dateOrderWallpaperKeys.get(dateOrderWallpaperKeys.size() - 1);
         long lastPostTimestamp = wallpaperHashMap.get(lastPostId).getTimestamp();
         Query query = databaseReference.orderByChild("timestamp").startAt(lastPostTimestamp).limitToFirst(5);
@@ -90,7 +87,6 @@ public class MainContentFragment extends Fragment {
     }
 
     private void refreshData() {
-        clearCurrentData = true;
         Query query = databaseReference.orderByChild("timestamp").limitToFirst(5);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -134,7 +130,8 @@ public class MainContentFragment extends Fragment {
         });
 
         int screenWidth = getActivity().getWindowManager().getDefaultDisplay().getWidth();
-        mainContentRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), dateOrderWallpaperKeys, wallpaperHashMap, null, screenWidth);
+        int screenHeight = getActivity().getWindowManager().getDefaultDisplay().getHeight();
+        mainContentRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), dateOrderWallpaperKeys, wallpaperHashMap, null, new int[]{screenWidth, screenHeight});
         mainContentRecyclerView.setAdapter(mainContentRecyclerViewAdapter);
 
         mainContentSwipeRefreshLayout = view.findViewById(R.id.main_content_swipe_refresh_layout);
@@ -143,7 +140,11 @@ public class MainContentFragment extends Fragment {
             @Override
             public void onRefresh() {
                 // TODO: Pull data with ASync
-                refreshData();
+                if (!isLoading) {
+                    refreshData();
+                } else {
+                    mainContentSwipeRefreshLayout.setRefreshing(false);
+                }
             }
         });
 
@@ -160,22 +161,19 @@ public class MainContentFragment extends Fragment {
 
         @Override
         protected Void doInBackground(DataSnapshot... snapshots) {
-            if (snapshots.length == 0) {
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }
-
             // TODO: Create a HashMap<String, Wallpaper> from cloud database and an ArrayList<String> of keys by date order
             // TODO: Populate RecyclerViewAdapter with HashMap<String, WallPaper> and ArrayList<String>
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (dateOrderWallpaperKeys.size() > 0) {
+                        mainContentRecyclerViewAdapter.notifyItemRangeRemoved(0, dateOrderWallpaperKeys.size());
+                    }
+                }
+            });
             dateOrderWallpaperKeys.clear();
             wallpaperHashMap.clear();
-            mainContentRecyclerViewAdapter.notifyItemRangeRemoved(0, mainContentRecyclerViewAdapter.getItemCount());
 
-            final int[] pos = {0};
             for (DataSnapshot postSnapshot : snapshots[0].getChildren()) {
                 String postKey = postSnapshot.getKey();
                 if (!dateOrderWallpaperKeys.contains(postKey)) {
@@ -191,7 +189,6 @@ public class MainContentFragment extends Fragment {
         @Override
         protected void onPostExecute(Void v) {
             super.onPostExecute(v);
-            clearCurrentData = false;
             mainContentSwipeRefreshLayout.setRefreshing(false);
             mainContentRecyclerViewAdapter.notifyItemRangeChanged(0, dateOrderWallpaperKeys.size());
         }
@@ -207,15 +204,6 @@ public class MainContentFragment extends Fragment {
 
         @Override
         protected Void doInBackground(DataSnapshot... snapshots) {
-            if (snapshots.length == 0) {
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }
-
             // TODO: Create a HashMap<String, Wallpaper> from cloud database and an ArrayList<String> of keys by date order
             // TODO: Populate RecyclerViewAdapter with HashMap<String, WallPaper> and ArrayList<String>
 
@@ -228,7 +216,7 @@ public class MainContentFragment extends Fragment {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            mainContentRecyclerViewAdapter.notifyItemInserted(mainContentRecyclerViewAdapter.getItemCount());
+                            mainContentRecyclerViewAdapter.notifyItemInserted(dateOrderWallpaperKeys.size());
                         }
                     });
                 }
@@ -240,7 +228,6 @@ public class MainContentFragment extends Fragment {
         @Override
         protected void onPostExecute(Void v) {
             super.onPostExecute(v);
-            clearCurrentData = false;
             mainContentSwipeRefreshLayout.setRefreshing(false);
         }
     }

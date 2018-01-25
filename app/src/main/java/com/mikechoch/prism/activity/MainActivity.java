@@ -165,9 +165,10 @@ public class MainActivity extends FragmentActivity {
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
-
+                
             }
         });
+
 
         // Initialize uploadImageFab and OnClickListener to take you to ImageUploadActivity
         uploadImageFab = findViewById(R.id.upload_image_fab);
