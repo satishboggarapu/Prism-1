@@ -10,9 +10,12 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -34,6 +37,7 @@ import com.mikechoch.prism.Key;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.ViewPagerAdapter;
 import com.mikechoch.prism.Wallpaper;
+import com.mikechoch.prism.fragments.MainContentFragment;
 
 public class MainActivity extends FragmentActivity {
 
@@ -82,15 +86,15 @@ public class MainActivity extends FragmentActivity {
 //        toolbarTextView.setTypeface(sourceSansProBold);
 //        setSupportActionBar(toolbar);
 
-        tabLayout = findViewById(R.id.tab_layout);
+
         viewPager = findViewById(R.id.view_pager);
         viewPager.setOffscreenPageLimit(5);
-        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(
-                tabLayout));
+        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
         ViewPagerAdapter viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(viewPagerAdapter);
-        tabLayout.setupWithViewPager(viewPager);
 
+        tabLayout = findViewById(R.id.tab_layout);
+        tabLayout.setupWithViewPager(viewPager);
         tabLayout.getTabAt(0).setIcon(R.drawable.ic_image_filter_hdr_white_36dp);
         tabLayout.getTabAt(1).setIcon(R.drawable.ic_flash_white_36dp);
         tabLayout.getTabAt(2).setIcon(R.drawable.ic_magnify_white_36dp);
@@ -165,7 +169,29 @@ public class MainActivity extends FragmentActivity {
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
-                
+                int tabPosition = tab.getPosition();
+                switch (tabPosition) {
+                    case 0:
+                        RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
+                        if (mainContentRecyclerView != null) {
+                            mainContentRecyclerView.smoothScrollToPosition(0);
+                        }
+                        break;
+                    case 1:
+                        RecyclerView trendingContentRecyclerView = MainActivity.this.findViewById(R.id.trending_content_recycler_view);
+                        if (trendingContentRecyclerView != null) {
+                            trendingContentRecyclerView.smoothScrollToPosition(0);
+                        }
+                        break;
+                    case 2:
+                        break;
+                    case 3:
+                        break;
+                    case 4:
+                        break;
+                    default:
+                        break;
+                }
             }
         });
 
