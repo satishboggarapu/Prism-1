@@ -3,17 +3,34 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="8dp"
-    android:layout_marginBottom="28dp"
+    android:layout_marginBottom="36dp"
     android:layout_marginStart="16dp"
     android:layout_marginEnd="16dp"
-    android:background="@android:color/transparent">
+    android:background="@android:color/transparent"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <TextView
+        android:id="@+id/recycler_view_user_text_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="8dp"
+        android:textSize="20sp"
+        android:textColor="@android:color/white"
+        android:textAlignment="center"/>
 
     <RelativeLayout
         android:id="@+id/image_relative_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:foregroundGravity="center">
+        android:layout_below="@id/recycler_view_user_text_view"
+        android:foregroundGravity="center"
+        android:clipChildren="false"
+        android:clipToPadding="false">
 
         <ImageView
             android:id="@+id/recycler_view_image_image_view"
@@ -33,17 +50,48 @@
 
     </RelativeLayout>
 
-    <TextView
-        android:id="@+id/recycler_view_user_text_view"
+    <TableRow
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/image_relative_layout"
-        android:layout_alignStart="@id/image_relative_layout"
         android:layout_alignParentBottom="true"
-        android:gravity="center_horizontal|bottom"
-        android:layout_marginTop="4dp"
-        android:layout_marginStart="4dp"
-        android:textSize="20sp"
-        android:textColor="@android:color/white"/>
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/image_relative_layout"
+        android:layout_marginTop="12dp"
+        android:gravity="center"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <ImageView
+            android:id="@+id/image_like_button"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:clipChildren="false"
+            android:clipToPadding="false"/>
+
+        <ImageView
+            android:id="@+id/image_share_button"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/ic_share_variant_black_36dp"
+            android:tint="@android:color/white"
+            android:clipChildren="false"
+            android:clipToPadding="false"/>
+
+        <ImageView
+            android:id="@+id/image_more_button"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/ic_dots_vertical_black_36dp"
+            android:tint="@android:color/white"
+            android:clipChildren="false"
+            android:clipToPadding="false"/>
+
+    </TableRow>
 
 </RelativeLayout>
