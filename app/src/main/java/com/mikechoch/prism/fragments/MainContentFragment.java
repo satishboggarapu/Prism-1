@@ -140,7 +140,7 @@ public class MainContentFragment extends Fragment {
             @Override
             public void onRefresh() {
                 // TODO: Pull data with ASync
-                if (!isLoading) {
+                if (!isLoading || mainContentRecyclerViewAdapter.getItemCount() < 4) {
                     refreshData();
                 } else {
                     mainContentSwipeRefreshLayout.setRefreshing(false);

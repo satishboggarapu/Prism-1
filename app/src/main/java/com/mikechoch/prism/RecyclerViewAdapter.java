@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
@@ -21,6 +22,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
+import com.mikechoch.prism.fragments.MainContentFragment;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
@@ -102,18 +104,18 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
         public void setData(final Wallpaper wallpaper) {
             this.wallpaper = wallpaper;
-            wallpaperUserTextView.setText("username");
+            wallpaperUserTextView.setText(wallpaper.getUsername());
             Glide.with(context)
                     .load(wallpaper.getImage())
                     .listener(new RequestListener<Drawable>() {
                         @Override
                         public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
-                            return false;
+                            return false;       // todo progressBar should be made invisible here as well right?
                         }
 
                         @Override
                         public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
-                            progressBar.setVisibility(View.INVISIBLE);
+                            progressBar.setVisibility(View.INVISIBLE); // todo Shouldn't this be View.GONE ?
                             return false;
                         }
                     })
