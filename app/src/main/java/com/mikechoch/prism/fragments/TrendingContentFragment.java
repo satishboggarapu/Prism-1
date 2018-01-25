@@ -61,7 +61,7 @@ public class TrendingContentFragment extends Fragment {
         wallpaperHashMap = new HashMap<>();
 
         FirebaseAuth auth = FirebaseAuth.getInstance();
-        databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_USERS_REF).child(auth.getCurrentUser().getUid());
+        databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_REF_USER_PROFILES).child(auth.getCurrentUser().getUid());
         databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -86,7 +86,8 @@ public class TrendingContentFragment extends Fragment {
         trendingContentRecyclerView = view.findViewById(R.id.trending_content_recycler_view);
         trendingContentRecyclerView.setItemAnimator(new DefaultItemAnimator());
         trendingContentRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        trendingContentRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), popularityOrderWallpaperKeys, wallpaperHashMap, null);
+        int screenWidth = getActivity().getWindowManager().getDefaultDisplay().getWidth();
+        trendingContentRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), popularityOrderWallpaperKeys, wallpaperHashMap, null, screenWidth);
         trendingContentRecyclerView.setAdapter(trendingContentRecyclerViewAdapter);
 
         trendingContentSwipeRefreshLayout = view.findViewById(R.id.trending_content_swipe_refresh_layout);
@@ -112,37 +113,8 @@ public class TrendingContentFragment extends Fragment {
         @Override
         protected Void doInBackground(DataSnapshot... v) {
             if (v.length != 0) {
-                // TODO: Create a HashMap<String, Wallpaper> from cloud database and an ArrayList<String> of keys by date order
-                // TODO: Populate RecyclerViewAdapter with HashMap<String, WallPaper> and ArrayList<String>
-                popularityOrderWallpaperKeys.clear();
-                wallpaperHashMap.clear();
-                // for each user
-                for (DataSnapshot dsUser : v[0].getChildren()) {
 
-                    DataSnapshot profileSnap = dsUser.child(Key.DB_USERS_PROFILE_REF);
-                    String userFullName = (String) profileSnap.child(Key.DB_USERS_PROFILE_NAME).getValue();
-                    String userName = (String) profileSnap.child(Key.DB_USERS_PROFILE_USERNAME).getValue();
 
-                    // for pics for each dsUser
-                    for (DataSnapshot snapshot : dsUser.getChildren()) {
-                        String postId = snapshot.getKey();
-                        if (postId.equals(Key.DB_USERS_PROFILE_REF)) {
-                            continue;
-                        }
-                        String imageUri = (String) snapshot.child(Key.POST_IMAGE_URI).getValue();
-                        String caption = (String) snapshot.child(Key.POST_DESC).getValue();
-                        String date = (String) snapshot.child(Key.POST_DATE).getValue();
-                        String time = (String) snapshot.child(Key.POST_TIME).getValue();
-                        Wallpaper wallpaper = new Wallpaper(caption, imageUri, date, time, userName, userFullName);
-                        popularityOrderWallpaperKeys.add(postId);
-                        wallpaperHashMap.put(postId, wallpaper);
-                        getActivity().runOnUiThread(new Runnable() {
-                            public void run() {
-                                trendingContentRecyclerViewAdapter.notifyItemInserted(popularityOrderWallpaperKeys.size() - 1);
-                            }
-                        });
-                    }
-                }
             } else {
                 try {
                     Thread.sleep(2000);

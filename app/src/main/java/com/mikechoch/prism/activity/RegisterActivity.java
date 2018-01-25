@@ -51,7 +51,7 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.register_activity_layout);
 
         auth = FirebaseAuth.getInstance();
-        databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_USERS_REF);
+        databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_REF_USER_PROFILES);
 
         sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
@@ -202,9 +202,9 @@ public class RegisterActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             String uid = auth.getCurrentUser().getUid();
-                            DatabaseReference profileReference = databaseReference.child(uid).child(Key.DB_USERS_PROFILE_REF);
-                            profileReference.child(Key.DB_USERS_PROFILE_NAME).setValue(fullName);
-                            profileReference.child(Key.DB_USERS_PROFILE_USERNAME).setValue(userName);
+                            DatabaseReference profileReference = databaseReference.child(uid).child(Key.DB_REF_USER_PROFILES);
+                            profileReference.child(Key.DB_REF_USER_PROFILE_FULL_NAME).setValue(fullName);
+                            profileReference.child(Key.DB_REF_USER_PROFILE_USERNAME).setValue(userName);
 
                             startActivity(new Intent(RegisterActivity.this, MainActivity.class));
                             finish();

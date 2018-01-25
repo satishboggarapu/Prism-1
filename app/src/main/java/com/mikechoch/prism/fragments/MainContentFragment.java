@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewPager;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -13,11 +12,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.Key;
 import com.mikechoch.prism.R;
@@ -42,8 +41,11 @@ public class MainContentFragment extends Fragment {
     private ArrayList<String> dateOrderWallpaperKeys;
     private HashMap<String, Wallpaper> wallpaperHashMap;
 
+    private boolean clearCurrentData = false;
+
     private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
 
+    private boolean isLoading = false;
 
     public static final MainContentFragment newInstance(int title, String message) {
         MainContentFragment mainContentFragment = new MainContentFragment();
@@ -63,15 +65,39 @@ public class MainContentFragment extends Fragment {
         dateOrderWallpaperKeys = new ArrayList<>();
         wallpaperHashMap = new HashMap<>();
 
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_USERS_REF).child(auth.getCurrentUser().getUid());
-        databaseReference.addValueEventListener(new ValueEventListener() {
+        databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_REF_ALL_POSTS);
+        refreshData();
+    }
+
+
+    private void fetchOldData() {
+        clearCurrentData = false;
+        String lastPostId = dateOrderWallpaperKeys.get(dateOrderWallpaperKeys.size() - 1);
+        long lastPostTimestamp = wallpaperHashMap.get(lastPostId).getTimestamp();
+        Query query = databaseReference.orderByChild("timestamp").startAt(lastPostTimestamp).limitToFirst(5);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    DataSnapshot[] dataSnapshots = {dataSnapshot};
-                    new MainContentTask().execute(dataSnapshots);
-                }
+                System.out.println(dataSnapshot.toString());
+                DataSnapshot[] dataSnapshots = {dataSnapshot};
+                new FetchOldDataTask().execute(dataSnapshots);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+    }
+
+    private void refreshData() {
+        clearCurrentData = true;
+        Query query = databaseReference.orderByChild("timestamp").limitToFirst(5);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                System.out.println(dataSnapshot.toString());
+                DataSnapshot[] dataSnapshots = {dataSnapshot};
+                new RefreshDataTask().execute(dataSnapshots);
             }
 
             @Override
@@ -89,8 +115,26 @@ public class MainContentFragment extends Fragment {
 
         mainContentRecyclerView = view.findViewById(R.id.main_content_recycler_view);
         mainContentRecyclerView.setItemAnimator(new DefaultItemAnimator());
-        mainContentRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        mainContentRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), dateOrderWallpaperKeys, wallpaperHashMap, null);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
+        mainContentRecyclerView.setLayoutManager(linearLayoutManager);
+        mainContentRecyclerView.setItemViewCacheSize(20);
+        mainContentRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                int totalItemCount = linearLayoutManager.getItemCount();
+                int lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
+                if (!isLoading && totalItemCount - 1 == lastVisibleItem) {
+                    isLoading = true;
+                    fetchOldData();
+                } else if (totalItemCount - 1 > lastVisibleItem + 2) {
+                    isLoading = false;
+                }
+            }
+        });
+
+        int screenWidth = getActivity().getWindowManager().getDefaultDisplay().getWidth();
+        mainContentRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), dateOrderWallpaperKeys, wallpaperHashMap, null, screenWidth);
         mainContentRecyclerView.setAdapter(mainContentRecyclerViewAdapter);
 
         mainContentSwipeRefreshLayout = view.findViewById(R.id.main_content_swipe_refresh_layout);
@@ -99,14 +143,14 @@ public class MainContentFragment extends Fragment {
             @Override
             public void onRefresh() {
                 // TODO: Pull data with ASync
-                new MainContentTask().execute();
+                refreshData();
             }
         });
 
         return view;
     }
 
-    private class MainContentTask extends AsyncTask<DataSnapshot, Void, Void> {
+    private class RefreshDataTask extends AsyncTask<DataSnapshot, Void, Void> {
 
         @Override
         protected void onPreExecute() {
@@ -115,45 +159,80 @@ public class MainContentFragment extends Fragment {
 
 
         @Override
-        protected Void doInBackground(DataSnapshot... v) {
-            if (v.length != 0) {
-                // TODO: Create a HashMap<String, Wallpaper> from cloud database and an ArrayList<String> of keys by date order
-                // TODO: Populate RecyclerViewAdapter with HashMap<String, WallPaper> and ArrayList<String>
-                dateOrderWallpaperKeys.clear();
-                wallpaperHashMap.clear();
-                // for each user
-                for (DataSnapshot dsUser : v[0].getChildren()) {
-
-                    DataSnapshot profileSnap = dsUser.child(Key.DB_USERS_PROFILE_REF);
-                    String userFullName = (String) profileSnap.child(Key.DB_USERS_PROFILE_NAME).getValue();
-                    String userName = (String) profileSnap.child(Key.DB_USERS_PROFILE_USERNAME).getValue();
-
-                    // for pics for each dsUser
-                    for (DataSnapshot snapshot : dsUser.getChildren()) {
-                        String postId = snapshot.getKey();
-                        if (postId.equals(Key.DB_USERS_PROFILE_REF)) {
-                            continue;
-                        }
-                        String imageUri = (String) snapshot.child(Key.POST_IMAGE_URI).getValue();
-                        String caption = (String) snapshot.child(Key.POST_DESC).getValue();
-                        String date = (String) snapshot.child(Key.POST_DATE).getValue();
-                        String time = (String) snapshot.child(Key.POST_TIME).getValue();
-                        Wallpaper wallpaper = new Wallpaper(caption, imageUri, date, time, userName, userFullName);
-                        dateOrderWallpaperKeys.add(postId);
-                        wallpaperHashMap.put(postId, wallpaper);
-                        getActivity().runOnUiThread(new Runnable() {
-                            public void run() {
-                                mainContentRecyclerViewAdapter.notifyItemInserted(dateOrderWallpaperKeys.size() - 1);
-                            }
-                        });
-                    }
-                }
-            } else {
+        protected Void doInBackground(DataSnapshot... snapshots) {
+            if (snapshots.length == 0) {
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                return null;
+            }
+
+            // TODO: Create a HashMap<String, Wallpaper> from cloud database and an ArrayList<String> of keys by date order
+            // TODO: Populate RecyclerViewAdapter with HashMap<String, WallPaper> and ArrayList<String>
+            dateOrderWallpaperKeys.clear();
+            wallpaperHashMap.clear();
+            mainContentRecyclerViewAdapter.notifyItemRangeRemoved(0, mainContentRecyclerViewAdapter.getItemCount());
+
+            final int[] pos = {0};
+            for (DataSnapshot postSnapshot : snapshots[0].getChildren()) {
+                String postKey = postSnapshot.getKey();
+                if (!dateOrderWallpaperKeys.contains(postKey)) {
+                    Wallpaper wallpaper = postSnapshot.getValue(Wallpaper.class);
+                    dateOrderWallpaperKeys.add(postKey);
+                    wallpaperHashMap.put(postKey, wallpaper);
+                }
+
+            }
+        return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void v) {
+            super.onPostExecute(v);
+            clearCurrentData = false;
+            mainContentSwipeRefreshLayout.setRefreshing(false);
+            mainContentRecyclerViewAdapter.notifyItemRangeChanged(0, dateOrderWallpaperKeys.size());
+        }
+    }
+
+    private class FetchOldDataTask extends AsyncTask<DataSnapshot, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+
+        @Override
+        protected Void doInBackground(DataSnapshot... snapshots) {
+            if (snapshots.length == 0) {
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+
+            // TODO: Create a HashMap<String, Wallpaper> from cloud database and an ArrayList<String> of keys by date order
+            // TODO: Populate RecyclerViewAdapter with HashMap<String, WallPaper> and ArrayList<String>
+
+            for (DataSnapshot postSnapshot : snapshots[0].getChildren()) {
+                String postKey = postSnapshot.getKey();
+                if (!dateOrderWallpaperKeys.contains(postKey)) {
+                    Wallpaper wallpaper = postSnapshot.getValue(Wallpaper.class);
+                    dateOrderWallpaperKeys.add(postKey);
+                    wallpaperHashMap.put(postKey, wallpaper);
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mainContentRecyclerViewAdapter.notifyItemInserted(mainContentRecyclerViewAdapter.getItemCount());
+                        }
+                    });
+                }
+
             }
             return null;
         }
@@ -161,6 +240,7 @@ public class MainContentFragment extends Fragment {
         @Override
         protected void onPostExecute(Void v) {
             super.onPostExecute(v);
+            clearCurrentData = false;
             mainContentSwipeRefreshLayout.setRefreshing(false);
         }
     }
