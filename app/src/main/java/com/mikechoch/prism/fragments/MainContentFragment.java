@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewPager;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -13,8 +12,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -28,8 +25,6 @@ import com.mikechoch.prism.Wallpaper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
 
 /**
  * Created by mikechoch on 1/22/18.
@@ -50,6 +45,7 @@ public class MainContentFragment extends Fragment {
 
     private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
 
+    private boolean isLoading = false;
 
     public static final MainContentFragment newInstance(int title, String message) {
         MainContentFragment mainContentFragment = new MainContentFragment();
@@ -71,7 +67,6 @@ public class MainContentFragment extends Fragment {
 
         databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_REF_ALL_POSTS);
         refreshData();
-
     }
 
 
@@ -79,13 +74,13 @@ public class MainContentFragment extends Fragment {
         clearCurrentData = false;
         String lastPostId = dateOrderWallpaperKeys.get(dateOrderWallpaperKeys.size() - 1);
         long lastPostTimestamp = wallpaperHashMap.get(lastPostId).getTimestamp();
-        Query query = databaseReference.orderByChild("timestamp").startAt(lastPostTimestamp).limitToFirst(20);
+        Query query = databaseReference.orderByChild("timestamp").startAt(lastPostTimestamp).limitToFirst(5);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 System.out.println(dataSnapshot.toString());
                 DataSnapshot[] dataSnapshots = {dataSnapshot};
-                new MainContentTask().execute(dataSnapshots);
+                new FetchOldDataTask().execute(dataSnapshots);
             }
 
             @Override
@@ -96,13 +91,13 @@ public class MainContentFragment extends Fragment {
 
     private void refreshData() {
         clearCurrentData = true;
-        Query query = databaseReference.orderByChild("timestamp").limitToFirst(20);
+        Query query = databaseReference.orderByChild("timestamp").limitToFirst(5);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 System.out.println(dataSnapshot.toString());
                 DataSnapshot[] dataSnapshots = {dataSnapshot};
-                new MainContentTask().execute(dataSnapshots);
+                new RefreshDataTask().execute(dataSnapshots);
             }
 
             @Override
@@ -120,16 +115,26 @@ public class MainContentFragment extends Fragment {
 
         mainContentRecyclerView = view.findViewById(R.id.main_content_recycler_view);
         mainContentRecyclerView.setItemAnimator(new DefaultItemAnimator());
-        mainContentRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
+        mainContentRecyclerView.setLayoutManager(linearLayoutManager);
         mainContentRecyclerView.setItemViewCacheSize(20);
-        mainContentRecyclerView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
+        mainContentRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
-            public void onScrollChange(View view, int i, int i1, int i2, int i3) {
-                ViewPager viewPager = (ViewPager) mainContentRecyclerView.getParent().getParent().getParent();
-                viewPager.invalidate();
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                int totalItemCount = linearLayoutManager.getItemCount();
+                int lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
+                if (!isLoading && totalItemCount - 1 == lastVisibleItem) {
+                    isLoading = true;
+                    fetchOldData();
+                } else if (totalItemCount - 1 > lastVisibleItem + 2) {
+                    isLoading = false;
+                }
             }
         });
-        mainContentRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), dateOrderWallpaperKeys, wallpaperHashMap, null);
+
+        int screenWidth = getActivity().getWindowManager().getDefaultDisplay().getWidth();
+        mainContentRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), dateOrderWallpaperKeys, wallpaperHashMap, null, screenWidth);
         mainContentRecyclerView.setAdapter(mainContentRecyclerViewAdapter);
 
         mainContentSwipeRefreshLayout = view.findViewById(R.id.main_content_swipe_refresh_layout);
@@ -145,7 +150,7 @@ public class MainContentFragment extends Fragment {
         return view;
     }
 
-    private class MainContentTask extends AsyncTask<DataSnapshot, Void, Void> {
+    private class RefreshDataTask extends AsyncTask<DataSnapshot, Void, Void> {
 
         @Override
         protected void onPreExecute() {
@@ -166,11 +171,11 @@ public class MainContentFragment extends Fragment {
 
             // TODO: Create a HashMap<String, Wallpaper> from cloud database and an ArrayList<String> of keys by date order
             // TODO: Populate RecyclerViewAdapter with HashMap<String, WallPaper> and ArrayList<String>
-            if (clearCurrentData) {
-                dateOrderWallpaperKeys.clear();
-                wallpaperHashMap.clear();
-            }
+            dateOrderWallpaperKeys.clear();
+            wallpaperHashMap.clear();
+            mainContentRecyclerViewAdapter.notifyItemRangeRemoved(0, mainContentRecyclerViewAdapter.getItemCount());
 
+            final int[] pos = {0};
             for (DataSnapshot postSnapshot : snapshots[0].getChildren()) {
                 String postKey = postSnapshot.getKey();
                 if (!dateOrderWallpaperKeys.contains(postKey)) {
@@ -188,7 +193,55 @@ public class MainContentFragment extends Fragment {
             super.onPostExecute(v);
             clearCurrentData = false;
             mainContentSwipeRefreshLayout.setRefreshing(false);
-            mainContentRecyclerViewAdapter.notifyDataSetChanged();
+            mainContentRecyclerViewAdapter.notifyItemRangeChanged(0, dateOrderWallpaperKeys.size());
+        }
+    }
+
+    private class FetchOldDataTask extends AsyncTask<DataSnapshot, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+
+        @Override
+        protected Void doInBackground(DataSnapshot... snapshots) {
+            if (snapshots.length == 0) {
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+
+            // TODO: Create a HashMap<String, Wallpaper> from cloud database and an ArrayList<String> of keys by date order
+            // TODO: Populate RecyclerViewAdapter with HashMap<String, WallPaper> and ArrayList<String>
+
+            for (DataSnapshot postSnapshot : snapshots[0].getChildren()) {
+                String postKey = postSnapshot.getKey();
+                if (!dateOrderWallpaperKeys.contains(postKey)) {
+                    Wallpaper wallpaper = postSnapshot.getValue(Wallpaper.class);
+                    dateOrderWallpaperKeys.add(postKey);
+                    wallpaperHashMap.put(postKey, wallpaper);
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mainContentRecyclerViewAdapter.notifyItemInserted(mainContentRecyclerViewAdapter.getItemCount());
+                        }
+                    });
+                }
+
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void v) {
+            super.onPostExecute(v);
+            clearCurrentData = false;
+            mainContentSwipeRefreshLayout.setRefreshing(false);
         }
     }
 }

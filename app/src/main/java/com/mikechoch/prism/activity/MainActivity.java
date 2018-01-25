@@ -48,9 +48,6 @@ public class MainActivity extends FragmentActivity {
     private ViewPager viewPager;
 
 //    private Toolbar toolbar;
-    private ArrayList<Wallpaper> listOfImages;
-    private HashMap<String, Wallpaper> mapOfImages;
-    private ArrayList<String> listOfPostIDs; // todo sort this by date in future
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -84,10 +81,6 @@ public class MainActivity extends FragmentActivity {
 //        TextView toolbarTextView = findViewById(R.id.toolbar_text_view);
 //        toolbarTextView.setTypeface(sourceSansProBold);
 //        setSupportActionBar(toolbar);
-
-        listOfImages = new ArrayList<>();
-        listOfPostIDs = new ArrayList<>();
-        mapOfImages = new HashMap<>();
 
         tabLayout = findViewById(R.id.tab_layout);
         viewPager = findViewById(R.id.view_pager);

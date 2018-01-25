@@ -35,11 +35,14 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     private ItemListener mListener;
 
-    public RecyclerViewAdapter(Context context, ArrayList<String> wallpaperKeys, HashMap<String, Wallpaper> wallpaperHashMap, ItemListener listener) {
+    private int screenWidth;
+
+    public RecyclerViewAdapter(Context context, ArrayList<String> wallpaperKeys, HashMap<String, Wallpaper> wallpaperHashMap, ItemListener listener, int screenWidth) {
         this.context = context;
         this.wallpaperKeys = wallpaperKeys;
         this.wallpaperHashMap = wallpaperHashMap;
         this.mListener = listener;
+        this.screenWidth = screenWidth;
 
         this.sourceSansProLight = Typeface.createFromAsset(context.getAssets(), "fonts/SourceSansPro-Light.ttf");
         this.sourceSansProBold = Typeface.createFromAsset(context.getAssets(), "fonts/SourceSansPro-Black.ttf");
@@ -83,6 +86,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             wallpaperUserTextView.setTypeface(sourceSansProBold);
 
             wallpaperImageView = itemView.findViewById(R.id.recycler_view_image_image_view);
+            wallpaperImageView.getLayoutParams().width = (int) (screenWidth * 0.6);
         }
 
         public void setData(final Wallpaper wallpaper) {

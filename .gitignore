@@ -10,6 +10,7 @@
 .idea/misc.xml
 app/build.gradle
 app/google-services.json
+.idea/workspace.xml
 .idea/
 .gradle/
 app/app.iml

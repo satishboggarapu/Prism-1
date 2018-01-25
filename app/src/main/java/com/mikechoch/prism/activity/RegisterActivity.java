@@ -25,7 +25,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.mikechoch.prism.Key;
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.helper.TransitionUtils;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -54,8 +53,6 @@ public class RegisterActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.register_activity_layout);
-
-        getWindow().setEnterTransition(TransitionUtils.makeEnterTransition());
 
         auth = FirebaseAuth.getInstance();
         databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_REF_USER_PROFILES);
@@ -240,6 +237,11 @@ public class RegisterActivity extends AppCompatActivity {
                 RegisterActivity.super.onBackPressed();
             }
         });
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
     }
 
     /**

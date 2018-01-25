@@ -5,15 +5,12 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.transition.Fade;
-import android.transition.Transition;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.helper.TransitionUtils;
 
 /**
  * Created by mikechoch on 1/21/18.
@@ -28,8 +25,6 @@ public class SplashActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.splash_activity_layout);
-
-        getWindow().setEnterTransition(TransitionUtils.makeEnterTransition());
 
         iconImageView = findViewById(R.id.icon_image_view);
         rotateAnimation = AnimationUtils.loadAnimation(this, R.anim.icon_rotate);

@@ -24,7 +24,6 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.helper.TransitionUtils;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -46,8 +45,6 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login_activity);
-
-        getWindow().setEnterTransition(TransitionUtils.makeEnterTransition());
 
         auth = FirebaseAuth.getInstance();
 
@@ -173,6 +170,7 @@ public class LoginActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        super.onBackPressed();
         finish();
     }
 
