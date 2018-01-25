@@ -10,6 +10,7 @@ public class Key {
 
 
     public static final String DB_REF_USER_PROFILES = "USERS";
+    public static final String DB_REF_USER_POSTS = "USER_POSTS";
     public static final String DB_REF_USER_PROFILE_FULL_NAME = "fullname";
     public static final String DB_REF_USER_PROFILE_USERNAME = "username";
 

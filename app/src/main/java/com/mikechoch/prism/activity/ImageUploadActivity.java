@@ -68,6 +68,7 @@ public class ImageUploadActivity extends AppCompatActivity {
 
     private StorageReference storageReference;
     private DatabaseReference databaseReference;
+    private DatabaseReference userReference;
     private FirebaseAuth auth;
 
     @Override
@@ -147,7 +148,7 @@ public class ImageUploadActivity extends AppCompatActivity {
         auth = FirebaseAuth.getInstance();
         storageReference = FirebaseStorage.getInstance().getReference();
         databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_REF_ALL_POSTS);
-
+        userReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_REF_USER_PROFILES).child(auth.getCurrentUser().getUid());
         selectImageFromGallery();
     }
 
@@ -160,11 +161,15 @@ public class ImageUploadActivity extends AppCompatActivity {
                 Uri downloadUrl = taskSnapshot.getDownloadUrl();
                 DatabaseReference reference = databaseReference.push();
 
+
                 String imageUri = downloadUrl.toString();
                 String description = imageDescriptionEditText.getText().toString().trim();
                 String username = auth.getCurrentUser().getDisplayName();
                 String userId = auth.getCurrentUser().getUid();
                 Long timestamp = -1 * Calendar.getInstance().getTimeInMillis();
+
+                DatabaseReference postRef = userReference.child(Key.DB_REF_USER_POSTS).child(reference.getKey());
+                postRef.setValue(timestamp);
 
                 Wallpaper wallpaper = new Wallpaper(imageUri, description, username, userId, timestamp);
                 reference.setValue(wallpaper).addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -174,6 +179,7 @@ public class ImageUploadActivity extends AppCompatActivity {
                         finish();
                     }
                 });
+
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
