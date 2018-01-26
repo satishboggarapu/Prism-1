@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -114,6 +115,10 @@ public class MainContentFragment extends Fragment {
         mainContentRecyclerView.setItemAnimator(new DefaultItemAnimator());
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
         mainContentRecyclerView.setLayoutManager(linearLayoutManager);
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(mainContentRecyclerView.getContext(),
+                linearLayoutManager.getOrientation());
+        dividerItemDecoration.setDrawable(getContext().getResources().getDrawable(R.drawable.recycler_view_divider));
+        mainContentRecyclerView.addItemDecoration(dividerItemDecoration);
         mainContentRecyclerView.setItemViewCacheSize(20);
         mainContentRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -191,7 +196,9 @@ public class MainContentFragment extends Fragment {
         protected void onPostExecute(Void v) {
             super.onPostExecute(v);
             mainContentSwipeRefreshLayout.setRefreshing(false);
-            mainContentRecyclerViewAdapter.notifyItemRangeChanged(0, dateOrderWallpaperKeys.size());
+            if (dateOrderWallpaperKeys.size() > 0) {
+                mainContentRecyclerViewAdapter.notifyItemRangeChanged(0, dateOrderWallpaperKeys.size());
+            }
         }
     }
 
