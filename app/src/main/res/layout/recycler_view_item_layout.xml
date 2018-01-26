@@ -2,8 +2,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="10dp"
-    android:layout_marginBottom="16dp"
+    android:layout_marginTop="14dp"
+    android:layout_marginBottom="14dp"
     android:layout_marginStart="16dp"
     android:layout_marginEnd="16dp"
     android:background="@android:color/transparent"
@@ -16,8 +16,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="10dp"
+        android:layout_marginBottom="14dp"
         android:textSize="20sp"
         android:textColor="@android:color/white"
         android:textAlignment="center"/>
@@ -67,7 +66,7 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_below="@id/image_relative_layout"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="14dp"
         android:gravity="center"
         android:clipChildren="false"
         android:clipToPadding="false">
@@ -84,28 +83,27 @@
 
         <ImageView
             android:id="@+id/image_like_button"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:layout_marginStart="8dp"
-            android:layout_marginEnd="12dp"
+            android:layout_marginEnd="8dp"
             android:clipChildren="false"
             android:clipToPadding="false"/>
 
         <ImageView
-            android:id="@+id/image_share_button"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:id="@+id/image_repost_button"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
-            android:src="@drawable/ic_share_variant_black_36dp"
-            android:tint="@android:color/white"
+            android:src="@drawable/ic_camera_iris_black_36dp"
             android:clipChildren="false"
             android:clipToPadding="false"/>
 
         <ImageView
             android:id="@+id/image_more_button"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             android:src="@drawable/ic_dots_vertical_black_36dp"

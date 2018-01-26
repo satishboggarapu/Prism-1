@@ -1,6 +1,9 @@
 package com.mikechoch.prism;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -40,7 +43,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
 
-
     private int screenWidth;
     private int screenHeight;
 
@@ -79,8 +81,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         private ImageView likeHeartAnimationImageView;
         private TextView likesCountTextView;
         private ImageView likeButton;
-        private TextView sharesCountTextView;
-        private ImageView shareButton;
+        private TextView repostsCountTextView;
+        private ImageView repostButton;
         private ImageView moreButton;
         private ProgressBar progressBar;
 
@@ -92,6 +94,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
         public ViewHolder(View itemView) {
             super(itemView);
+
+            final boolean[] liked = {false};
+            final boolean[] reposted = {false};
 
             likeHeartBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.like_heart_animation);
             likeHeartBounceAnimation.setAnimationListener(new Animation.AnimationListener() {
@@ -120,7 +125,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             shareButtonBounceAnimation.setInterpolator(interpolator);
             moreButtonBounceAnimation.setInterpolator(interpolator);
 
-            final boolean[] liked = {false};
+            likeHeartAnimationImageView = itemView.findViewById(R.id.recycler_view_like_heart);
+
             final GestureDetector gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
                 @Override
                 public boolean onSingleTapConfirmed(MotionEvent e) {
@@ -136,10 +142,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
                 @Override
                 public boolean onDoubleTap(MotionEvent e) {
-
                     Drawable heartDrawable = context.getResources().getDrawable(R.drawable.ic_heart_black_36dp);
-                    int color = context.getResources().getColor(R.color.colorAccent);
-                    heartDrawable.setTint(color);
+                    int likeColor = context.getResources().getColor(R.color.colorAccent);
+                    heartDrawable.setTint(likeColor);
                     likeButton.setImageDrawable(heartDrawable);
                     likeButton.startAnimation(likeButtonBounceAnimation);
 
@@ -170,49 +175,70 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                 }
             });
 
-            likeHeartAnimationImageView = itemView.findViewById(R.id.recycler_view_like_heart);
-
             likesCountTextView = itemView.findViewById(R.id.likes_count_text_view);
             likesCountTextView.setTypeface(sourceSansProLight);
-            int count = 20;
-            likesCountTextView.setText(count + " like(s)");
+            int likeCount = 20;
+            likesCountTextView.setText(likeCount + " like(s)");
 
             likeButton = itemView.findViewById(R.id.image_like_button);
             // TODO: get wallpaper current like status and show correct heart
             Drawable heartDrawable = context.getResources().getDrawable(
                     liked[0] ? R.drawable.ic_heart_black_36dp : R.drawable.ic_heart_outline_black_36dp);
-            int color = context.getResources().getColor(
+            int likeColor = context.getResources().getColor(
                     liked[0] ? R.color.colorAccent : android.R.color.white);
-            heartDrawable.setTint(color);
+            heartDrawable.setTint(likeColor);
             likeButton.setImageDrawable(heartDrawable);
             likeButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                        Drawable heartDrawable = context.getResources().getDrawable(
-                                liked[0] ? R.drawable.ic_heart_outline_black_36dp : R.drawable.ic_heart_black_36dp);
-                        int color = context.getResources().getColor(
-                                liked[0] ? android.R.color.white : R.color.colorAccent);
-                        heartDrawable.setTint(color);
-                        likeButton.setImageDrawable(heartDrawable);
-                        likeButton.startAnimation(likeButtonBounceAnimation);
+                    // TODO: change this to modify the specific image to be liked or un-liked
+                    liked[0] = !liked[0];
 
-                        // TODO: change this to modify the specific image to be liked or un-liked
-                        liked[0] = !liked[0];
+                    Drawable heartDrawable = context.getResources().getDrawable(
+                                liked[0] ? R.drawable.ic_heart_black_36dp : R.drawable.ic_heart_outline_black_36dp );
+                    int color = context.getResources().getColor(
+                                liked[0] ? R.color.colorAccent : android.R.color.white);
+                    heartDrawable.setTint(color);
+                    likeButton.setImageDrawable(heartDrawable);
+                    likeButton.startAnimation(likeButtonBounceAnimation);
                 }
             });
 
-            sharesCountTextView = itemView.findViewById(R.id.shares_count_text_view);
-            sharesCountTextView.setTypeface(sourceSansProLight);
-            count = 4;
-            sharesCountTextView.setText(count + " share(s)");
+            repostsCountTextView = itemView.findViewById(R.id.shares_count_text_view);
+            repostsCountTextView.setTypeface(sourceSansProLight);
+            int repostCount = 4;
+            repostsCountTextView.setText(repostCount + " share(s)");
 
-            shareButton = itemView.findViewById(R.id.image_share_button);
-            shareButton.setOnClickListener(new View.OnClickListener() {
+            repostButton = itemView.findViewById(R.id.image_repost_button);
+            int repostColor = context.getResources().getColor(
+                    reposted[0] ? R.color.colorAccent : android.R.color.white);
+            repostButton.setImageTintList(ColorStateList.valueOf(repostColor));
+            repostButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    shareButton.startAnimation(shareButtonBounceAnimation);
+                    AlertDialog.Builder repostConfirmationAlertDialogBuilder = new AlertDialog.Builder(context);
+                    repostConfirmationAlertDialogBuilder.setTitle("This post will show on your profile, are you sure you want to repost?");
+                    repostConfirmationAlertDialogBuilder.setPositiveButton("REPOST", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            reposted[0] = !reposted[0];
+                            // TODO: change this to modify the specific image to be reposted or un-reposted
 
-                    // TODO: share intent
+                            int repostColor = context.getResources().getColor(
+                                    reposted[0] ? R.color.colorAccent : android.R.color.white);
+                            repostButton.setImageTintList(ColorStateList.valueOf(repostColor));
+                            repostButton.startAnimation(shareButtonBounceAnimation);
+                            dialogInterface.dismiss();
+                        }
+                    }).setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.cancel();
+                        }
+                    });
+
+                    AlertDialog repostConfirmationAlertDialog = repostConfirmationAlertDialogBuilder.create();
+                    repostConfirmationAlertDialog.show();
                 }
             });
 
@@ -249,19 +275,5 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                     .into(wallpaperImageView);
         }
 
-    }
-
-    class GestureTap extends GestureDetector.SimpleOnGestureListener {
-        @Override
-        public boolean onDoubleTap(MotionEvent e) {
-            Log.i("onDoubleTap :", "" + e.getAction());
-            return true;
-        }
-
-        @Override
-        public boolean onSingleTapConfirmed(MotionEvent e) {
-            Log.i("onSingleTap :", "" + e.getAction());
-            return true;
-        }
     }
 }
