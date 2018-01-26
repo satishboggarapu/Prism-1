@@ -28,6 +28,7 @@ public class Key {
     public static final String POST_LIKES = "likes";
     public static final String POST_ID = "postid";
 
+    public static final String DB_REF_ACCOUNTS = "ACCOUNTS";
 
 
 }
