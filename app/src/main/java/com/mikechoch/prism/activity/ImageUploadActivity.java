@@ -26,12 +26,7 @@ import android.widget.Toast;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.mikechoch.prism.Default;
@@ -68,6 +63,7 @@ public class ImageUploadActivity extends AppCompatActivity {
 
     private StorageReference storageReference;
     private DatabaseReference databaseReference;
+    private DatabaseReference userReference;
     private FirebaseAuth auth;
 
     @Override
@@ -145,9 +141,9 @@ public class ImageUploadActivity extends AppCompatActivity {
         imageDescriptionEditText.setTypeface(sourceSansProLight);
 
         auth = FirebaseAuth.getInstance();
-        storageReference = FirebaseStorage.getInstance().getReference();
-        databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_REF_ALL_POSTS);
-
+        storageReference = Default.STORAGE_REFERENCE;
+        databaseReference = Default.ALL_POSTS_REFERENCE;
+        userReference = Default.USERS_REFERENCE.child(auth.getCurrentUser().getUid());
         selectImageFromGallery();
     }
 
@@ -160,13 +156,19 @@ public class ImageUploadActivity extends AppCompatActivity {
                 Uri downloadUrl = taskSnapshot.getDownloadUrl();
                 DatabaseReference reference = databaseReference.push();
 
+
                 String imageUri = downloadUrl.toString();
                 String description = imageDescriptionEditText.getText().toString().trim();
                 String username = auth.getCurrentUser().getDisplayName();
                 String userId = auth.getCurrentUser().getUid();
                 Long timestamp = -1 * Calendar.getInstance().getTimeInMillis();
+                int likes = 0;
+                String postId = reference.getKey();
 
-                Wallpaper wallpaper = new Wallpaper(imageUri, description, username, userId, timestamp);
+                DatabaseReference userPostRef = userReference.child(Key.DB_REF_USER_UPLOADS).child(postId);
+                userPostRef.setValue(timestamp);
+
+                Wallpaper wallpaper = new Wallpaper(imageUri, description, username, userId, timestamp, likes, postId);
                 reference.setValue(wallpaper).addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
@@ -174,6 +176,7 @@ public class ImageUploadActivity extends AppCompatActivity {
                         finish();
                     }
                 });
+
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override

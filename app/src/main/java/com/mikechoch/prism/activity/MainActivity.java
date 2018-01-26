@@ -33,6 +33,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.StorageReference;
+import com.mikechoch.prism.CurrentUser;
 import com.mikechoch.prism.Key;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.ViewPagerAdapter;
@@ -80,7 +81,7 @@ public class MainActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity_layout);
-
+        new CurrentUser(); // generates current user's details
 //        toolbar = findViewById(R.id.toolbar);
 //        TextView toolbarTextView = findViewById(R.id.toolbar_text_view);
 //        toolbarTextView.setTypeface(sourceSansProBold);

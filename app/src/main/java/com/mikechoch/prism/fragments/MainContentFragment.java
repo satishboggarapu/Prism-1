@@ -19,6 +19,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.mikechoch.prism.Default;
 import com.mikechoch.prism.Key;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.RecyclerViewAdapter;
@@ -64,7 +65,7 @@ public class MainContentFragment extends Fragment {
         dateOrderWallpaperKeys = new ArrayList<>();
         wallpaperHashMap = new HashMap<>();
 
-        databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_REF_ALL_POSTS);
+        databaseReference = Default.ALL_POSTS_REFERENCE;
         refreshData();
     }
 
@@ -72,7 +73,7 @@ public class MainContentFragment extends Fragment {
     private void fetchOldData() {
         String lastPostId = dateOrderWallpaperKeys.get(dateOrderWallpaperKeys.size() - 1);
         long lastPostTimestamp = wallpaperHashMap.get(lastPostId).getTimestamp();
-        Query query = databaseReference.orderByChild("timestamp").startAt(lastPostTimestamp).limitToFirst(5);
+        Query query = databaseReference.orderByChild(Key.POST_TIMESTAMP).startAt(lastPostTimestamp).limitToFirst(5);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -88,7 +89,7 @@ public class MainContentFragment extends Fragment {
     }
 
     private void refreshData() {
-        Query query = databaseReference.orderByChild("timestamp").limitToFirst(5);
+        Query query = databaseReference.orderByChild(Key.POST_TIMESTAMP).limitToFirst(5);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -145,7 +146,7 @@ public class MainContentFragment extends Fragment {
             @Override
             public void onRefresh() {
                 // TODO: Pull data with ASync
-                if (!isLoading || mainContentRecyclerViewAdapter.getItemCount() < 5) {
+                if (!isLoading || mainContentRecyclerViewAdapter.getItemCount() < 4) {
                     refreshData();
                 } else {
                     mainContentSwipeRefreshLayout.setRefreshing(false);
