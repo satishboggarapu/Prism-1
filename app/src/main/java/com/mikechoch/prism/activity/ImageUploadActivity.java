@@ -156,7 +156,7 @@ public class ImageUploadActivity extends AppCompatActivity {
                 Uri downloadUrl = taskSnapshot.getDownloadUrl();
                 DatabaseReference reference = databaseReference.push();
 
-
+                // attributes for the post
                 String imageUri = downloadUrl.toString();
                 String description = imageDescriptionEditText.getText().toString().trim();
                 String username = auth.getCurrentUser().getDisplayName();
@@ -165,9 +165,11 @@ public class ImageUploadActivity extends AppCompatActivity {
                 int likes = 0;
                 String postId = reference.getKey();
 
+                // add the post to USER_UPLOADS
                 DatabaseReference userPostRef = userReference.child(Key.DB_REF_USER_UPLOADS).child(postId);
                 userPostRef.setValue(timestamp);
 
+                // push the post to DB
                 Wallpaper wallpaper = new Wallpaper(imageUri, description, username, userId, timestamp, likes, postId);
                 reference.setValue(wallpaper).addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override

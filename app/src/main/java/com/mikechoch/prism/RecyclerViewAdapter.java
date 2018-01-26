@@ -349,15 +349,33 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                         if (performLike) {
                             // increment likes count
                             mutableData.child(Key.POST_LIKES).setValue(likes + 1);
+
                             // add postId to user's liked section
                             userReference.child(Key.DB_REF_USER_LIKES).child(postId).setValue(timestamp);
+
                             // add postId and timestamp to userLikedPosts hashMap
                             CurrentUser.userLikedPosts.put(postId, timestamp);
+
+                            // add the user to LIKED_USERS list for this post
+                            postReference.child(Key.DB_REF_POST_LIKED_USERS)
+                                    .child(CurrentUser.user.getUid())
+                                    .setValue(CurrentUser.user.getDisplayName());
                         } else {
                             int dislikeCount = likes == 0 ? 0 : likes - 1;
+
+                            // decrement likes count
                             mutableData.child(Key.POST_LIKES).setValue(dislikeCount);
+
+                            // remove postId from user's liked section
                             userReference.child(Key.DB_REF_USER_LIKES).child(postId).removeValue();
+
+                            // remove the postId and timestamp from userLikedPosts hashMap
                             CurrentUser.userLikedPosts.remove(postId);
+
+                            // remove the user from LIKED_USERS list for this post
+                            postReference.child(Key.DB_REF_POST_LIKED_USERS)
+                                    .child(CurrentUser.user.getUid())
+                                    .removeValue();
                         }
                     }
                     return Transaction.success(mutableData);

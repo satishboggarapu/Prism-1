@@ -19,8 +19,8 @@ public class CurrentUser {
 
     private DatabaseReference userReference;
     private FirebaseAuth auth;
-    private FirebaseUser user;
 
+    public static FirebaseUser user;
     public static HashMap userLikedPosts; // KEY: String postID   VALUE: long timestamp
 
     public CurrentUser() {
