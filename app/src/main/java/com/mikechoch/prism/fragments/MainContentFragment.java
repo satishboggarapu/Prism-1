@@ -12,6 +12,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -19,6 +20,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.mikechoch.prism.CurrentUser;
 import com.mikechoch.prism.Default;
 import com.mikechoch.prism.Key;
 import com.mikechoch.prism.R;
@@ -92,12 +94,14 @@ public class MainContentFragment extends Fragment {
 
     private void refreshData() {
         Query query = databaseReference.orderByChild(Key.POST_TIMESTAMP).limitToFirst(5);
+        CurrentUser.refreshUserLikedPosts();
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     System.out.println(dataSnapshot.toString());
                     DataSnapshot[] dataSnapshots = {dataSnapshot};
+
                     new RefreshDataTask().execute(dataSnapshots);
                 }
             }
@@ -116,12 +120,13 @@ public class MainContentFragment extends Fragment {
         View view = inflater.inflate(R.layout.main_content_fragment_layout, container, false);
 
         mainContentRecyclerView = view.findViewById(R.id.main_content_recycler_view);
-        mainContentRecyclerView.setItemAnimator(new DefaultItemAnimator());
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
-        mainContentRecyclerView.setLayoutManager(linearLayoutManager);
-        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(mainContentRecyclerView.getContext(),
+        DefaultItemAnimator defaultItemAnimator = new DefaultItemAnimator();
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(getActivity(),
                 linearLayoutManager.getOrientation());
         dividerItemDecoration.setDrawable(getContext().getResources().getDrawable(R.drawable.recycler_view_divider));
+        mainContentRecyclerView.setLayoutManager(linearLayoutManager);
+        mainContentRecyclerView.setItemAnimator(defaultItemAnimator);
         mainContentRecyclerView.addItemDecoration(dividerItemDecoration);
         mainContentRecyclerView.setItemViewCacheSize(20);
         mainContentRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -136,6 +141,19 @@ public class MainContentFragment extends Fragment {
                 } else if (totalItemCount - 1 > lastVisibleItem + 2) {
                     isLoading = false;
                 }
+            }
+        });
+        mainContentRecyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
+            @Override
+            public void onChildViewAttachedToWindow(View view) {
+            }
+
+            @Override
+            public void onChildViewDetachedFromWindow(View view) {
+                ImageView heartAnimationImageView = view.findViewById(R.id.recycler_view_like_heart);
+                heartAnimationImageView.setVisibility(View.INVISIBLE);
+                ImageView repostAnimationImageView = view.findViewById(R.id.recycler_view_repost_iris);
+                repostAnimationImageView.setVisibility(View.INVISIBLE);
             }
         });
 
@@ -193,6 +211,7 @@ public class MainContentFragment extends Fragment {
                 }
 
             }
+
         return null;
         }
 
