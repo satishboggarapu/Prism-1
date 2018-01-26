@@ -13,10 +13,11 @@ import java.text.SimpleDateFormat;
 
 public class Default {
 
-    public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MMM dd, yyyy");
-    public static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm");
+    private static final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
 
-    public static final DatabaseReference ALL_POSTS_REFERENCE = FirebaseDatabase.getInstance().getReference().child(Key.DB_REF_ALL_POSTS);
-    public static final DatabaseReference USERS_REFERENCE = FirebaseDatabase.getInstance().getReference().child(Key.DB_REF_USER_PROFILES);
+    public static final DatabaseReference ALL_POSTS_REFERENCE = databaseReference.child(Key.DB_REF_ALL_POSTS);
+    public static final DatabaseReference USERS_REFERENCE = databaseReference.child(Key.DB_REF_USER_PROFILES);
+    public static final DatabaseReference ACCOUNT_REFERENCE = databaseReference.child(Key.DB_REF_ACCOUNTS);
+
     public static final StorageReference STORAGE_REFERENCE = FirebaseStorage.getInstance().getReference();
 }

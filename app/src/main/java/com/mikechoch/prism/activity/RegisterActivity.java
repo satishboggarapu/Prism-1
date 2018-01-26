@@ -23,6 +23,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.mikechoch.prism.Default;
 import com.mikechoch.prism.Key;
 import com.mikechoch.prism.R;
 
@@ -47,7 +48,7 @@ public class RegisterActivity extends AppCompatActivity {
     private FirebaseAuth auth;
     private FirebaseAuth.AuthStateListener authStateListener;
 
-    private DatabaseReference databaseReference;
+    private DatabaseReference usersDatabaseRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +56,7 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.register_activity_layout);
 
         auth = FirebaseAuth.getInstance();
-        databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_REF_USER_PROFILES);
+        usersDatabaseRef = FirebaseDatabase.getInstance().getReference().child(Key.DB_REF_USER_PROFILES);
 
         sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
@@ -205,14 +206,20 @@ public class RegisterActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            String uid = auth.getCurrentUser().getUid();
-                            DatabaseReference profileReference = databaseReference.child(uid);
-                            profileReference.child(Key.DB_REF_USER_PROFILE_FULL_NAME).setValue(fullName);
-                            profileReference.child(Key.DB_REF_USER_PROFILE_USERNAME).setValue(userName);
                             FirebaseUser user = auth.getCurrentUser();
                             if (user != null) {
                                 UserProfileChangeRequest profile = new UserProfileChangeRequest.Builder().setDisplayName(userName).build();
                                 user.updateProfile(profile);
+                                String uid = user.getUid();
+                                String email = user.getEmail();
+
+                                DatabaseReference profileReference = usersDatabaseRef.child(uid);
+                                profileReference.child(Key.DB_REF_USER_PROFILE_FULL_NAME).setValue(fullName);
+                                profileReference.child(Key.DB_REF_USER_PROFILE_USERNAME).setValue(userName);
+
+                                DatabaseReference accountReference = Default.ACCOUNT_REFERENCE.child(userName);
+                                accountReference.setValue(email);
+
                             }
 
                             startActivity(new Intent(RegisterActivity.this, MainActivity.class));

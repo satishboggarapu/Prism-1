@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -23,6 +24,12 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
+import com.mikechoch.prism.Default;
+import com.mikechoch.prism.Key;
 import com.mikechoch.prism.R;
 
 public class LoginActivity extends AppCompatActivity {
@@ -73,7 +80,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 emailTextInputLayout.setErrorEnabled(false);
-                boolean isEmailAndPasswordValid = isEmailValid(emailEditText.getText().toString().trim()) &&
+                boolean isEmailAndPasswordValid = isEmailOrUsernameValid(emailEditText.getText().toString().trim()) &&
                         isPasswordValid(passwordEditText.getText().toString().trim());
                 loginButton.setEnabled(isEmailAndPasswordValid);
                 int color = isEmailAndPasswordValid ? R.color.colorAccent : R.color.disabledButtonColor;
@@ -98,7 +105,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 passwordTextInputLayout.setErrorEnabled(false);
-                boolean isEmailAndPasswordValid = isEmailValid(emailEditText.getText().toString().trim()) &&
+                boolean isEmailAndPasswordValid = isEmailOrUsernameValid(emailEditText.getText().toString().trim()) &&
                         isPasswordValid(passwordEditText.getText().toString().trim());
                 loginButton.setEnabled(isEmailAndPasswordValid);
                 int color = isEmailAndPasswordValid ? R.color.colorAccent : R.color.disabledButtonColor;
@@ -124,31 +131,40 @@ public class LoginActivity extends AppCompatActivity {
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String email = emailEditText.getText().toString().trim();
-                String password = passwordEditText.getText().toString().trim();
-
                 loginButton.setVisibility(View.INVISIBLE);
                 goToRegisterButton.setVisibility(View.INVISIBLE);
                 loginProgressBar.setVisibility(View.VISIBLE);
 
-                // todo perform validation checks before attempting sign in
-                // todo also display a loading spinner until onComplete
+                String emailOrUsername = emailEditText.getText().toString().trim();
+                String password = passwordEditText.getText().toString().trim();
 
-                auth.signInWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                            finish();
-                            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
-                        } else {
-                            passwordTextInputLayout.setError("Invalid email or password");
-                            loginButton.setVisibility(View.VISIBLE);
-                            goToRegisterButton.setVisibility(View.VISIBLE);
-                            loginProgressBar.setVisibility(View.INVISIBLE);
+                // if input is username, extract email from database
+                if (!emailOrUsername.contains("@")) {
+                    DatabaseReference accountReference = Default.ACCOUNT_REFERENCE.child(emailOrUsername);
+                    accountReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.exists()) {
+                                String email = (String) dataSnapshot.getValue();
+                                attemptLogin(email, password);
+                            } else {
+                                toast("Could not find account with your username");
+                                // todo @mike: hide loading spinner here
+                            }
                         }
-                    }
-                });
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            toast("An error occurred");
+                            // todo @mike: hide loading spinner here
+                            Log.wtf("Database Error", databaseError.getDetails());
+                        }
+                    });
+                } else {
+                    attemptLogin(emailOrUsername, password);
+                }
+
+
             }
         });
 
@@ -168,6 +184,27 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
+    private void attemptLogin(String email, String password) {
+        // todo perform validation checks before attempting sign in
+        // todo also display a loading spinner until onComplete
+        auth.signInWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+            @Override
+            public void onComplete(@NonNull Task<AuthResult> task) {
+                if (task.isSuccessful()) {
+                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                    finish();
+                    overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+                } else {
+                    // todo @mike: maybe you should put these in a function because we will be calling these a few times
+                    passwordTextInputLayout.setError("Invalid email/username or password");
+                    loginButton.setVisibility(View.VISIBLE);
+                    goToRegisterButton.setVisibility(View.VISIBLE);
+                    loginProgressBar.setVisibility(View.INVISIBLE);
+                }
+            }
+        });
+    }
+
     @Override
     public void onBackPressed() {
         super.onBackPressed();
@@ -177,12 +214,9 @@ public class LoginActivity extends AppCompatActivity {
     /**
      *
      */
-    private boolean isEmailValid(String email) {
+    private boolean isEmailOrUsernameValid(String email) {
         // TODO: Add more checks for valid email?
-        if (email.contains("@")) {
-            return true;
-        }
-        return false;
+        return true;
     }
 
     /**

@@ -78,9 +78,11 @@ public class MainContentFragment extends Fragment {
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                System.out.println(dataSnapshot.toString());
-                DataSnapshot[] dataSnapshots = {dataSnapshot};
-                new FetchOldDataTask().execute(dataSnapshots);
+                if (dataSnapshot.exists()) {
+                    System.out.println(dataSnapshot.toString());
+                    DataSnapshot[] dataSnapshots = {dataSnapshot};
+                    new FetchOldDataTask().execute(dataSnapshots);
+                }
             }
 
             @Override
@@ -94,9 +96,11 @@ public class MainContentFragment extends Fragment {
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                System.out.println(dataSnapshot.toString());
-                DataSnapshot[] dataSnapshots = {dataSnapshot};
-                new RefreshDataTask().execute(dataSnapshots);
+                if (dataSnapshot.exists()) {
+                    System.out.println(dataSnapshot.toString());
+                    DataSnapshot[] dataSnapshots = {dataSnapshot};
+                    new RefreshDataTask().execute(dataSnapshots);
+                }
             }
 
             @Override
