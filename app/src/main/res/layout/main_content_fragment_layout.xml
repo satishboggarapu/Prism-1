@@ -14,7 +14,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:paddingTop="20dp"
-            android:paddingBottom="60dp"
+            android:paddingBottom="56dp"
             android:clipChildren="false"
             android:clipToPadding="false"
             android:nestedScrollingEnabled="true"

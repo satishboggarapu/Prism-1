@@ -88,7 +88,7 @@ public class TrendingContentFragment extends Fragment {
         trendingContentRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         int screenWidth = getActivity().getWindowManager().getDefaultDisplay().getWidth();
         int screenHeight = getActivity().getWindowManager().getDefaultDisplay().getWidth();
-        trendingContentRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), popularityOrderWallpaperKeys, wallpaperHashMap, null, new int[]{screenWidth, screenHeight});
+        trendingContentRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), popularityOrderWallpaperKeys, wallpaperHashMap, new int[]{screenWidth, screenHeight});
         trendingContentRecyclerView.setAdapter(trendingContentRecyclerViewAdapter);
 
         trendingContentSwipeRefreshLayout = view.findViewById(R.id.trending_content_swipe_refresh_layout);
