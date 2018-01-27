@@ -6,13 +6,17 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.RecyclerView;
@@ -23,34 +27,42 @@ import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Calendar;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.mikechoch.prism.CurrentUser;
+import com.mikechoch.prism.Default;
 import com.mikechoch.prism.Key;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.ViewPagerAdapter;
 import com.mikechoch.prism.Wallpaper;
-import com.mikechoch.prism.fragments.MainContentFragment;
+
+import me.zhanghai.android.materialprogressbar.MaterialProgressBar;
 
 public class MainActivity extends FragmentActivity {
 
-    private final int MY_PERMISSIONS_REQUEST_READ_MEDIA = 1;
-
+    /*
+     * Global variables
+     */
     private FloatingActionButton uploadImageFab;
     private FirebaseAuth auth;
     private DatabaseReference databaseReference;
     private StorageReference storageReference;
+    private DatabaseReference userReference;
+
+    private Uri uploadedImageUri;
+    private String uploadedImageDescription;
 
     private TabLayout tabLayout;
     private ViewPager viewPager;
+    private MaterialProgressBar fabProgressCircle;
+    private CoordinatorLayout mainCoordinateLayout;
 
 //    private Toolbar toolbar;
 
@@ -87,6 +99,12 @@ public class MainActivity extends FragmentActivity {
 //        toolbarTextView.setTypeface(sourceSansProBold);
 //        setSupportActionBar(toolbar);
 
+        auth = FirebaseAuth.getInstance();
+        storageReference = Default.STORAGE_REFERENCE;
+        databaseReference = Default.ALL_POSTS_REFERENCE;
+        userReference = Default.USERS_REFERENCE.child(auth.getCurrentUser().getUid());
+
+        mainCoordinateLayout = findViewById(R.id.main_content);
 
         viewPager = findViewById(R.id.view_pager);
         viewPager.setOffscreenPageLimit(5);
@@ -196,14 +214,14 @@ public class MainActivity extends FragmentActivity {
             }
         });
 
-
         // Initialize uploadImageFab and OnClickListener to take you to ImageUploadActivity
+        fabProgressCircle = findViewById(R.id.fabProgressCircle);
         uploadImageFab = findViewById(R.id.upload_image_fab);
         uploadImageFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent imageUploadIntent = new Intent( MainActivity.this, ImageUploadActivity.class);
-                startActivity(imageUploadIntent);
+                startActivityForResult(imageUploadIntent, Default.IMAGE_UPLOAD_INTENT_REQUEST_CODE);
                 overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
             }
         });
@@ -218,7 +236,7 @@ public class MainActivity extends FragmentActivity {
         // Ask user for write permissions to external storage
         int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_READ_MEDIA);
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, Default.MY_PERMISSIONS_REQUEST_READ_MEDIA);
         }
     }
 
@@ -229,10 +247,116 @@ public class MainActivity extends FragmentActivity {
 //        System.out.println(listOfImages);
     }
 
+    @SuppressLint("SimpleDateFormat")
+    private void uploadImageToCloud() {
+        StorageReference filePath = storageReference.child(Key.STORAGE_IMAGE_REF).child(uploadedImageUri.getLastPathSegment());
+        filePath.putFile(uploadedImageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                DatabaseReference reference = databaseReference.push();
+
+                String imageUri = downloadUrl.toString();
+                String description = uploadedImageDescription;
+                String username = auth.getCurrentUser().getDisplayName();
+                String userId = auth.getCurrentUser().getUid();
+                Long timestamp = -1 * Calendar.getInstance().getTimeInMillis();
+                int likes = 0;
+                String postId = reference.getKey();
+
+                DatabaseReference userPostRef = userReference.child(Key.DB_REF_USER_UPLOADS).child(postId);
+                userPostRef.setValue(timestamp);
+
+                Wallpaper wallpaper = new Wallpaper(imageUri, description, username, userId, timestamp, likes, postId);
+
+                reference.setValue(wallpaper).addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        snackTime("Successfully uploaded image");
+                        fabProgressCircle.setVisibility(View.GONE);
+                    }
+                });
+
+            }
+        }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                new Thread(new Runnable() {
+                    @SuppressLint("NewApi")
+                    @Override
+                    public void run() {
+                        int progress = (int) ((taskSnapshot.getBytesTransferred() * 100) / taskSnapshot.getTotalByteCount());
+                        int currentProgress = fabProgressCircle.getProgress();
+                        while (currentProgress <= progress) {
+                            try {
+                                Thread.sleep(40);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            fabProgressCircle.setProgress(currentProgress++, Build.VERSION.SDK_INT >= Build.VERSION_CODES.N);
+                        }
+                    }
+                }).start();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                snackTime("Failed to upload image");
+                fabProgressCircle.setVisibility(View.GONE);
+                e.printStackTrace();
+            }
+        });
+    }
+
+    /**
+     *
+     */
+    private class ImageUploadTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            uploadImageToCloud();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void v) {
+            super.onPostExecute(v);
+        }
+    }
+
+    /**
+     *
+     */
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch(requestCode) {
+            case Default.IMAGE_UPLOAD_INTENT_REQUEST_CODE:
+                if (resultCode == RESULT_OK) {
+                    fabProgressCircle.setProgress(0);
+                    fabProgressCircle.setVisibility(View.VISIBLE);
+                    uploadedImageUri = Uri.parse(data.getStringExtra("ImageUri"));
+                    uploadedImageDescription = data.getStringExtra("ImageDescription");
+                    new ImageUploadTask().execute();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
+     *
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_READ_MEDIA:
+            case Default.MY_PERMISSIONS_REQUEST_READ_MEDIA:
                 if ((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                     // Code here for allowing write permission
                 }
@@ -243,9 +367,16 @@ public class MainActivity extends FragmentActivity {
     }
 
     /**
-     * Shortcut for toasting a message
+     * Shortcut for displaying a Toast message
      */
     private void toast(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    /**
+     * Shortcut for displaying a Snackbar message
+     */
+    private void snackTime(String message) {
+        Snackbar.make(mainCoordinateLayout, message, Toast.LENGTH_SHORT).show();
     }
 }

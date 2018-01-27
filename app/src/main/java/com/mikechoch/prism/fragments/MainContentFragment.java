@@ -46,6 +46,8 @@ public class MainContentFragment extends Fragment {
 
     private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
 
+    private int screenWidth;
+    private int screenHeight;
     private boolean isLoading = false;
 
     public static final MainContentFragment newInstance(int title, String message) {
@@ -63,6 +65,7 @@ public class MainContentFragment extends Fragment {
 
         int title = getArguments().getInt("Title");
         String message = getArguments().getString("Extra_Message");
+
         dateOrderWallpaperKeys = new ArrayList<>();
         wallpaperHashMap = new HashMap<>();
 
@@ -154,8 +157,8 @@ public class MainContentFragment extends Fragment {
             }
         });
 
-        int screenWidth = getActivity().getWindowManager().getDefaultDisplay().getWidth();
-        int screenHeight = getActivity().getWindowManager().getDefaultDisplay().getHeight();
+        screenWidth = getActivity().getWindowManager().getDefaultDisplay().getWidth();
+        screenHeight = getActivity().getWindowManager().getDefaultDisplay().getHeight();
         mainContentRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), dateOrderWallpaperKeys, wallpaperHashMap, new int[]{screenWidth, screenHeight});
         mainContentRecyclerView.setAdapter(mainContentRecyclerViewAdapter);
 
@@ -233,7 +236,6 @@ public class MainContentFragment extends Fragment {
         protected Void doInBackground(DataSnapshot... snapshots) {
             // TODO: Create a HashMap<String, Wallpaper> from cloud database and an ArrayList<String> of keys by date order
             // TODO: Populate RecyclerViewAdapter with HashMap<String, WallPaper> and ArrayList<String>
-
             for (DataSnapshot postSnapshot : snapshots[0].getChildren()) {
                 String postKey = postSnapshot.getKey();
                 if (!dateOrderWallpaperKeys.contains(postKey)) {
