@@ -1,6 +1,5 @@
 package com.mikechoch.prism;
 
-import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -97,6 +96,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
         private Animation likeHeartBounceAnimation;
         private Animation repostIrisBounceAnimation;
+        private Animation unrepostIrisBounceAnimation;
         private Animation likeButtonBounceAnimation;
         private Animation shareButtonBounceAnimation;
         private Animation moreButtonBounceAnimation;
@@ -113,8 +113,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             userReference = Default.USERS_REFERENCE.child(auth.getCurrentUser().getUid());
 
             // Animation initializations
-            likeHeartBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.like_repost_animation);
-            repostIrisBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.like_repost_animation);
+            likeHeartBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.like_animation);
+            repostIrisBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.repost_animation);
+            unrepostIrisBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.unrepost_animation);
             likeButtonBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.button_bounce_animation);
             shareButtonBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.button_bounce_animation);
             moreButtonBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.button_bounce_animation);
@@ -239,14 +240,14 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                         @Override
                         public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
                             // TODO: @Mike we should hide progressBar here as well and display a toast or something
-                            progressBar.setVisibility(View.INVISIBLE);
+                            progressBar.setVisibility(View.GONE);
                             return false;
                         }
 
                         @Override
                         public boolean onResourceReady(Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
                             // TODO: @Mike we should hide progressBar here as well and display a toast or something
-                            progressBar.setVisibility(View.INVISIBLE);
+                            progressBar.setVisibility(View.GONE);
                             return false;
                         }
                     })
@@ -281,7 +282,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             });
 
             repostIrisAnimationImageView.setVisibility(View.INVISIBLE);
-            repostIrisBounceAnimation.setInterpolator(interpolator);
+//            repostIrisBounceAnimation.setInterpolator(interpolator);
+//            unrepostIrisBounceAnimation.setInterpolator(interpolator);
             repostIrisBounceAnimation.setAnimationListener(new Animation.AnimationListener() {
                 @Override
                 public void onAnimationStart(Animation animation) {
@@ -406,7 +408,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                     ColorStateList repostColor = getRepostColor(true);
                     repostButton.setImageTintList(repostColor);
                     repostButton.startAnimation(shareButtonBounceAnimation);
-                    repostIrisAnimationImageView.startAnimation(repostIrisBounceAnimation);
+                    repostIrisAnimationImageView.startAnimation(unrepostIrisBounceAnimation);
 
                     dialogInterface.dismiss();
                 }
@@ -435,7 +437,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             boolean performLike = !CurrentUser.userLikedPosts.containsKey(postId);
 
             DatabaseReference postReference = Default.ALL_POSTS_REFERENCE.child(postId);
-
             postReference.runTransaction(new Transaction.Handler() {
                 @Override
                 public Transaction.Result doTransaction(MutableData mutableData) {

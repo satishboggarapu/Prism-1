@@ -31,7 +31,8 @@ import java.util.HashMap;
 
 public class TrendingContentFragment extends Fragment {
 
-    private DatabaseReference databaseReference;
+    private int screenWidth;
+    private int screenHeight;
 
     private RecyclerView trendingContentRecyclerView;
     private RecyclerViewAdapter trendingContentRecyclerViewAdapter;
@@ -57,25 +58,12 @@ public class TrendingContentFragment extends Fragment {
 
         int title = getArguments().getInt("Title");
         String message = getArguments().getString("Extra_Message");
+
+        screenWidth = getActivity().getWindowManager().getDefaultDisplay().getWidth();
+        screenHeight = getActivity().getWindowManager().getDefaultDisplay().getHeight();
+
         popularityOrderWallpaperKeys = new ArrayList<>();
         wallpaperHashMap = new HashMap<>();
-
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        databaseReference = FirebaseDatabase.getInstance().getReference().child(Key.DB_REF_USER_PROFILES).child(auth.getCurrentUser().getUid());
-        databaseReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    DataSnapshot[] dataSnapshots = {dataSnapshot};
-                    new TrendingContentTask().execute(dataSnapshots);
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
     }
 
     @Override
@@ -86,8 +74,6 @@ public class TrendingContentFragment extends Fragment {
         trendingContentRecyclerView = view.findViewById(R.id.trending_content_recycler_view);
         trendingContentRecyclerView.setItemAnimator(new DefaultItemAnimator());
         trendingContentRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        int screenWidth = getActivity().getWindowManager().getDefaultDisplay().getWidth();
-        int screenHeight = getActivity().getWindowManager().getDefaultDisplay().getWidth();
         trendingContentRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), popularityOrderWallpaperKeys, wallpaperHashMap, new int[]{screenWidth, screenHeight});
         trendingContentRecyclerView.setAdapter(trendingContentRecyclerViewAdapter);
 
@@ -103,6 +89,9 @@ public class TrendingContentFragment extends Fragment {
         return view;
     }
 
+    /**
+     *
+     */
     private class TrendingContentTask extends AsyncTask<DataSnapshot, Void, Void> {
 
         @Override
@@ -113,15 +102,10 @@ public class TrendingContentFragment extends Fragment {
 
         @Override
         protected Void doInBackground(DataSnapshot... v) {
-            if (v.length != 0) {
-
-
-            } else {
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
             return null;
         }

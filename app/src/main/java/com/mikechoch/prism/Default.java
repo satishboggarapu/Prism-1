@@ -19,4 +19,8 @@ public class Default {
     public static final DatabaseReference ALL_POSTS_REFERENCE = FirebaseDatabase.getInstance().getReference().child(Key.DB_REF_ALL_POSTS);
     public static final DatabaseReference USERS_REFERENCE = FirebaseDatabase.getInstance().getReference().child(Key.DB_REF_USER_PROFILES);
     public static final StorageReference STORAGE_REFERENCE = FirebaseStorage.getInstance().getReference();
+
+    public static final int MY_PERMISSIONS_REQUEST_READ_MEDIA = 99;
+    public static final int IMAGE_UPLOAD_INTENT_REQUEST_CODE = 100;
+    public static final int GALLERY_INTENT_REQUEST = 101;
 }

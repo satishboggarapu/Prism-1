@@ -6,10 +6,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
@@ -19,27 +17,17 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 import com.mikechoch.prism.Default;
-import com.mikechoch.prism.Key;
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.Wallpaper;
 import com.mikechoch.prism.helper.ExifUtil;
 import com.mikechoch.prism.helper.FileChooser;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.Calendar;
 
 /**
  * Created by mikechoch on 1/21/18.
@@ -47,24 +35,23 @@ import java.util.Calendar;
 
 public class ImageUploadActivity extends AppCompatActivity {
 
-    private final int GALLERY_INTENT_REQUEST = 1;
+    /*
+     * Global variables
+     */
+    private int screenWidth;
+    private int screenHeight;
 
-    private float scale;
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
 
     private Uri imageUri;
     private ImageView uploadedImageImageView;
+    private TextInputLayout imageDescriptionTextInputLayout;
     private EditText imageDescriptionEditText;
+    private TextView uploadImageTitle;
     private TextView uploadButtonTextView;
     private CardView uploadButton;
-    private ProgressBar progressBar;
     private Toolbar toolbar;
-
-    private StorageReference storageReference;
-    private DatabaseReference databaseReference;
-    private DatabaseReference userReference;
-    private FirebaseAuth auth;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -91,24 +78,31 @@ public class ImageUploadActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.image_upload_activity_layout);
 
-
+        // Setup the toolbar and back button to return to MainActivity
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        scale = getResources().getDisplayMetrics().density;
-        int displayHeight = getWindowManager().getDefaultDisplay().getHeight();
+        // Get screen height for future use
+        screenWidth = getWindowManager().getDefaultDisplay().getWidth();
+        screenHeight = getWindowManager().getDefaultDisplay().getHeight();
+        // Create two typefaces
         sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
 
-        progressBar = findViewById(R.id.progress_bar);
-        TextView uploadImageTitle = findViewById(R.id.uploaded_image_text_view_title);
+        // Initialize text related UI elements and assign typefaces
+        uploadImageTitle = findViewById(R.id.uploaded_image_text_view_title);
         uploadImageTitle.setTypeface(sourceSansProLight);
-        TextInputLayout textInputLayout = findViewById(R.id.image_description_title_text_input_layout);
-        textInputLayout.setTypeface(sourceSansProLight);
+        imageDescriptionTextInputLayout = findViewById(R.id.image_description_title_text_input_layout);
+        imageDescriptionTextInputLayout.setTypeface(sourceSansProLight);
+        uploadButtonTextView = findViewById(R.id.upload_button_text_view);
+        uploadButtonTextView.setTypeface(sourceSansProLight);
+        imageDescriptionEditText = findViewById(R.id.image_description_edit_text);
+        imageDescriptionEditText.setTypeface(sourceSansProLight);
 
+        // Initialize the uploadedImageImageView and give it 60% of screen height
         uploadedImageImageView = findViewById(R.id.uploaded_image_image_view);
-        uploadedImageImageView.getLayoutParams().height = (int) (displayHeight * 0.6);
+        uploadedImageImageView.getLayoutParams().height = (int) (screenHeight * 0.6);
         uploadedImageImageView.setForeground(getResources().getDrawable(R.drawable.upload_selector));
         uploadedImageImageView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -117,83 +111,42 @@ public class ImageUploadActivity extends AppCompatActivity {
             }
         });
 
+        // Initialize the uploadButton and setup onClickListener
         uploadButton = findViewById(R.id.upload_button_card_view);
         uploadButton.setForeground(getResources().getDrawable(R.drawable.upload_selector));
         uploadButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // TODO: Parth add your cloud storing for the image here
-                // TODO: I think we should make a custom object and store the following but not limited to:
-                // String title
-                // String description
-                // Bitmap image
-                // ... and so on
-                toast("Uploading image..."); // TODO: show loading spinner in future
-                new ImageUploadTask().execute();
+                /*
+                 * When the uploadButton is clicked, a new Intent is created
+                 * This passes the uploaded image data (image and description) back to MainActivity
+                 * Then ImageUploadActivity is finished
+                 */
+                Intent data = new Intent();
+                data.putExtra("ImageUri", imageUri.toString());
+                data.putExtra("ImageDescription", imageDescriptionEditText.getText().toString().trim());
+                setResult(RESULT_OK, data);
+                finish();
 
+                /*
+                 * Old method of getting image in cloud, not connected to MainActivity
+                 * Bad experience for user since they would have to hold on ImageUploadActivity
+                 */
+//                new ImageUploadTask().execute();
             }
         });
 
-        uploadButtonTextView = findViewById(R.id.upload_button_text_view);
-        uploadButtonTextView.setTypeface(sourceSansProLight);
-
-        imageDescriptionEditText = findViewById(R.id.image_description_edit_text);
-        imageDescriptionEditText.setTypeface(sourceSansProLight);
-
-        auth = FirebaseAuth.getInstance();
-        storageReference = Default.STORAGE_REFERENCE;
-        databaseReference = Default.ALL_POSTS_REFERENCE;
-        userReference = Default.USERS_REFERENCE.child(auth.getCurrentUser().getUid());
+        // Ask user to select an image to upload from phone gallery
         selectImageFromGallery();
     }
 
-    @SuppressLint("SimpleDateFormat")
-    private void uploadImageToCloud() {
-        StorageReference filePath = storageReference.child(Key.STORAGE_IMAGE_REF).child(imageUri.getLastPathSegment());
-        filePath.putFile(imageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                DatabaseReference reference = databaseReference.push();
-
-
-                String imageUri = downloadUrl.toString();
-                String description = imageDescriptionEditText.getText().toString().trim();
-                String username = auth.getCurrentUser().getDisplayName();
-                String userId = auth.getCurrentUser().getUid();
-                Long timestamp = -1 * Calendar.getInstance().getTimeInMillis();
-                int likes = 0;
-                String postId = reference.getKey();
-
-                DatabaseReference userPostRef = userReference.child(Key.DB_REF_USER_UPLOADS).child(postId);
-                userPostRef.setValue(timestamp);
-
-                Wallpaper wallpaper = new Wallpaper(imageUri, description, username, userId, timestamp, likes, postId);
-                reference.setValue(wallpaper).addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        toast("Image successfully uploaded");
-                        finish();
-                    }
-                });
-
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                toast("Failed to upload image");
-                e.printStackTrace();
-            }
-        });
-    }
-
     /**
-     *
+     * Create an Intent to ask user to select a image they would like to upload
      */
     private void selectImageFromGallery() {
         Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT);
         galleryIntent.setType("image/*");
-        startActivityForResult(Intent.createChooser(galleryIntent, "Select a picture"), GALLERY_INTENT_REQUEST);
+        startActivityForResult(Intent.createChooser(galleryIntent, "Select a picture"), Default.GALLERY_INTENT_REQUEST);
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
     }
 
@@ -202,7 +155,7 @@ public class ImageUploadActivity extends AppCompatActivity {
      */
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch(requestCode) {
-            case GALLERY_INTENT_REQUEST:
+            case Default.GALLERY_INTENT_REQUEST:
                 if (resultCode == RESULT_OK) {
                     imageUri = data.getData();
                     Bitmap bitmap = null;
@@ -236,30 +189,6 @@ public class ImageUploadActivity extends AppCompatActivity {
         inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
         String path = MediaStore.Images.Media.insertImage(getContentResolver(), inImage, "Title", null);
         return Uri.parse(path);
-    }
-
-    private class ImageUploadTask extends AsyncTask<Void, Void, Void> {
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            uploadedImageImageView.setVisibility(View.INVISIBLE);
-            imageDescriptionEditText.setVisibility(View.INVISIBLE);
-            uploadButton.setVisibility(View.INVISIBLE);
-            progressBar.setVisibility(View.VISIBLE);
-        }
-
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            uploadImageToCloud();
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void v) {
-            super.onPostExecute(v);
-        }
     }
 
     /**

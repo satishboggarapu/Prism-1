@@ -41,13 +41,14 @@ public class ProfileFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        int title = getArguments().getInt("Title");
+        String message = getArguments().getString("Extra_Message");
+
         auth = FirebaseAuth.getInstance();
 
         sourceSansProLight = Typeface.createFromAsset(getContext().getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getContext().getAssets(), "fonts/SourceSansPro-Black.ttf");
 
-        int title = getArguments().getInt("Title");
-        String message = getArguments().getString("Extra_Message");
     }
 
     @Override
