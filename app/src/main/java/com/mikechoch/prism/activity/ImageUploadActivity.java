@@ -162,7 +162,6 @@ public class ImageUploadActivity extends AppCompatActivity {
                 String username = auth.getCurrentUser().getDisplayName();
                 String userId = auth.getCurrentUser().getUid();
                 Long timestamp = -1 * Calendar.getInstance().getTimeInMillis();
-                int likes = 0;
                 String postId = reference.getKey();
 
                 // add the post to USER_UPLOADS
@@ -170,7 +169,7 @@ public class ImageUploadActivity extends AppCompatActivity {
                 userPostRef.setValue(timestamp);
 
                 // push the post to DB
-                Wallpaper wallpaper = new Wallpaper(imageUri, description, username, userId, timestamp, likes, postId);
+                Wallpaper wallpaper = new Wallpaper(imageUri, description, username, userId, timestamp, postId);
                 reference.setValue(wallpaper).addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
