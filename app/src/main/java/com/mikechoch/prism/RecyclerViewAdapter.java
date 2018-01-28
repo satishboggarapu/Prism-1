@@ -456,8 +456,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
                             // add the user to LIKED_USERS list for this post
                             postReference.child(Key.DB_REF_POST_LIKED_USERS)
-                                    .child(CurrentUser.user.getUid())
-                                    .setValue(CurrentUser.user.getDisplayName());
+                                    .child(CurrentUser.user.getDisplayName())
+                                    .setValue(CurrentUser.user.getUid());
                         } else {
                             int dislikeCount = likes == 0 ? 0 : likes - 1;
 
@@ -472,7 +472,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
                             // remove the user from LIKED_USERS list for this post
                             postReference.child(Key.DB_REF_POST_LIKED_USERS)
-                                    .child(CurrentUser.user.getUid())
+                                    .child(CurrentUser.user.getDisplayName())
                                     .removeValue();
                         }
                     }

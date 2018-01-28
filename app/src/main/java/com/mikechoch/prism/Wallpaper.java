@@ -19,14 +19,27 @@ public class Wallpaper {
     public Wallpaper() {
     }
 
-    public Wallpaper(String image, String caption, String username, String uid, long timestamp, int likes, String  postid) {
+//    public Wallpaper(String image, String caption, String username, String uid, long timestamp, int likes, String  postid) {
+//        this.image = image;
+//        this.caption = caption;
+//        this.username = username;
+//        this.uid = uid;
+//        this.timestamp = timestamp;
+//        this.likes = likes;
+//        this.postid = postid;
+//    }
+
+    public Wallpaper(String image, String caption, String username, String uid, long timestamp, String  postid) {
         this.image = image;
         this.caption = caption;
         this.username = username;
         this.uid = uid;
         this.timestamp = timestamp;
-        this.likes = likes;
         this.postid = postid;
+    }
+
+    public void setLikes(int likes) {
+        this.likes = likes;
     }
 
     public String getImage() {

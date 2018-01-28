@@ -206,6 +206,7 @@ public class MainContentFragment extends Fragment {
                 String postKey = postSnapshot.getKey();
                 if (!dateOrderWallpaperKeys.contains(postKey)) {
                     Wallpaper wallpaper = postSnapshot.getValue(Wallpaper.class);
+                    wallpaper.setLikes((int) postSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount());
                     dateOrderWallpaperKeys.add(postKey);
                     wallpaperHashMap.put(postKey, wallpaper);
                 }
@@ -242,6 +243,7 @@ public class MainContentFragment extends Fragment {
                 String postKey = postSnapshot.getKey();
                 if (!dateOrderWallpaperKeys.contains(postKey)) {
                     Wallpaper wallpaper = postSnapshot.getValue(Wallpaper.class);
+                    wallpaper.setLikes((int) postSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount());
                     dateOrderWallpaperKeys.add(postKey);
                     wallpaperHashMap.put(postKey, wallpaper);
                     getActivity().runOnUiThread(new Runnable() {
