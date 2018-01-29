@@ -2,6 +2,7 @@ package com.mikechoch.prism.activity;
 
 import android.content.Intent;
 import android.graphics.Typeface;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -26,6 +27,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.mikechoch.prism.Default;
 import com.mikechoch.prism.Key;
 import com.mikechoch.prism.R;
+
+import java.util.regex.Pattern;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -255,7 +258,7 @@ public class RegisterActivity extends AppCompatActivity {
      *
      */
     private boolean areInputsValid(String fullName, String username, String email, String password) {
-        return (isNameValid(fullName) &&
+        return (isFullNameValid(fullName) &&
                 isUsernameValid(username) &&
                 isEmailValid(email) &&
                 isPasswordValid(password));
@@ -263,24 +266,69 @@ public class RegisterActivity extends AppCompatActivity {
 
     /**
      *
+     * @param fullName
+     * @return
      */
-    private boolean isNameValid(String fullName) {
-        // TODO: Add more checks for valid fullName?
-        if (fullName.length() > 3) {
-            return true;
+    private boolean isFullNameValid(String fullName) {
+        if (fullName.length() < 2) {
+            registerNameTextInputLayout.setError("Name must be at least 2 characters long");
+            return false;
         }
-        return false;
+        if (fullName.length() > 70) {
+            registerNameTextInputLayout.setError("Name cannot be longer than 70 characters");
+            return false;
+        }
+        if (!Pattern.matches("^[a-zA-Z ']+", fullName)) {
+            registerNameTextInputLayout.setError("Name can only have alphabets, space and apostrophe");
+            return false;
+        }
+        if (Pattern.matches(".*(.)\\1{3,}.*", fullName)) {
+            registerNameTextInputLayout.setError("Name cannot have more than 3 repeating characters");
+            return false;
+        }
+        if (Pattern.matches(".*(['])\\1{1,}.*", fullName)) {
+            registerNameTextInputLayout.setError("Name cannot have more than 1 apostrophe");
+            return false;
+        }
+        if (!Character.isAlphabetic(fullName.charAt(0))) {
+            registerNameTextInputLayout.setError("Name must start with a letter");
+            return false;
+        }
+        return true;
     }
 
     /**
      *
+     * @param username
+     * @return
      */
     private boolean isUsernameValid(String username) {
-        // TODO: Add more checks for valid username?
-        if (username.length() > 5) {
-            return true;
+        if (username.length() < 5) {
+            // TODO: show error "Username must be as least 5 characters long"
+            return false;
         }
-        return false;
+        if (username.length() > 30) {
+            // TODO: show error "Username cannot be longer than 30 characters"
+            return false;
+        }
+        if (!Pattern.matches("^[a-z0-9._']+", username)) {
+            // TODO: show error "Username can only contain lowercase letters, numbers, period and underscore"
+            return false;
+        }
+        if (Pattern.matches(".*([a-z0-9])\\1{5,}.*", username)) {
+            // TODO: show error "Username cannot have more than 3 repeating characters"
+            return false;
+        }
+        if (Pattern.matches(".*([._]){2,}.*", username)) {
+            // TODO: show error "Username cannot have more than 1 repeating symbol"
+            return false;
+        }
+        if (!Character.isAlphabetic(username.charAt(0))) {
+            // TODO: show error "Username must start with a letter"
+            return false;
+        }
+        return true;
+
     }
 
     /**
