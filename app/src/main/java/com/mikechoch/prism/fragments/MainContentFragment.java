@@ -20,6 +20,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.mikechoch.prism.CurrentUser;
 import com.mikechoch.prism.Default;
 import com.mikechoch.prism.Key;
 import com.mikechoch.prism.R;
@@ -77,7 +78,7 @@ public class MainContentFragment extends Fragment {
     private void fetchOldData() {
         String lastPostId = dateOrderWallpaperKeys.get(dateOrderWallpaperKeys.size() - 1);
         long lastPostTimestamp = wallpaperHashMap.get(lastPostId).getTimestamp();
-        Query query = databaseReference.orderByChild(Key.POST_TIMESTAMP).startAt(lastPostTimestamp).limitToFirst(5);
+        Query query = databaseReference.orderByChild(Key.POST_TIMESTAMP).startAt(lastPostTimestamp).limitToFirst(Default.IMAGE_LOAD_COUNT);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -95,13 +96,15 @@ public class MainContentFragment extends Fragment {
     }
 
     private void refreshData() {
-        Query query = databaseReference.orderByChild(Key.POST_TIMESTAMP).limitToFirst(5);
+        Query query = databaseReference.orderByChild(Key.POST_TIMESTAMP).limitToFirst(Default.IMAGE_LOAD_COUNT);
+        CurrentUser.refreshUserLikedPosts();
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     System.out.println(dataSnapshot.toString());
                     DataSnapshot[] dataSnapshots = {dataSnapshot};
+
                     new RefreshDataTask().execute(dataSnapshots);
                 }
             }
@@ -135,10 +138,10 @@ public class MainContentFragment extends Fragment {
                 super.onScrolled(recyclerView, dx, dy);
                 int totalItemCount = linearLayoutManager.getItemCount();
                 int lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
-                if (!isLoading && totalItemCount - 1 == lastVisibleItem) {
+                if (!isLoading && totalItemCount - Default.IMAGE_LOAD_THRESHOLD == lastVisibleItem) {
                     isLoading = true;
                     fetchOldData();
-                } else if (totalItemCount - 1 > lastVisibleItem + 2) {
+                } else if (totalItemCount > lastVisibleItem + Default.IMAGE_LOAD_THRESHOLD) {
                     isLoading = false;
                 }
             }
@@ -206,11 +209,13 @@ public class MainContentFragment extends Fragment {
                 String postKey = postSnapshot.getKey();
                 if (!dateOrderWallpaperKeys.contains(postKey)) {
                     Wallpaper wallpaper = postSnapshot.getValue(Wallpaper.class);
+                    wallpaper.setLikes((int) postSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount());
                     dateOrderWallpaperKeys.add(postKey);
                     wallpaperHashMap.put(postKey, wallpaper);
                 }
 
             }
+
         return null;
         }
 
@@ -240,6 +245,7 @@ public class MainContentFragment extends Fragment {
                 String postKey = postSnapshot.getKey();
                 if (!dateOrderWallpaperKeys.contains(postKey)) {
                     Wallpaper wallpaper = postSnapshot.getValue(Wallpaper.class);
+                    wallpaper.setLikes((int) postSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount());
                     dateOrderWallpaperKeys.add(postKey);
                     wallpaperHashMap.put(postKey, wallpaper);
                     getActivity().runOnUiThread(new Runnable() {

@@ -17,16 +17,21 @@ import java.util.Map;
 
 public class CurrentUser {
 
-    private DatabaseReference userReference;
-    private FirebaseAuth auth;
-    private FirebaseUser user;
+    private static DatabaseReference userReference;
+    private static FirebaseAuth auth;
 
+    public static FirebaseUser user;
     public static HashMap userLikedPosts; // KEY: String postID   VALUE: long timestamp
 
     public CurrentUser() {
         auth = FirebaseAuth.getInstance();
         user = auth.getCurrentUser();
         userReference = Default.USERS_REFERENCE.child(user.getUid());
+        refreshUserLikedPosts();
+
+    }
+
+    public static void refreshUserLikedPosts() {
         userLikedPosts = new HashMap<String, Long>();
         userReference.child(Key.DB_REF_USER_LIKES).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -38,8 +43,5 @@ public class CurrentUser {
             @Override
             public void onCancelled(DatabaseError databaseError) { }
         });
-
-
-
     }
 }

@@ -24,4 +24,14 @@ public class Default {
     public static final int MY_PERMISSIONS_REQUEST_READ_MEDIA = 99;
     public static final int IMAGE_UPLOAD_INTENT_REQUEST_CODE = 100;
     public static final int GALLERY_INTENT_REQUEST = 101;
+
+    public static final int IMAGE_LOAD_THRESHOLD = 3;
+    public static final int IMAGE_LOAD_COUNT = 10;
+
+    public static final int VIEW_PAGER_SIZE = 5;
+    public static final int VIEW_PAGER_HOME = 0;
+    public static final int VIEW_PAGER_TRENDING = 1;
+    public static final int VIEW_PAGER_SEARCH = 2;
+    public static final int VIEW_PAGER_NOTIFICATIONS = 3;
+    public static final int VIEW_PAGER_PROFILE = 4;
 }

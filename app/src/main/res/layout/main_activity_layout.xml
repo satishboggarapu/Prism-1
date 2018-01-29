@@ -2,7 +2,7 @@
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main_content"
+    android:id="@+id/main_coordinate_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/backgroundColor"
@@ -15,62 +15,27 @@
         android:fitsSystemWindows="true"
         android:theme="@style/AppTheme.AppBarOverlay">
 
-        <!--<android.support.v7.widget.Toolbar-->
-            <!--android:id="@+id/toolbar"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="36dp"-->
-            <!--android:background="@color/colorPrimary"-->
-            <!--app:title=""-->
-            <!--app:popupTheme="@style/AppTheme.PopupOverlay"-->
-            <!--app:layout_scrollFlags="scroll|enterAlways|snap">-->
-
-            <!--<RelativeLayout-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:gravity="start|center_vertical">-->
-
-                <!--<ImageView-->
-                    <!--android:id="@+id/toolbar_image_view"-->
-                    <!--android:layout_width="wrap_content"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:layout_alignParentStart="true"-->
-                    <!--android:layout_centerVertical="true"-->
-
-                    <!--android:layout_marginEnd="12dp"-->
-                    <!--android:src="@mipmap/ic_prism"/>-->
-
-                <!--<TextView-->
-                    <!--android:id="@+id/toolbar_text_view"-->
-                    <!--android:layout_width="wrap_content"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:layout_toEndOf="@id/toolbar_image_view"-->
-                    <!--android:layout_centerVertical="true"-->
-                    <!--android:text="Prism"-->
-                    <!--android:textSize="20sp"-->
-                    <!--android:textStyle="bold"-->
-                    <!--android:textColor="@android:color/white"/>-->
-
-            <!--</RelativeLayout>-->
-
-        <!--</android.support.v7.widget.Toolbar>-->
-
-        <me.zhanghai.android.materialprogressbar.MaterialProgressBar
-            android:id="@+id/fabProgressCircle"
+        <com.daimajia.numberprogressbar.NumberProgressBar
+            android:id="@+id/image_upload_progress_bar"
             android:layout_width="match_parent"
-            android:layout_height="4dp"
+            android:layout_height="wrap_content"
             android:layout_gravity="top"
             android:indeterminate="false"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
             android:visibility="gone"
-            app:layout_anchor="@id/view_pager"
-            app:layout_anchorGravity="bottom|right|end"
-            app:mpb_progressStyle="horizontal"
-            app:mpb_progressTint="@android:color/white"
-            app:mpb_secondaryProgressTint="@color/secondaryProgressTint"
-            app:mpb_progressBackgroundTint="@color/backgroundColor"
-            style="@style/Widget.MaterialProgressBar.ProgressBar.Horizontal.NoPadding" />
+            app:progress_unreached_color="@color/backgroundColor"
+            app:progress_reached_color="@android:color/white"
+            app:progress_unreached_bar_height="1dp"
+            app:progress_reached_bar_height="2dp"
+            app:progress_text_size="12sp"
+            app:progress_text_color="@android:color/white"
+            app:progress_text_offset="2dp"
+            app:progress_max="100"
+            style="@style/NumberProgressBar_Default"/>
 
         <android.support.design.widget.TabLayout
-            android:id="@+id/tab_layout"
+            android:id="@+id/prism_tab_layout"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             app:tabMode="fixed"
@@ -81,10 +46,10 @@
     </android.support.design.widget.AppBarLayout>
 
     <android.support.v4.view.ViewPager
-        android:id="@+id/view_pager"
+        android:id="@+id/prism_view_pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/tab_layout"
+        android:layout_below="@+id/prism_tab_layout"
         android:nestedScrollingEnabled="true"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
@@ -130,7 +95,7 @@
         android:backgroundTint="@color/colorAccent"
         android:clipChildren="false"
         android:clipToPadding="false"
-        app:layout_anchor="@id/view_pager"
+        app:layout_anchor="@id/prism_view_pager"
         app:layout_anchorGravity="bottom|right|end"
         app:rippleColor="@android:color/white"
         app:borderWidth="0dp"

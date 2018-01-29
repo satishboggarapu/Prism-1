@@ -42,6 +42,9 @@ import java.util.HashMap;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
 
+    private final int PROGRESS_BAR_VIEW_TYPE = 0;
+    private final int PRISM_POST_VIEW_TYPE = 1;
+
     private Context context;
     private Wallpaper wallpaper;
     private ArrayList<String> wallpaperKeys;
@@ -65,9 +68,20 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     }
 
     @Override
+    public int getItemViewType(int position) {
+        return PRISM_POST_VIEW_TYPE;
+    }
+
+    @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(
-                R.layout.recycler_view_item_layout, parent, false));
+        ViewHolder viewHolder = null;
+        switch (viewType) {
+            case PRISM_POST_VIEW_TYPE:
+                viewHolder =  new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(
+                        R.layout.recycler_view_item_layout, parent, false));
+                break;
+        }
+        return viewHolder;
     }
 
     @Override
@@ -448,15 +462,33 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                         if (performLike) {
                             // increment likes count
                             mutableData.child(Key.POST_LIKES).setValue(likes + 1);
+
                             // add postId to user's liked section
                             userReference.child(Key.DB_REF_USER_LIKES).child(postId).setValue(timestamp);
+
                             // add postId and timestamp to userLikedPosts hashMap
                             CurrentUser.userLikedPosts.put(postId, timestamp);
+
+                            // add the user to LIKED_USERS list for this post
+                            postReference.child(Key.DB_REF_POST_LIKED_USERS)
+                                    .child(CurrentUser.user.getDisplayName())
+                                    .setValue(CurrentUser.user.getUid());
                         } else {
                             int dislikeCount = likes == 0 ? 0 : likes - 1;
+
+                            // decrement likes count
                             mutableData.child(Key.POST_LIKES).setValue(dislikeCount);
+
+                            // remove postId from user's liked section
                             userReference.child(Key.DB_REF_USER_LIKES).child(postId).removeValue();
+
+                            // remove the postId and timestamp from userLikedPosts hashMap
                             CurrentUser.userLikedPosts.remove(postId);
+
+                            // remove the user from LIKED_USERS list for this post
+                            postReference.child(Key.DB_REF_POST_LIKED_USERS)
+                                    .child(CurrentUser.user.getDisplayName())
+                                    .removeValue();
                         }
                     }
                     return Transaction.success(mutableData);
