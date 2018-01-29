@@ -49,7 +49,26 @@ public class ExampleUnitTest {
         assertTrue(isUsernameValid("a.alpha.b.beta_"));
         assertTrue(isUsernameValid("a_beta_alpha"));
         assertTrue(isUsernameValid("a1beta2gamma3"));
-        assertTrue(isUsernameValid(""));
+        assertTrue(isUsernameValid("aaaaa"));
+
+        assertFalse(isUsernameValid("a"));
+        assertFalse(isUsernameValid(".parth_bhoiwala"));
+        assertFalse(isUsernameValid("_parth.bhoiwala"));
+        assertFalse(isUsernameValid("14_parth.bhoiwala"));
+        assertFalse(isUsernameValid("9parth"));
+        assertFalse(isUsernameValid("parth bhoiwala"));
+        assertFalse(isUsernameValid("parth bhoiwala_shah"));
+        assertFalse(isUsernameValid("parth bhoiwala shah"));
+        assertFalse(isUsernameValid("ppppppparth_shah"));
+        assertFalse(isUsernameValid("parth__bhoiwala"));
+        assertFalse(isUsernameValid("parth....bhoiwala"));
+        assertFalse(isUsernameValid("parth_._bhoiwala"));
+        assertFalse(isUsernameValid("parth._.bhoiwala"));
+        assertFalse(isUsernameValid("pb._bhoiwala"));
+        assertFalse(isUsernameValid("part4_bhO!wala"));
+        assertFalse(isUsernameValid("pARTH_BH0!W@lA"));
+        assertFalse(isUsernameValid("BHOIWALA"));
+        assertFalse(isUsernameValid("parthbhoiWala"));
     }
 
 
@@ -100,7 +119,7 @@ public class ExampleUnitTest {
             // TODO: show error "Username cannot have more than 3 repeating characters"
             return false;
         }
-        if (Pattern.matches(".*([._])\\1{1,}.*", username)) {
+        if (Pattern.matches(".*([._]){2,}.*", username)) {
             // TODO: show error "Username cannot have more than 1 repeating symbol"
             return false;
         }
