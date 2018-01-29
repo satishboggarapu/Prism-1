@@ -5,10 +5,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.widget.RecyclerView;
+import android.text.format.DateFormat;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -24,6 +28,8 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.bumptech.glide.request.target.Target;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -31,10 +37,13 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
+import com.mikechoch.prism.helper.MyTimeUnit;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by mikechoch on 1/21/18.
@@ -97,7 +106,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public class ViewHolder extends RecyclerView.ViewHolder {
 
         private Wallpaper wallpaper;
+        private ImageView userProfilePicImageView;
         private TextView wallpaperUserTextView;
+        private TextView wallpaperDateTextView;
         private ImageView wallpaperImageView;
         private ImageView likeHeartAnimationImageView;
         private TextView likesCountTextView;
@@ -136,7 +147,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
             // Image initializations
             progressBar = itemView.findViewById(R.id.image_progress_bar);
+            userProfilePicImageView = itemView.findViewById(R.id.recycler_view_profile_pic_image_view);
             wallpaperUserTextView = itemView.findViewById(R.id.recycler_view_user_text_view);
+            wallpaperDateTextView = itemView.findViewById(R.id.recycler_view_date_text_view);
             wallpaperImageView = itemView.findViewById(R.id.recycler_view_image_image_view);
             likeHeartAnimationImageView = itemView.findViewById(R.id.recycler_view_like_heart);
             repostIrisAnimationImageView = itemView.findViewById(R.id.recycler_view_repost_iris);
@@ -158,6 +171,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
              * Post ID
              */
             String postId = this.wallpaper.getPostid();
+            String postDate = getFancyDateDifferenceString(wallpaper.getTimestamp() * -1);
             final int[] likeCount = {this.wallpaper.getLikes()};
 //            int repostCount = this.wallpaper.getReposts();
             boolean postLiked = CurrentUser.userLikedPosts.containsKey(postId);
@@ -166,8 +180,24 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             /*
              * Username
              */
+            // TODO: Using Glide we need to populate the user's profile picture ImageView
+            Glide.with(context)
+                    .asBitmap()
+                    .thumbnail(0.05f)
+                    .load(wallpaper.getImage())
+                    .apply(new RequestOptions().centerCrop())
+                    .into(new BitmapImageViewTarget(userProfilePicImageView) {
+                        @Override
+                        protected void setResource(Bitmap resource) {
+                            RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(context.getResources(), resource);
+                            drawable.setCircular(true);
+                            userProfilePicImageView.setImageDrawable(drawable);
+                        }
+                    });
             wallpaperUserTextView.setText(wallpaper.getUsername());
             wallpaperUserTextView.setTypeface(sourceSansProBold);
+            wallpaperDateTextView.setText(postDate);
+            wallpaperDateTextView.setTypeface(sourceSansProLight);
 
             /*
              * Image
@@ -387,6 +417,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             });
         }
 
+
         /**
          *
          */
@@ -399,6 +430,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             return heartDrawable;
         }
 
+
         /**
          *
          */
@@ -407,6 +439,55 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             int repostColor = context.getResources().getColor(color);
             return ColorStateList.valueOf(repostColor);
         }
+
+
+        /**
+         * Takes in the time of the post and creates a fancy string difference
+         * Examples:
+         * 10 seconds ago     (time < minute)
+         * 20 minutes ago     (time < hour)
+         * 2 hours ago        (time < day)
+         * 4 days ago         (time < week)
+         * January 21         (time < year)
+         * September 18, 2017 (else)
+         */
+        private String getFancyDateDifferenceString(long time) {
+            // Create a calendar object and calculate the timeFromStart
+            Calendar calendar = Calendar.getInstance(Locale.ENGLISH);
+            long timeFromCurrent = calendar.getTimeInMillis() - time;
+
+            // Set the calendar object to be the time of the post
+            calendar.setTimeInMillis(time);
+
+            // Calculate all units for the given timeFromCurrent
+            long secondsTime = TimeUnit.MILLISECONDS.toSeconds(timeFromCurrent);
+            long minutesTime = TimeUnit.MILLISECONDS.toMinutes(timeFromCurrent);
+            long hoursTime = TimeUnit.MILLISECONDS.toHours(timeFromCurrent);
+            long daysTime = TimeUnit.MILLISECONDS.toDays(timeFromCurrent);
+
+            // The fancyDateString will start off as this DateFormat to satisfy the else case
+            String fancyDateString = DateFormat.format("MMM dd, yyyy", calendar).toString();
+
+            // Check each calculated time unit until it is clear the unit of timeFromCurrent
+            if (secondsTime < MyTimeUnit.SECONDS_UNIT) {
+//                String fancyDateTail = secondsTime == 1 ? " second ago" : " seconds ago";
+//                fancyDateString = secondsTime + fancyDateTail;
+                fancyDateString = "Just now";
+            } else if (minutesTime < MyTimeUnit.MINUTES_UNIT) {
+                String fancyDateTail = minutesTime == 1 ? " minute ago" : " minutes ago";
+                fancyDateString = minutesTime + fancyDateTail;
+            } else if (hoursTime < MyTimeUnit.HOURS_UNIT) {
+                String fancyDateTail = hoursTime == 1 ? " hour ago" : " hours ago";
+                fancyDateString = hoursTime + fancyDateTail;
+            } else if (daysTime < MyTimeUnit.DAYS_UNIT) {
+                String fancyDateTail = daysTime == 1 ? " day ago" : " days ago";
+                fancyDateString = daysTime + fancyDateTail;
+            } else if (daysTime < MyTimeUnit.YEARS_UNIT) {
+                fancyDateString = DateFormat.format("MMM dd", calendar).toString();
+            }
+            return fancyDateString;
+        }
+
 
         /**
          *
@@ -434,6 +515,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             });
             return repostConfirmationAlertDialogBuilder.create();
         }
+
 
         /**
          * Check userLikedPosts HashMap if it contains the postId or not. If it contains
