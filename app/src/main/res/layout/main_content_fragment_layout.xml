@@ -13,6 +13,7 @@
             android:id="@+id/main_content_recycler_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_gravity="top|center"
             android:clipChildren="false"
             android:clipToPadding="false"
             android:nestedScrollingEnabled="true"

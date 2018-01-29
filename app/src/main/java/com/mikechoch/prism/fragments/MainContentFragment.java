@@ -47,6 +47,8 @@ public class MainContentFragment extends Fragment {
 
     private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
 
+    private int screenWidth;
+    private int screenHeight;
     private boolean isLoading = false;
 
     public static final MainContentFragment newInstance(int title, String message) {
@@ -64,6 +66,7 @@ public class MainContentFragment extends Fragment {
 
         int title = getArguments().getInt("Title");
         String message = getArguments().getString("Extra_Message");
+
         dateOrderWallpaperKeys = new ArrayList<>();
         wallpaperHashMap = new HashMap<>();
 
@@ -75,7 +78,7 @@ public class MainContentFragment extends Fragment {
     private void fetchOldData() {
         String lastPostId = dateOrderWallpaperKeys.get(dateOrderWallpaperKeys.size() - 1);
         long lastPostTimestamp = wallpaperHashMap.get(lastPostId).getTimestamp();
-        Query query = databaseReference.orderByChild(Key.POST_TIMESTAMP).startAt(lastPostTimestamp).limitToFirst(5);
+        Query query = databaseReference.orderByChild(Key.POST_TIMESTAMP).startAt(lastPostTimestamp).limitToFirst(Default.IMAGE_LOAD_COUNT);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -93,7 +96,7 @@ public class MainContentFragment extends Fragment {
     }
 
     private void refreshData() {
-        Query query = databaseReference.orderByChild(Key.POST_TIMESTAMP).limitToFirst(5);
+        Query query = databaseReference.orderByChild(Key.POST_TIMESTAMP).limitToFirst(Default.IMAGE_LOAD_COUNT);
         CurrentUser.refreshUserLikedPosts();
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -135,10 +138,10 @@ public class MainContentFragment extends Fragment {
                 super.onScrolled(recyclerView, dx, dy);
                 int totalItemCount = linearLayoutManager.getItemCount();
                 int lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
-                if (!isLoading && totalItemCount - 1 == lastVisibleItem) {
+                if (!isLoading && totalItemCount - Default.IMAGE_LOAD_THRESHOLD == lastVisibleItem) {
                     isLoading = true;
                     fetchOldData();
-                } else if (totalItemCount - 1 > lastVisibleItem + 2) {
+                } else if (totalItemCount > lastVisibleItem + Default.IMAGE_LOAD_THRESHOLD) {
                     isLoading = false;
                 }
             }
@@ -157,8 +160,8 @@ public class MainContentFragment extends Fragment {
             }
         });
 
-        int screenWidth = getActivity().getWindowManager().getDefaultDisplay().getWidth();
-        int screenHeight = getActivity().getWindowManager().getDefaultDisplay().getHeight();
+        screenWidth = getActivity().getWindowManager().getDefaultDisplay().getWidth();
+        screenHeight = getActivity().getWindowManager().getDefaultDisplay().getHeight();
         mainContentRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), dateOrderWallpaperKeys, wallpaperHashMap, new int[]{screenWidth, screenHeight});
         mainContentRecyclerView.setAdapter(mainContentRecyclerViewAdapter);
 
@@ -238,7 +241,6 @@ public class MainContentFragment extends Fragment {
         protected Void doInBackground(DataSnapshot... snapshots) {
             // TODO: Create a HashMap<String, Wallpaper> from cloud database and an ArrayList<String> of keys by date order
             // TODO: Populate RecyclerViewAdapter with HashMap<String, WallPaper> and ArrayList<String>
-
             for (DataSnapshot postSnapshot : snapshots[0].getChildren()) {
                 String postKey = postSnapshot.getKey();
                 if (!dateOrderWallpaperKeys.contains(postKey)) {
