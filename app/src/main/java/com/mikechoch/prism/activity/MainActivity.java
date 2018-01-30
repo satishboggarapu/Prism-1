@@ -4,11 +4,15 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -17,15 +21,24 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Calendar;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.daimajia.numberprogressbar.NumberProgressBar;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -40,6 +53,8 @@ import com.mikechoch.prism.Key;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.ViewPagerAdapter;
 import com.mikechoch.prism.Wallpaper;
+
+import org.w3c.dom.Text;
 
 public class MainActivity extends FragmentActivity {
 
@@ -58,10 +73,16 @@ public class MainActivity extends FragmentActivity {
     private TabLayout prismTabLayout;
     private ViewPager prismViewPager;
     private FloatingActionButton uploadImageFab;
-    private NumberProgressBar imageUploadProgressBar;
+    private ImageView imageUploadPreview;
+    private TextView uploadingImageTextView;
+    private ProgressBar imageUploadProgressBar;
+    private RelativeLayout uploadingImageRelativeLayout;
 
     private Animation hideFabAnimation;
     private Animation showFabAnimation;
+
+    private Typeface sourceSansProLight;
+    private Typeface sourceSansProBold;
 
 
     @SuppressLint("NewApi")
@@ -80,6 +101,9 @@ public class MainActivity extends FragmentActivity {
         // Create uploadImageFab showing and hiding animations
         showFabAnimation = createFabShowAnimation(false);
         hideFabAnimation = createFabShowAnimation(true);
+
+        sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
+        sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
 
         // Initialize the mainCoordinateLayout for the MainActivity layout
         mainCoordinateLayout = findViewById(R.id.main_coordinate_layout);
@@ -157,6 +181,10 @@ public class MainActivity extends FragmentActivity {
         });
 
         // Initialize uploadImageFab and OnClickListener to take you to ImageUploadActivity
+        imageUploadPreview = findViewById(R.id.image_upload_preview);
+        uploadingImageTextView = findViewById(R.id.uploading_image_text_view);
+        uploadingImageTextView.setTypeface(sourceSansProLight);
+        uploadingImageRelativeLayout = findViewById(R.id.uploading_image_relative_layout);
         imageUploadProgressBar = findViewById(R.id.image_upload_progress_bar);
         uploadImageFab = findViewById(R.id.upload_image_fab);
         uploadImageFab.setOnClickListener(new View.OnClickListener() {
@@ -168,6 +196,8 @@ public class MainActivity extends FragmentActivity {
             }
         });
 
+        // Check if user is logged in
+        // Otherwise intent to LoginActivity
         auth = FirebaseAuth.getInstance();
         if (auth.getCurrentUser() == null) {
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
@@ -179,6 +209,59 @@ public class MainActivity extends FragmentActivity {
         int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, Default.MY_PERMISSIONS_REQUEST_READ_MEDIA);
+        }
+    }
+
+
+    /**
+     * When a permission is allowed, this function will run and you can
+     * Check for this allow and do something
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case Default.MY_PERMISSIONS_REQUEST_READ_MEDIA:
+                if ((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    // Code here for allowing write permission
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+
+    /**
+     * Called when an activity is intent with startActivityForResult and the result is intent back
+     * This allows you to check the requestCode that came back and do something
+     */
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch(requestCode) {
+            // If requestCode is for ImageUploadActivity
+            case Default.IMAGE_UPLOAD_INTENT_REQUEST_CODE:
+                if (resultCode == RESULT_OK) {
+                    imageUploadProgressBar.setProgress(0);
+                    uploadingImageRelativeLayout.setVisibility(View.VISIBLE);
+                    uploadedImageUri = Uri.parse(data.getStringExtra("ImageUri"));
+                    uploadedImageDescription = data.getStringExtra("ImageDescription");
+                    Glide.with(this)
+                            .asBitmap()
+                            .thumbnail(0.05f)
+                            .load(uploadedImageUri)
+                            .apply(new RequestOptions().centerCrop())
+                            .into(new BitmapImageViewTarget(imageUploadPreview) {
+                                @Override
+                                protected void setResource(Bitmap resource) {
+                                    RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), resource);
+                                    drawable.setCircular(true);
+                                    imageUploadPreview.setImageDrawable(drawable);
+                                }
+                            });
+                    new ImageUploadTask().execute();
+                }
+                break;
+            default:
+                break;
         }
     }
 
@@ -212,6 +295,9 @@ public class MainActivity extends FragmentActivity {
     }
 
 
+    /**
+     *
+     */
     @SuppressLint("SimpleDateFormat")
     private void uploadImageToCloud() {
         StorageReference filePath = storageReference.child(Key.STORAGE_IMAGE_REF).child(uploadedImageUri.getLastPathSegment());
@@ -234,10 +320,38 @@ public class MainActivity extends FragmentActivity {
                 Wallpaper wallpaper = new Wallpaper(imageUri, description, username, userId, timestamp, postId);
 
                 reference.setValue(wallpaper).addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @SuppressLint("NewApi")
                     @Override
                     public void onSuccess(Void aVoid) {
-                        snackTime("Successfully uploaded image");
-                        imageUploadProgressBar.setVisibility(View.GONE);
+                        uploadingImageTextView.setText("Done");
+                        imageUploadProgressBar.setIndeterminate(false);
+                        imageUploadProgressBar.setProgress(100, Build.VERSION.SDK_INT >= Build.VERSION_CODES.N);
+
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                uploadingImageRelativeLayout.setVisibility(View.GONE);
+                                Snackbar snackbar = Snackbar.make(mainCoordinateLayout, "Successfully uploaded image", Snackbar.LENGTH_LONG);
+//                                snackTime("Successfully uploaded image");
+                                View snackbarLayout = snackbar.getView();
+                                ImageView textView = snackbarLayout.findViewById(android.support.design.R.id.action_image);
+                                textView.setBackgroundDrawable(getResources().getDrawable(R.drawable.circle_profile_frame));
+                                Glide.with(MainActivity.this)
+                                        .asBitmap()
+                                        .thumbnail(0.05f)
+                                        .load(wallpaper.getImage())
+                                        .apply(new RequestOptions().centerCrop())
+                                        .into(new BitmapImageViewTarget(textView) {
+                                            @Override
+                                            protected void setResource(Bitmap resource) {
+                                                RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), resource);
+                                                drawable.setCircular(true);
+                                                textView.setImageDrawable(drawable);
+                                            }
+                                        });
+                                snackbar.show();
+                            }
+                        }, 2000);
                     }
                 });
 
@@ -257,11 +371,12 @@ public class MainActivity extends FragmentActivity {
             @Override
             public void onFailure(@NonNull Exception e) {
                 snackTime("Failed to upload image");
-                imageUploadProgressBar.setVisibility(View.GONE);
+                uploadingImageRelativeLayout.setVisibility(View.GONE);
                 e.printStackTrace();
             }
         });
     }
+
 
     /**
      *
@@ -273,9 +388,13 @@ public class MainActivity extends FragmentActivity {
             super.onPreExecute();
         }
 
-
         @Override
         protected Void doInBackground(Void... params) {
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             uploadImageToCloud();
             return null;
         }
@@ -284,42 +403,9 @@ public class MainActivity extends FragmentActivity {
         protected void onPostExecute(Void v) {
             super.onPostExecute(v);
         }
+
     }
 
-    /**
-     *
-     */
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch(requestCode) {
-            case Default.IMAGE_UPLOAD_INTENT_REQUEST_CODE:
-                if (resultCode == RESULT_OK) {
-                    imageUploadProgressBar.setProgress(0);
-                    imageUploadProgressBar.setVisibility(View.VISIBLE);
-                    uploadedImageUri = Uri.parse(data.getStringExtra("ImageUri"));
-                    uploadedImageDescription = data.getStringExtra("ImageDescription");
-                    new ImageUploadTask().execute();
-                }
-                break;
-            default:
-                break;
-        }
-    }
-
-    /**
-     *
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case Default.MY_PERMISSIONS_REQUEST_READ_MEDIA:
-                if ((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    // Code here for allowing write permission
-                }
-                break;
-            default:
-                break;
-        }
-    }
 
     /**
      * Shortcut for displaying a Toast message
@@ -327,6 +413,7 @@ public class MainActivity extends FragmentActivity {
     private void toast(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
+
 
     /**
      * Shortcut for displaying a Snackbar message

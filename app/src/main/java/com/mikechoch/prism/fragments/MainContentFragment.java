@@ -13,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -36,16 +37,20 @@ import java.util.HashMap;
 
 public class MainContentFragment extends Fragment {
 
+    /*
+     * Global variables
+     */
     private DatabaseReference databaseReference;
-
-    private RecyclerView mainContentRecyclerView;
-    private RecyclerViewAdapter mainContentRecyclerViewAdapter;
-    private SwipeRefreshLayout mainContentSwipeRefreshLayout;
 
     private ArrayList<String> dateOrderWallpaperKeys;
     private HashMap<String, Wallpaper> wallpaperHashMap;
 
+    private RecyclerView mainContentRecyclerView;
+    private RecyclerViewAdapter mainContentRecyclerViewAdapter;
+    private ProgressBar mainContentProgress;
+
     private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
+    private SwipeRefreshLayout mainContentSwipeRefreshLayout;
 
     private int screenWidth;
     private int screenHeight;
@@ -67,6 +72,9 @@ public class MainContentFragment extends Fragment {
         int title = getArguments().getInt("Title");
         String message = getArguments().getString("Extra_Message");
 
+        screenWidth = getActivity().getWindowManager().getDefaultDisplay().getWidth();
+        screenHeight = getActivity().getWindowManager().getDefaultDisplay().getHeight();
+
         dateOrderWallpaperKeys = new ArrayList<>();
         wallpaperHashMap = new HashMap<>();
 
@@ -75,53 +83,19 @@ public class MainContentFragment extends Fragment {
     }
 
 
-    private void fetchOldData() {
-        String lastPostId = dateOrderWallpaperKeys.get(dateOrderWallpaperKeys.size() - 1);
-        long lastPostTimestamp = wallpaperHashMap.get(lastPostId).getTimestamp();
-        Query query = databaseReference.orderByChild(Key.POST_TIMESTAMP).startAt(lastPostTimestamp).limitToFirst(Default.IMAGE_LOAD_COUNT);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    System.out.println(dataSnapshot.toString());
-                    DataSnapshot[] dataSnapshots = {dataSnapshot};
-                    new FetchOldDataTask().execute(dataSnapshots);
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-            }
-        });
-    }
-
-    private void refreshData() {
-        Query query = databaseReference.orderByChild(Key.POST_TIMESTAMP).limitToFirst(Default.IMAGE_LOAD_COUNT);
-        CurrentUser.refreshUserLikedPosts();
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    System.out.println(dataSnapshot.toString());
-                    DataSnapshot[] dataSnapshots = {dataSnapshot};
-
-                    new RefreshDataTask().execute(dataSnapshots);
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-    }
-
     @SuppressLint("NewApi")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.main_content_fragment_layout, container, false);
 
+        mainContentProgress = getActivity().findViewById(R.id.main_content_progress_bar);
+
+        /*
+         * The main purpose of this MainContentFragment is to be a Home page of the application
+         * The RecyclerView being created below will show all of the most recent posts
+         * The posts shown will be of people the user follows
+         */
         mainContentRecyclerView = view.findViewById(R.id.main_content_recycler_view);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
         DefaultItemAnimator defaultItemAnimator = new DefaultItemAnimator();
@@ -132,13 +106,21 @@ public class MainContentFragment extends Fragment {
         mainContentRecyclerView.setItemAnimator(defaultItemAnimator);
         mainContentRecyclerView.addItemDecoration(dividerItemDecoration);
         mainContentRecyclerView.setItemViewCacheSize(20);
+
+        /*
+         * The OnScrollListener is handling the toggling of the isLoading boolean
+         * Bottom of the RecyclerView will set isLoading to true and fetchOldData() will be called
+         * Otherwise a threshold is set to call fetchOldData() again and isLoading will become false
+         * As new data is pulled this threshold is met
+         * This avoids conflicts with swipe refreshing while pulling old data
+         */
         mainContentRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
                 int totalItemCount = linearLayoutManager.getItemCount();
                 int lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
-                if (!isLoading && totalItemCount - Default.IMAGE_LOAD_THRESHOLD == lastVisibleItem) {
+                if (!isLoading && (totalItemCount - Default.IMAGE_LOAD_THRESHOLD == lastVisibleItem)) {
                     isLoading = true;
                     fetchOldData();
                 } else if (totalItemCount > lastVisibleItem + Default.IMAGE_LOAD_THRESHOLD) {
@@ -160,18 +142,21 @@ public class MainContentFragment extends Fragment {
             }
         });
 
-        screenWidth = getActivity().getWindowManager().getDefaultDisplay().getWidth();
-        screenHeight = getActivity().getWindowManager().getDefaultDisplay().getHeight();
         mainContentRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), dateOrderWallpaperKeys, wallpaperHashMap, new int[]{screenWidth, screenHeight});
         mainContentRecyclerView.setAdapter(mainContentRecyclerViewAdapter);
 
+        /*
+         * SwipeRefreshLayout OnRefreshListener handles fetching new data from the cloud database
+         * Checks that isLoading is false and the totalItemCount is > then the image threshold
+         * Then will call refreshData
+         * Otherwise stop refreshing
+         */
         mainContentSwipeRefreshLayout = view.findViewById(R.id.main_content_swipe_refresh_layout);
         mainContentSwipeRefreshLayout.setColorSchemeResources(swipeRefreshLayoutColors);
         mainContentSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                // TODO: Pull data with ASync
-                if (!isLoading || mainContentRecyclerViewAdapter.getItemCount() < 4) {
+                if (!isLoading || !(mainContentRecyclerViewAdapter.getItemCount() < Default.IMAGE_LOAD_THRESHOLD)) {
                     refreshData();
                 } else {
                     mainContentSwipeRefreshLayout.setRefreshing(false);
@@ -182,6 +167,35 @@ public class MainContentFragment extends Fragment {
         return view;
     }
 
+
+    /**
+     * Calls the RefreshDataTask after checking if more data exists in the cloud database
+     */
+    private void refreshData() {
+        Query query = databaseReference.orderByChild(Key.POST_TIMESTAMP).limitToFirst(Default.IMAGE_LOAD_COUNT);
+        CurrentUser.refreshUserLikedPosts();
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    System.out.println(dataSnapshot.toString());
+                    DataSnapshot[] dataSnapshots = {dataSnapshot};
+
+                    new RefreshDataTask().execute(dataSnapshots);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+
+    /**
+     * AsyncTask for retrieving most recent data when you open the app or swipe refresh
+     */
     private class RefreshDataTask extends AsyncTask<DataSnapshot, Void, Void> {
 
         @Override
@@ -192,8 +206,11 @@ public class MainContentFragment extends Fragment {
 
         @Override
         protected Void doInBackground(DataSnapshot... snapshots) {
-            // TODO: Create a HashMap<String, Wallpaper> from cloud database and an ArrayList<String> of keys by date order
-            // TODO: Populate RecyclerViewAdapter with HashMap<String, WallPaper> and ArrayList<String>
+            /*
+             * Notify that all RecyclerView data will be cleared and then clear all data structures
+             * Iterate through the DataSnapshot and add all new data to the data structures
+             * Notify RecyclerView after items are added to data structures
+             */
             getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -215,20 +232,47 @@ public class MainContentFragment extends Fragment {
                 }
 
             }
-
         return null;
         }
 
         @Override
         protected void onPostExecute(Void v) {
             super.onPostExecute(v);
+            // Stop refreshing since AsyncTask is finished
+            mainContentProgress.setVisibility(View.GONE);
             mainContentSwipeRefreshLayout.setRefreshing(false);
-            if (dateOrderWallpaperKeys.size() > 0) {
-                mainContentRecyclerViewAdapter.notifyItemRangeChanged(0, dateOrderWallpaperKeys.size());
-            }
+            mainContentRecyclerViewAdapter.notifyDataSetChanged();
         }
     }
 
+
+    /**
+     * Calls the FetchOldDataTask after checking if more data exists in the cloud database
+     */
+    private void fetchOldData() {
+        String lastPostId = dateOrderWallpaperKeys.get(dateOrderWallpaperKeys.size() - 1);
+        long lastPostTimestamp = wallpaperHashMap.get(lastPostId).getTimestamp();
+        Query query = databaseReference.orderByChild(Key.POST_TIMESTAMP).startAt(lastPostTimestamp).limitToFirst(Default.IMAGE_LOAD_COUNT);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    System.out.println(dataSnapshot.toString());
+                    DataSnapshot[] dataSnapshots = {dataSnapshot};
+                    new FetchOldDataTask().execute(dataSnapshots);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+    }
+
+
+    /**
+     * AsyncTask for retrieving older data as you scroll in the RecyclerView
+     */
     private class FetchOldDataTask extends AsyncTask<DataSnapshot, Void, Void> {
 
         @Override
@@ -239,8 +283,10 @@ public class MainContentFragment extends Fragment {
 
         @Override
         protected Void doInBackground(DataSnapshot... snapshots) {
-            // TODO: Create a HashMap<String, Wallpaper> from cloud database and an ArrayList<String> of keys by date order
-            // TODO: Populate RecyclerViewAdapter with HashMap<String, WallPaper> and ArrayList<String>
+            /*
+             * Iterate through the DataSnapshot and add all older data to the data structures
+             * Notify RecyclerView after items are added to data structures
+             */
             for (DataSnapshot postSnapshot : snapshots[0].getChildren()) {
                 String postKey = postSnapshot.getKey();
                 if (!dateOrderWallpaperKeys.contains(postKey)) {
@@ -251,7 +297,9 @@ public class MainContentFragment extends Fragment {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            mainContentRecyclerViewAdapter.notifyItemInserted(dateOrderWallpaperKeys.size());
+                            if (dateOrderWallpaperKeys.size() > 0) {
+                                mainContentRecyclerViewAdapter.notifyItemInserted(dateOrderWallpaperKeys.size());
+                            }
                         }
                     });
                 }
@@ -263,6 +311,7 @@ public class MainContentFragment extends Fragment {
         @Override
         protected void onPostExecute(Void v) {
             super.onPostExecute(v);
+            // Stop refreshing since AsyncTask is finished
             mainContentSwipeRefreshLayout.setRefreshing(false);
         }
     }
