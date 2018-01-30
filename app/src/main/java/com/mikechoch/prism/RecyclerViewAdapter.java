@@ -540,11 +540,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                     if (w == null) {
                         mutableData.setValue(0);
                     } else {
-                        int likes = w.getLikes();
                         if (performLike) {
-                            // increment likes count
-                            mutableData.child(Key.POST_LIKES).setValue(likes + 1);
-
                             // add postId to user's liked section
                             userReference.child(Key.DB_REF_USER_LIKES).child(postId).setValue(timestamp);
 
@@ -556,11 +552,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                                     .child(CurrentUser.user.getDisplayName())
                                     .setValue(CurrentUser.user.getUid());
                         } else {
-                            int dislikeCount = likes == 0 ? 0 : likes - 1;
-
-                            // decrement likes count
-                            mutableData.child(Key.POST_LIKES).setValue(dislikeCount);
-
                             // remove postId from user's liked section
                             userReference.child(Key.DB_REF_USER_LIKES).child(postId).removeValue();
 
