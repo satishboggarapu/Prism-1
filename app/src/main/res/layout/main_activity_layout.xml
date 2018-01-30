@@ -19,42 +19,65 @@
             android:id="@+id/uploading_image_relative_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:layout_marginBottom="2dp"
+            android:layout_marginTop="4dp"
             android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/image_upload_preview"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="8dp"
+                android:src="@drawable/circle_profile_frame"/>
 
             <TextView
                 android:id="@+id/uploading_image_text_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="top|start"
-                android:layout_alignParentStart="true"
                 android:layout_alignParentTop="true"
-                android:layout_marginStart="4dp"
-                android:layout_marginBottom="4dp"
+                android:layout_toEndOf="@id/image_upload_preview"
+                android:layout_marginTop="2dp"
+                android:layout_marginStart="8dp"
                 android:text="Uploading image..."
-                android:textSize="12sp"
+                android:textSize="14sp"
                 android:textColor="@android:color/white" />
 
-            <com.daimajia.numberprogressbar.NumberProgressBar
+            <ProgressBar
                 android:id="@+id/image_upload_progress_bar"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="12dp"
                 android:layout_gravity="center_horizontal"
-                android:layout_alignParentStart="true"
-                android:layout_centerHorizontal="true"
+                android:layout_toEndOf="@id/image_upload_preview"
                 android:layout_below="@id/uploading_image_text_view"
-                android:layout_marginStart="4dp"
-                android:indeterminate="false"
-                app:progress_unreached_color="@color/backgroundColor"
-                app:progress_reached_color="@android:color/white"
-                app:progress_unreached_bar_height="1dp"
-                app:progress_reached_bar_height="2dp"
-                app:progress_text_size="12sp"
-                app:progress_text_color="@android:color/white"
-                app:progress_text_offset="2dp"
-                app:progress_max="100"
-                style="@style/NumberProgressBar_Default"/>
+                android:layout_marginTop="4dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:indeterminate="true"
+                android:max="100"
+                android:indeterminateTint="@android:color/white"
+                style="?android:attr/progressBarStyleHorizontal"/>
+
+            <!--<com.daimajia.numberprogressbar.NumberProgressBar-->
+                <!--android:id="@+id/image_upload_progress_bar"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:layout_gravity="center_horizontal"-->
+                <!--android:layout_alignParentStart="true"-->
+                <!--android:layout_centerHorizontal="true"-->
+                <!--android:layout_below="@id/uploading_image_text_view"-->
+                <!--android:layout_marginStart="4dp"-->
+                <!--android:indeterminate="true"-->
+                <!--app:progress_unreached_color="@color/backgroundColor"-->
+                <!--app:progress_reached_color="@android:color/white"-->
+                <!--app:progress_unreached_bar_height="1dp"-->
+                <!--app:progress_reached_bar_height="2dp"-->
+                <!--app:progress_text_size="12sp"-->
+                <!--app:progress_text_color="@android:color/white"-->
+                <!--app:progress_text_offset="2dp"-->
+                <!--app:progress_max="100"-->
+                <!--style="@style/NumberProgressBar_Default"/>-->
 
         </RelativeLayout>
 

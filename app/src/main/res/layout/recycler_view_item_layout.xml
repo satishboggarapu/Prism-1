@@ -23,9 +23,9 @@
             android:id="@+id/recycler_view_profile_pic_image_view"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:src="@drawable/circle_profile_frame"
             android:layout_alignParentStart="true"
-            android:layout_centerVertical="true" />
+            android:layout_centerVertical="true"
+            android:src="@drawable/circle_profile_frame"/>
 
         <TextView
             android:id="@+id/recycler_view_user_text_view"

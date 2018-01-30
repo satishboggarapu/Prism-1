@@ -4,11 +4,15 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -17,11 +21,14 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -29,6 +36,9 @@ import android.widget.Toast;
 
 import java.util.Calendar;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.daimajia.numberprogressbar.NumberProgressBar;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -63,12 +73,16 @@ public class MainActivity extends FragmentActivity {
     private TabLayout prismTabLayout;
     private ViewPager prismViewPager;
     private FloatingActionButton uploadImageFab;
+    private ImageView imageUploadPreview;
     private TextView uploadingImageTextView;
-    private NumberProgressBar imageUploadProgressBar;
+    private ProgressBar imageUploadProgressBar;
     private RelativeLayout uploadingImageRelativeLayout;
 
     private Animation hideFabAnimation;
     private Animation showFabAnimation;
+
+    private Typeface sourceSansProLight;
+    private Typeface sourceSansProBold;
 
 
     @SuppressLint("NewApi")
@@ -87,6 +101,9 @@ public class MainActivity extends FragmentActivity {
         // Create uploadImageFab showing and hiding animations
         showFabAnimation = createFabShowAnimation(false);
         hideFabAnimation = createFabShowAnimation(true);
+
+        sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
+        sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
 
         // Initialize the mainCoordinateLayout for the MainActivity layout
         mainCoordinateLayout = findViewById(R.id.main_coordinate_layout);
@@ -164,7 +181,9 @@ public class MainActivity extends FragmentActivity {
         });
 
         // Initialize uploadImageFab and OnClickListener to take you to ImageUploadActivity
+        imageUploadPreview = findViewById(R.id.image_upload_preview);
         uploadingImageTextView = findViewById(R.id.uploading_image_text_view);
+        uploadingImageTextView.setTypeface(sourceSansProLight);
         uploadingImageRelativeLayout = findViewById(R.id.uploading_image_relative_layout);
         imageUploadProgressBar = findViewById(R.id.image_upload_progress_bar);
         uploadImageFab = findViewById(R.id.upload_image_fab);
@@ -225,6 +244,19 @@ public class MainActivity extends FragmentActivity {
                     uploadingImageRelativeLayout.setVisibility(View.VISIBLE);
                     uploadedImageUri = Uri.parse(data.getStringExtra("ImageUri"));
                     uploadedImageDescription = data.getStringExtra("ImageDescription");
+                    Glide.with(this)
+                            .asBitmap()
+                            .thumbnail(0.05f)
+                            .load(uploadedImageUri)
+                            .apply(new RequestOptions().centerCrop())
+                            .into(new BitmapImageViewTarget(imageUploadPreview) {
+                                @Override
+                                protected void setResource(Bitmap resource) {
+                                    RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), resource);
+                                    drawable.setCircular(true);
+                                    imageUploadPreview.setImageDrawable(drawable);
+                                }
+                            });
                     new ImageUploadTask().execute();
                 }
                 break;
@@ -288,10 +320,38 @@ public class MainActivity extends FragmentActivity {
                 Wallpaper wallpaper = new Wallpaper(imageUri, description, username, userId, timestamp, postId);
 
                 reference.setValue(wallpaper).addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @SuppressLint("NewApi")
                     @Override
                     public void onSuccess(Void aVoid) {
-                        snackTime("Successfully uploaded image");
-                        uploadingImageRelativeLayout.setVisibility(View.GONE);
+                        uploadingImageTextView.setText("Done");
+                        imageUploadProgressBar.setIndeterminate(false);
+                        imageUploadProgressBar.setProgress(100, Build.VERSION.SDK_INT >= Build.VERSION_CODES.N);
+
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                uploadingImageRelativeLayout.setVisibility(View.GONE);
+                                Snackbar snackbar = Snackbar.make(mainCoordinateLayout, "Successfully uploaded image", Snackbar.LENGTH_LONG);
+//                                snackTime("Successfully uploaded image");
+                                View snackbarLayout = snackbar.getView();
+                                ImageView textView = snackbarLayout.findViewById(android.support.design.R.id.action_image);
+                                textView.setBackgroundDrawable(getResources().getDrawable(R.drawable.circle_profile_frame));
+                                Glide.with(MainActivity.this)
+                                        .asBitmap()
+                                        .thumbnail(0.05f)
+                                        .load(wallpaper.getImage())
+                                        .apply(new RequestOptions().centerCrop())
+                                        .into(new BitmapImageViewTarget(textView) {
+                                            @Override
+                                            protected void setResource(Bitmap resource) {
+                                                RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), resource);
+                                                drawable.setCircular(true);
+                                                textView.setImageDrawable(drawable);
+                                            }
+                                        });
+                                snackbar.show();
+                            }
+                        }, 2000);
                     }
                 });
 
@@ -330,6 +390,11 @@ public class MainActivity extends FragmentActivity {
 
         @Override
         protected Void doInBackground(Void... params) {
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             uploadImageToCloud();
             return null;
         }

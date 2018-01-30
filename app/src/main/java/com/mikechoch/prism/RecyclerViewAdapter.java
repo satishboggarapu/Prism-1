@@ -444,12 +444,12 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         /**
          * Takes in the time of the post and creates a fancy string difference
          * Examples:
-         * 10 seconds ago     (time < minute)
-         * 20 minutes ago     (time < hour)
-         * 2 hours ago        (time < day)
-         * 4 days ago         (time < week)
-         * January 21         (time < year)
-         * September 18, 2017 (else)
+         * 10 seconds ago/Just now      (time < minute)
+         * 20 minutes ago               (time < hour)
+         * 2 hours ago                  (time < day)
+         * 4 days ago                   (time < week)
+         * January 21                   (time < year)
+         * September 18, 2017           (else)
          */
         private String getFancyDateDifferenceString(long time) {
             // Create a calendar object and calculate the timeFromStart
