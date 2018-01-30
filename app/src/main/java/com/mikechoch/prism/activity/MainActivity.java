@@ -242,7 +242,9 @@ public class MainActivity extends FragmentActivity {
             // If requestCode is for ImageUploadActivity
             case Default.IMAGE_UPLOAD_INTENT_REQUEST_CODE:
                 if (resultCode == RESULT_OK) {
+                    uploadingImageTextView.setText("Uploading image...");
                     imageUploadProgressBar.setProgress(0);
+                    imageUploadProgressBar.setIndeterminate(true);
                     uploadingImageRelativeLayout.setVisibility(View.VISIBLE);
                     uploadedImageUri = Uri.parse(data.getStringExtra("ImageUri"));
                     uploadedImageDescription = data.getStringExtra("ImageDescription");
@@ -371,13 +373,13 @@ public class MainActivity extends FragmentActivity {
         }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                MainActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        int progress = (int) ((taskSnapshot.getBytesTransferred() * 100) / taskSnapshot.getTotalByteCount());
-                        imageUploadProgressBar.setProgress(progress);
-                    }
-                });
+//                MainActivity.this.runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        int progress = (int) ((taskSnapshot.getBytesTransferred() * 100) / taskSnapshot.getTotalByteCount());
+//                        imageUploadProgressBar.setProgress(progress);
+//                    }
+//                });
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
