@@ -185,7 +185,6 @@ public class MainActivity extends FragmentActivity {
         // Initialize uploadImageFab and OnClickListener to take you to ImageUploadActivity
         imageUploadPreview = findViewById(R.id.image_upload_preview);
         uploadingImageTextView = findViewById(R.id.uploading_image_text_view);
-        uploadingImageTextView.setTypeface(sourceSansProLight);
         uploadingImageRelativeLayout = findViewById(R.id.uploading_image_relative_layout);
         imageUploadProgressBar = findViewById(R.id.image_upload_progress_bar);
         uploadImageFab = findViewById(R.id.upload_image_fab);
@@ -243,8 +242,9 @@ public class MainActivity extends FragmentActivity {
             case Default.IMAGE_UPLOAD_INTENT_REQUEST_CODE:
                 if (resultCode == RESULT_OK) {
                     uploadingImageTextView.setText("Uploading image...");
+                    uploadingImageTextView.setTypeface(sourceSansProLight);
                     imageUploadProgressBar.setProgress(0);
-                    imageUploadProgressBar.setIndeterminate(true);
+                    imageUploadProgressBar.setIndeterminate(false);
                     uploadingImageRelativeLayout.setVisibility(View.VISIBLE);
                     uploadedImageUri = Uri.parse(data.getStringExtra("ImageUri"));
                     uploadedImageDescription = data.getStringExtra("ImageDescription");
@@ -328,42 +328,13 @@ public class MainActivity extends FragmentActivity {
                     @Override
                     public void onSuccess(Void aVoid) {
                         uploadingImageTextView.setText("Done");
-                        imageUploadProgressBar.setIndeterminate(false);
+                        uploadingImageTextView.setTypeface(sourceSansProBold);
                         imageUploadProgressBar.setProgress(100, Build.VERSION.SDK_INT >= Build.VERSION_CODES.N);
-
-                        // Create the Snackbar
-                        Snackbar snackbar = Snackbar.make(mainCoordinateLayout, "", Snackbar.LENGTH_LONG);
-                        // Get the Snackbar's layout view
-                        Snackbar.SnackbarLayout layout = (Snackbar.SnackbarLayout) snackbar.getView();
-                        // Hide the text
-                        TextView textView = (TextView) layout.findViewById(android.support.design.R.id.snackbar_text);
-                        textView.setVisibility(View.INVISIBLE);
-
-                        // Inflate our custom view
-                        View snackView = getLayoutInflater().inflate(R.layout.snackbar_layout, null);
-                        // Configure the view
-                        ImageView imageView = snackView.findViewById(R.id.snackbar_image_upload);
-                        Glide.with(MainActivity.this)
-                                .asBitmap()
-                                .thumbnail(0.05f)
-                                .load(wallpaper.getImage())
-                                .apply(new RequestOptions().centerCrop())
-                                .into(new BitmapImageViewTarget(imageView) {
-                                    @Override
-                                    protected void setResource(Bitmap resource) {
-                                        RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), resource);
-                                        drawable.setCircular(true);
-                                        imageView.setImageDrawable(drawable);
-                                    }
-                                });
-                        // Add the view to the Snackbar's layout
-                        layout.addView(snackView, 0);
 
                         new Handler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
                                 uploadingImageRelativeLayout.setVisibility(View.GONE);
-                                snackbar.show();
                             }
                         }, 1000);
                     }
@@ -371,15 +342,16 @@ public class MainActivity extends FragmentActivity {
 
             }
         }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+            @SuppressLint("NewApi")
             @Override
             public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-//                MainActivity.this.runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        int progress = (int) ((taskSnapshot.getBytesTransferred() * 100) / taskSnapshot.getTotalByteCount());
-//                        imageUploadProgressBar.setProgress(progress);
-//                    }
-//                });
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        int progress = (int) ((taskSnapshot.getBytesTransferred() * 100) / taskSnapshot.getTotalByteCount());
+                        imageUploadProgressBar.setProgress(progress, Build.VERSION.SDK_INT >= Build.VERSION_CODES.N);
+                    }
+                });
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override

@@ -40,7 +40,7 @@
                 android:layout_toEndOf="@id/image_upload_preview"
                 android:layout_marginTop="2dp"
                 android:layout_marginStart="8dp"
-                android:textSize="14sp"
+                android:textSize="16sp"
                 android:textColor="@android:color/white" />
 
             <ProgressBar
@@ -55,6 +55,8 @@
                 android:layout_marginEnd="8dp"
                 android:max="100"
                 android:indeterminateTint="@android:color/white"
+                android:progressTint="@android:color/white"
+                android:secondaryProgressTint="@android:color/white"
                 style="?android:attr/progressBarStyleHorizontal"/>
 
             <!--<com.daimajia.numberprogressbar.NumberProgressBar-->
