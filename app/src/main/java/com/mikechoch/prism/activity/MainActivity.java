@@ -25,6 +25,8 @@ import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.RecyclerView;
+import android.text.SpannableStringBuilder;
+import android.text.style.ImageSpan;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
@@ -327,31 +329,41 @@ public class MainActivity extends FragmentActivity {
                         imageUploadProgressBar.setIndeterminate(false);
                         imageUploadProgressBar.setProgress(100, Build.VERSION.SDK_INT >= Build.VERSION_CODES.N);
 
+                        // Create the Snackbar
+                        Snackbar snackbar = Snackbar.make(mainCoordinateLayout, "", Snackbar.LENGTH_LONG);
+                        // Get the Snackbar's layout view
+                        Snackbar.SnackbarLayout layout = (Snackbar.SnackbarLayout) snackbar.getView();
+                        // Hide the text
+                        TextView textView = (TextView) layout.findViewById(android.support.design.R.id.snackbar_text);
+                        textView.setVisibility(View.INVISIBLE);
+
+                        // Inflate our custom view
+                        View snackView = getLayoutInflater().inflate(R.layout.snackbar_layout, null);
+                        // Configure the view
+                        ImageView imageView = snackView.findViewById(R.id.snackbar_image_upload);
+                        Glide.with(MainActivity.this)
+                                .asBitmap()
+                                .thumbnail(0.05f)
+                                .load(wallpaper.getImage())
+                                .apply(new RequestOptions().centerCrop())
+                                .into(new BitmapImageViewTarget(imageView) {
+                                    @Override
+                                    protected void setResource(Bitmap resource) {
+                                        RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), resource);
+                                        drawable.setCircular(true);
+                                        imageView.setImageDrawable(drawable);
+                                    }
+                                });
+                        // Add the view to the Snackbar's layout
+                        layout.addView(snackView, 0);
+
                         new Handler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
                                 uploadingImageRelativeLayout.setVisibility(View.GONE);
-                                Snackbar snackbar = Snackbar.make(mainCoordinateLayout, "Successfully uploaded image", Snackbar.LENGTH_LONG);
-//                                snackTime("Successfully uploaded image");
-                                View snackbarLayout = snackbar.getView();
-                                ImageView textView = snackbarLayout.findViewById(android.support.design.R.id.action_image);
-                                textView.setBackgroundDrawable(getResources().getDrawable(R.drawable.circle_profile_frame));
-                                Glide.with(MainActivity.this)
-                                        .asBitmap()
-                                        .thumbnail(0.05f)
-                                        .load(wallpaper.getImage())
-                                        .apply(new RequestOptions().centerCrop())
-                                        .into(new BitmapImageViewTarget(textView) {
-                                            @Override
-                                            protected void setResource(Bitmap resource) {
-                                                RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), resource);
-                                                drawable.setCircular(true);
-                                                textView.setImageDrawable(drawable);
-                                            }
-                                        });
                                 snackbar.show();
                             }
-                        }, 2000);
+                        }, 1000);
                     }
                 });
 
@@ -390,11 +402,6 @@ public class MainActivity extends FragmentActivity {
 
         @Override
         protected Void doInBackground(Void... params) {
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
             uploadImageToCloud();
             return null;
         }
