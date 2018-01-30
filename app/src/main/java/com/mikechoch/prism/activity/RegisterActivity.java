@@ -2,13 +2,11 @@ package com.mikechoch.prism.activity;
 
 import android.content.Intent;
 import android.graphics.Typeface;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,10 +18,16 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseAuthUserCollisionException;
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.Default;
 import com.mikechoch.prism.Key;
 import com.mikechoch.prism.R;
@@ -33,14 +37,14 @@ import java.util.regex.Pattern;
 public class RegisterActivity extends AppCompatActivity {
 
     private ImageView iconImageView;
-    private TextInputLayout registerNameTextInputLayout;
-    private EditText registerNameEditText;
-    private TextInputLayout registerUsernameTextInputLayout;
-    private EditText registerUsernameEditText;
-    private TextInputLayout registerEmailTextInputLayout;
-    private EditText registerEmailEditText;
-    private TextInputLayout registerPasswordTextInputLayout;
-    private EditText registerPasswordEditText;
+    private TextInputLayout fullNameTextInputLayout;
+    private EditText fullNameEditText;
+    private TextInputLayout usernameTextInputLayout;
+    private EditText usernameEditText;
+    private TextInputLayout emailTextInputLayout;
+    private EditText emailEditText;
+    private TextInputLayout passwordTextInputLayout;
+    private EditText passwordEditText;
     private Button registerButton;
     private TextView goToLoginButton;
     private ProgressBar registerProgressBar;
@@ -70,121 +74,28 @@ public class RegisterActivity extends AppCompatActivity {
         iconImageView = findViewById(R.id.icon_image_view);
         iconImageView.getLayoutParams().width = (int) (screenWidth * 0.3);
 
-        registerNameTextInputLayout = findViewById(R.id.register_name_text_input_layout);
-        registerNameTextInputLayout.setTypeface(sourceSansProLight);
-        registerNameEditText = findViewById(R.id.register_name_edit_text);
-        registerNameEditText.setTypeface(sourceSansProLight);
-        registerNameEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+        fullNameTextInputLayout = findViewById(R.id.register_name_text_input_layout);
+        fullNameTextInputLayout.setTypeface(sourceSansProLight);
+        fullNameEditText = findViewById(R.id.register_name_edit_text);
+        fullNameEditText.setTypeface(sourceSansProLight);
 
-            }
+        usernameTextInputLayout = findViewById(R.id.register_username_text_input_layout);
+        usernameTextInputLayout.setTypeface(sourceSansProLight);
+        usernameEditText = findViewById(R.id.register_username_edit_text);
+        usernameEditText.setTypeface(sourceSansProLight);
 
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                registerNameTextInputLayout.setErrorEnabled(false);
-                boolean isEmailAndPasswordValid = areInputsValid(registerNameEditText.getText().toString().trim(),
-                        registerUsernameEditText.getText().toString().trim(),
-                        registerEmailEditText.getText().toString().trim(),
-                        registerPasswordEditText.getText().toString().trim());
-                registerButton.setEnabled(isEmailAndPasswordValid);
-                int color = isEmailAndPasswordValid ? R.color.colorAccent : R.color.disabledButtonColor;
-                registerButton.setBackgroundTintList(getResources().getColorStateList(color));
-            }
+        emailTextInputLayout = findViewById(R.id.register_email_text_input_layout);
+        emailTextInputLayout.setTypeface(sourceSansProLight);
+        emailEditText = findViewById(R.id.register_email_edit_text);
+        emailEditText.setTypeface(sourceSansProLight);
 
-            @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
-        });
-
-        registerUsernameTextInputLayout = findViewById(R.id.register_username_text_input_layout);
-        registerUsernameTextInputLayout.setTypeface(sourceSansProLight);
-        registerUsernameEditText = findViewById(R.id.register_username_edit_text);
-        registerUsernameEditText.setTypeface(sourceSansProLight);
-        registerUsernameEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                registerUsernameTextInputLayout.setErrorEnabled(false);
-                boolean isEmailAndPasswordValid = areInputsValid(registerNameEditText.getText().toString().trim(),
-                        registerUsernameEditText.getText().toString().trim(),
-                        registerEmailEditText.getText().toString().trim(),
-                        registerPasswordEditText.getText().toString().trim());
-                registerButton.setEnabled(isEmailAndPasswordValid);
-                int color = isEmailAndPasswordValid ? R.color.colorAccent : R.color.disabledButtonColor;
-                registerButton.setBackgroundTintList(getResources().getColorStateList(color));
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
-        });
-
-        registerEmailTextInputLayout = findViewById(R.id.register_email_text_input_layout);
-        registerEmailTextInputLayout.setTypeface(sourceSansProLight);
-        registerEmailEditText = findViewById(R.id.register_email_edit_text);
-        registerEmailEditText.setTypeface(sourceSansProLight);
-        registerEmailEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                registerEmailTextInputLayout.setErrorEnabled(false);
-                boolean isEmailAndPasswordValid = areInputsValid(registerNameEditText.getText().toString().trim(),
-                        registerUsernameEditText.getText().toString().trim(),
-                        registerEmailEditText.getText().toString().trim(),
-                        registerPasswordEditText.getText().toString().trim());
-                registerButton.setEnabled(isEmailAndPasswordValid);
-                int color = isEmailAndPasswordValid ? R.color.colorAccent : R.color.disabledButtonColor;
-                registerButton.setBackgroundTintList(getResources().getColorStateList(color));
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
-        });
-
-        registerPasswordTextInputLayout = findViewById(R.id.register_password_text_input_layout);
-        registerPasswordTextInputLayout.setTypeface(sourceSansProLight);
-        registerPasswordEditText = findViewById(R.id.register_password_edit_text);
-        registerPasswordEditText.setTypeface(sourceSansProLight);
-        registerPasswordEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                registerPasswordTextInputLayout.setErrorEnabled(false);
-                boolean isEmailAndPasswordValid = areInputsValid(registerNameEditText.getText().toString().trim(),
-                        registerUsernameEditText.getText().toString().trim(),
-                        registerEmailEditText.getText().toString().trim(),
-                        registerPasswordEditText.getText().toString().trim());
-                registerButton.setEnabled(isEmailAndPasswordValid);
-                int color = isEmailAndPasswordValid ? R.color.colorAccent : R.color.disabledButtonColor;
-                registerButton.setBackgroundTintList(getResources().getColorStateList(color));
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
-        });
+        passwordTextInputLayout = findViewById(R.id.register_password_text_input_layout);
+        passwordTextInputLayout.setTypeface(sourceSansProLight);
+        passwordEditText = findViewById(R.id.register_password_edit_text);
+        passwordEditText.setTypeface(sourceSansProLight);
 
         registerButton = findViewById(R.id.submit_button);
-        registerButton.setEnabled(false);
-        registerButton.setBackgroundTintList(getResources().getColorStateList(R.color.disabledButtonColor));
+        registerButton.setBackgroundTintList(getResources().getColorStateList(R.color.colorAccent));
         registerButton.setTypeface(sourceSansProLight);
 
         goToLoginButton = findViewById(R.id.login_text_view);
@@ -195,47 +106,72 @@ public class RegisterActivity extends AppCompatActivity {
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final String fullName = registerNameEditText.getText().toString().trim();
-                final String userName = registerUsernameEditText.getText().toString().trim();
-                final String email = registerEmailEditText.getText().toString().trim();
-                String password = registerPasswordEditText.getText().toString().trim();
+                toggleProgressBar(true);
+                final String fullName = getFormattedFullName();
+                final String userName = getFormattedUsername();
+                final String email = getFormattedEmail();
+                final String password = getFormattedPassword();
 
-                registerButton.setVisibility(View.INVISIBLE);
-                goToLoginButton.setVisibility(View.INVISIBLE);
-                registerProgressBar.setVisibility(View.VISIBLE);
+                if (!areInputsValid(fullName, userName, email, password)) {
+                    toggleProgressBar(false);
+                    return;
+                }
 
-                // todo check if user already exists
-                auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                DatabaseReference accountReference = Default.ACCOUNT_REFERENCE;
+                accountReference.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            FirebaseUser user = auth.getCurrentUser();
-                            if (user != null) {
-                                UserProfileChangeRequest profile = new UserProfileChangeRequest.Builder().setDisplayName(userName).build();
-                                user.updateProfile(profile);
-                                String uid = user.getUid();
-                                String email = user.getEmail();
-
-                                DatabaseReference profileReference = usersDatabaseRef.child(uid);
-                                profileReference.child(Key.DB_REF_USER_PROFILE_FULL_NAME).setValue(fullName);
-                                profileReference.child(Key.DB_REF_USER_PROFILE_USERNAME).setValue(userName);
-
-                                DatabaseReference accountReference = Default.ACCOUNT_REFERENCE.child(userName);
-                                accountReference.setValue(email);
-
-                            }
-
-                            startActivity(new Intent(RegisterActivity.this, MainActivity.class));
-                            finish();
-                            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
-                        } else {
-                            registerButton.setVisibility(View.VISIBLE);
-                            goToLoginButton.setVisibility(View.VISIBLE);
-                            registerProgressBar.setVisibility(View.INVISIBLE);
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.hasChild(userName)) {
+                            toggleProgressBar(false);
+                            usernameTextInputLayout.setError("Username is taken. Try again");
+                            return;
                         }
+                        // else -> attempt creation of new user
+                        auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                if (task.isSuccessful()) {
+                                    FirebaseUser user = auth.getCurrentUser();
+                                    if (user != null) {
+                                        UserProfileChangeRequest profile = new UserProfileChangeRequest.Builder().setDisplayName(userName).build();
+                                        user.updateProfile(profile);
+                                        String uid = user.getUid();
+                                        String email = user.getEmail();
+
+                                        DatabaseReference profileReference = usersDatabaseRef.child(uid);
+                                        profileReference.child(Key.DB_REF_USER_PROFILE_FULL_NAME).setValue(fullName);
+                                        profileReference.child(Key.DB_REF_USER_PROFILE_USERNAME).setValue(userName);
+
+                                        DatabaseReference accountReference = Default.ACCOUNT_REFERENCE.child(userName);
+                                        accountReference.setValue(email);
+                                    }
+                                    startActivity(new Intent(RegisterActivity.this, MainActivity.class));
+                                    finish();
+                                    overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+                                } else {
+                                    toggleProgressBar(false);
+                                    try {
+                                        throw task.getException();
+                                    } catch (FirebaseAuthWeakPasswordException weakPassword) {
+                                        passwordTextInputLayout.setError("Password is too weak");
+                                    } catch (FirebaseAuthInvalidCredentialsException invalidEmail) {
+                                        emailTextInputLayout.setError("Invalid email");
+                                    } catch (FirebaseAuthUserCollisionException existEmail) {
+                                        emailTextInputLayout.setError("Email already exists");
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+
+                                }
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        // TODO Log error
                     }
                 });
-
 
 
             }
@@ -247,6 +183,14 @@ public class RegisterActivity extends AppCompatActivity {
                 RegisterActivity.super.onBackPressed();
             }
         });
+    }
+
+    private void toggleProgressBar(boolean showProgressBar) {
+        int progressVisibility = showProgressBar ? View.VISIBLE : View.INVISIBLE;
+        int buttonVisibility = showProgressBar ? View.INVISIBLE : View.VISIBLE;
+        registerButton.setVisibility(buttonVisibility);
+        goToLoginButton.setVisibility(buttonVisibility);
+        registerProgressBar.setVisibility(progressVisibility);
     }
 
     @Override
@@ -265,66 +209,65 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     /**
-     *
      * @param fullName
      * @return
      */
     private boolean isFullNameValid(String fullName) {
         if (fullName.length() < 2) {
-            registerNameTextInputLayout.setError("Name must be at least 2 characters long");
+            fullNameTextInputLayout.setError("Name must be at least 2 characters long");
             return false;
         }
         if (fullName.length() > 70) {
-            registerNameTextInputLayout.setError("Name cannot be longer than 70 characters");
+            fullNameTextInputLayout.setError("Name cannot be longer than 70 characters");
             return false;
         }
         if (!Pattern.matches("^[a-zA-Z ']+", fullName)) {
-            registerNameTextInputLayout.setError("Name can only have alphabets, space and apostrophe");
+            fullNameTextInputLayout.setError("Name can only have alphabets, space and apostrophe");
             return false;
         }
         if (Pattern.matches(".*(.)\\1{3,}.*", fullName)) {
-            registerNameTextInputLayout.setError("Name cannot have more than 3 repeating characters");
+            fullNameTextInputLayout.setError("Name cannot have more than 3 repeating characters");
             return false;
         }
         if (Pattern.matches(".*(['])\\1{1,}.*", fullName)) {
-            registerNameTextInputLayout.setError("Name cannot have more than 1 apostrophe");
+            fullNameTextInputLayout.setError("Name cannot have more than 1 apostrophe");
             return false;
         }
         if (!Character.isAlphabetic(fullName.charAt(0))) {
-            registerNameTextInputLayout.setError("Name must start with a letter");
+            fullNameTextInputLayout.setError("Name must start with a letter");
             return false;
         }
         return true;
     }
 
     /**
-     *
      * @param username
      * @return
      */
     private boolean isUsernameValid(String username) {
         if (username.length() < 5) {
-            // TODO: show error "Username must be as least 5 characters long"
+            usernameTextInputLayout.setError("Username must be as least 5 characters long");
             return false;
         }
         if (username.length() > 30) {
-            // TODO: show error "Username cannot be longer than 30 characters"
+            // TODO: show error
+            usernameTextInputLayout.setError("Username cannot be longer than 30 characters");
             return false;
         }
         if (!Pattern.matches("^[a-z0-9._']+", username)) {
-            // TODO: show error "Username can only contain lowercase letters, numbers, period and underscore"
+            usernameTextInputLayout.setError("Username can only contain lowercase letters, numbers, period and underscore");
             return false;
         }
         if (Pattern.matches(".*([a-z0-9])\\1{5,}.*", username)) {
-            // TODO: show error "Username cannot have more than 3 repeating characters"
+            usernameTextInputLayout.setError("Username cannot have more than 3 repeating characters");
             return false;
         }
         if (Pattern.matches(".*([._]){2,}.*", username)) {
-            // TODO: show error "Username cannot have more than 1 repeating symbol"
+            usernameTextInputLayout.setError("Username cannot have more than 1 repeating symbol");
             return false;
         }
         if (!Character.isAlphabetic(username.charAt(0))) {
-            // TODO: show error "Username must start with a letter"
+            usernameTextInputLayout.setError("Username must start with a letter");
             return false;
         }
         return true;
@@ -335,11 +278,12 @@ public class RegisterActivity extends AppCompatActivity {
      *
      */
     private boolean isEmailValid(String email) {
-        // TODO: Add more checks for valid email?
-        if (email.contains("@")) {
+        if (Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             return true;
+        } else {
+            emailTextInputLayout.setError("Invalid email");
+            return false;
         }
-        return false;
     }
 
     /**
@@ -349,7 +293,26 @@ public class RegisterActivity extends AppCompatActivity {
         // TODO: Add more checks for valid password?
         if (password.length() > 5) {
             return true;
+        } else {
+            passwordTextInputLayout.setError("Password must be at least 6 characters long");
+            return false;
         }
-        return false;
+    }
+
+    public String getFormattedFullName() {
+        return fullNameEditText.getText().toString().trim().replaceAll(" +", " ");
+
+    }
+
+    public String getFormattedUsername() {
+        return usernameEditText.getText().toString().trim().toLowerCase();
+    }
+
+    public String getFormattedEmail() {
+        return emailEditText.getText().toString().trim().toLowerCase();
+    }
+
+    public String getFormattedPassword() {
+        return passwordEditText.getText().toString().trim();
     }
 }
