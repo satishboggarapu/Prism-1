@@ -9,6 +9,7 @@ import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
@@ -41,10 +42,13 @@ import com.google.firebase.database.Transaction;
 import com.mikechoch.prism.activity.UsersActivity;
 import com.mikechoch.prism.helper.MyTimeUnit;
 
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -184,11 +188,14 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
              * Username
              */
             // TODO: Using Glide we need to populate the user's profile picture ImageView
+            // TODO: check if a profile pic exists for user, if not use one of defaults at random
+            Random random = new Random();
+            int defaultProfPic = random.nextInt(10);
+            Uri uri = Uri.parse(String.valueOf(DefaultProfilePicture.values()[defaultProfPic].getProfilePicture()));
             Glide.with(context)
                     .asBitmap()
-                    .thumbnail(0.05f)
-                    .load(prismPost.getImage())
-                    .apply(new RequestOptions().centerCrop())
+                    .load(uri)
+                    .apply(new RequestOptions().fitCenter())
                     .into(new BitmapImageViewTarget(userProfilePicImageView) {
                         @Override
                         protected void setResource(Bitmap resource) {

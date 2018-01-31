@@ -1,14 +1,21 @@
 package com.mikechoch.prism.fragments;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.google.firebase.auth.FirebaseAuth;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.activity.LoginActivity;
@@ -23,7 +30,9 @@ public class ProfileFragment extends Fragment {
 
     private FirebaseAuth auth;
 
+    private ImageView userProfilePicImageView;
     private Button logoutButton;
+
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
 
@@ -55,6 +64,24 @@ public class ProfileFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.profile_fragment_layout, container, false);
+
+        userProfilePicImageView = view.findViewById(R.id.profile_frag_profile_picture_image_view);
+
+        Glide.with(this)
+                .asBitmap()
+                .thumbnail(0.05f)
+                .load(R.drawable.default_prof_0)
+                .apply(new RequestOptions().fitCenter())
+                .into(new BitmapImageViewTarget(userProfilePicImageView) {
+                    @Override
+                    protected void setResource(Bitmap resource) {
+                        RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), resource);
+                        drawable.setCircular(true);
+                        userProfilePicImageView.setImageDrawable(drawable);
+                    }
+                });
+
+
 
         logoutButton = view.findViewById(R.id.logout_button);
         logoutButton.setBackgroundTintList(getResources().getColorStateList(R.color.colorAccent));

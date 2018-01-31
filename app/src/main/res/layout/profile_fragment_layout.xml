@@ -3,6 +3,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <ImageView
+        android:id="@+id/profile_frag_profile_picture_image_view"
+        android:layout_width="172dp"
+        android:layout_height="172dp"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="48dp"
+        android:elevation="5dp"/>
+
     <!--<TextView-->
         <!--android:id="@+id/profile_text_view"-->
         <!--android:layout_width="wrap_content"-->
@@ -18,7 +27,7 @@
         android:transitionName="submit_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_below="@id/register_fields_relative_layout"
         android:layout_marginBottom="24dp"
