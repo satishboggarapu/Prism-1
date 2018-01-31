@@ -41,7 +41,6 @@ import java.util.Calendar;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
-import com.daimajia.numberprogressbar.NumberProgressBar;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -55,8 +54,8 @@ import com.mikechoch.prism.Key;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.ViewPagerAdapter;
 import com.mikechoch.prism.Wallpaper;
+import com.mikechoch.prism.fragments.MainContentFragment;
 
-import org.w3c.dom.Text;
 
 public class MainActivity extends FragmentActivity {
 
@@ -323,20 +322,34 @@ public class MainActivity extends FragmentActivity {
 
                 Wallpaper wallpaper = new Wallpaper(imageUri, description, username, userId, timestamp, postId);
 
+                RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
+                if (mainContentRecyclerView != null) {
+                    MainContentFragment.dateOrderWallpaperKeys.add(0, postId);
+                    MainContentFragment.wallpaperHashMap.put(postId, wallpaper);
+                    mainContentRecyclerView.getAdapter().notifyItemInserted(0);
+                    mainContentRecyclerView.smoothScrollToPosition(0);
+                }
+
                 reference.setValue(wallpaper).addOnSuccessListener(new OnSuccessListener<Void>() {
                     @SuppressLint("NewApi")
                     @Override
                     public void onSuccess(Void aVoid) {
-                        uploadingImageTextView.setText("Done");
-                        uploadingImageTextView.setTypeface(sourceSansProBold);
+                        uploadingImageTextView.setText("Finishing up...");
                         imageUploadProgressBar.setProgress(100, Build.VERSION.SDK_INT >= Build.VERSION_CODES.N);
+
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                uploadingImageTextView.setText("Done.");
+                            }
+                        }, 1000);
 
                         new Handler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
                                 uploadingImageRelativeLayout.setVisibility(View.GONE);
                             }
-                        }, 1000);
+                        }, 2000);
                     }
                 });
 
@@ -356,7 +369,7 @@ public class MainActivity extends FragmentActivity {
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                snackTime("Failed to upload image");
+                snackTime("Failed to upload image.");
                 uploadingImageRelativeLayout.setVisibility(View.GONE);
                 e.printStackTrace();
             }

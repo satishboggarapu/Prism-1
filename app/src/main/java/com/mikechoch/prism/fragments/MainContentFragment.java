@@ -18,14 +18,13 @@ import android.widget.ProgressBar;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.CurrentUser;
 import com.mikechoch.prism.Default;
 import com.mikechoch.prism.Key;
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.RecyclerViewAdapter;
+import com.mikechoch.prism.PrismPostRecyclerViewAdapter;
 import com.mikechoch.prism.Wallpaper;
 
 import java.util.ArrayList;
@@ -42,11 +41,11 @@ public class MainContentFragment extends Fragment {
      */
     private DatabaseReference databaseReference;
 
-    private ArrayList<String> dateOrderWallpaperKeys;
-    private HashMap<String, Wallpaper> wallpaperHashMap;
+    public static ArrayList<String> dateOrderWallpaperKeys;
+    public static HashMap<String, Wallpaper> wallpaperHashMap;
 
     private RecyclerView mainContentRecyclerView;
-    private RecyclerViewAdapter mainContentRecyclerViewAdapter;
+    private PrismPostRecyclerViewAdapter mainContentRecyclerViewAdapter;
     private ProgressBar mainContentProgress;
 
     private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
@@ -142,7 +141,7 @@ public class MainContentFragment extends Fragment {
             }
         });
 
-        mainContentRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), dateOrderWallpaperKeys, wallpaperHashMap, new int[]{screenWidth, screenHeight});
+        mainContentRecyclerViewAdapter = new PrismPostRecyclerViewAdapter(getContext(), dateOrderWallpaperKeys, wallpaperHashMap, new int[]{screenWidth, screenHeight});
         mainContentRecyclerView.setAdapter(mainContentRecyclerViewAdapter);
 
         /*
