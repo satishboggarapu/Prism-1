@@ -65,6 +65,7 @@ public class ImageUploadActivity extends AppCompatActivity {
         switch (id) {
             case android.R.id.home:
                 finish();
+                overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
                 break;
             default:
                 break;
@@ -127,6 +128,7 @@ public class ImageUploadActivity extends AppCompatActivity {
                 data.putExtra("ImageDescription", imageDescriptionEditText.getText().toString().trim());
                 setResult(RESULT_OK, data);
                 finish();
+                overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
 
                 /*
                  * Old method of getting image in cloud, not connected to MainActivity
@@ -173,6 +175,7 @@ public class ImageUploadActivity extends AppCompatActivity {
                 } else {
                     if (uploadedImageImageView.getDrawable() == null) {
                         finish();
+                        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
                     }
                 }
                 break;
