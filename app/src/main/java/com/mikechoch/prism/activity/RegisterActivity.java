@@ -1,11 +1,19 @@
 package com.mikechoch.prism.activity;
 
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.ColorFilter;
 import android.graphics.Typeface;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.InputFilter;
+import android.text.InputType;
+import android.text.Spanned;
+import android.text.TextWatcher;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
@@ -73,36 +81,146 @@ public class RegisterActivity extends AppCompatActivity {
 
         iconImageView = findViewById(R.id.icon_image_view);
         iconImageView.getLayoutParams().width = (int) (screenWidth * 0.3);
+        registerProgressBar = findViewById(R.id.register_progress_bar);
+        goToLoginButton = findViewById(R.id.login_text_view);
+        goToLoginButton.setTypeface(sourceSansProLight);
+        goToLoginButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                RegisterActivity.super.onBackPressed();
+            }
+        });
 
+        setupFullNameEditText();
+        setupUsernameEditText();
+        setupEmailEditText();
+        setupPasswordEditText();
+        setupRegisterButton();
+
+    }
+
+    private void setupFullNameEditText() {
         fullNameTextInputLayout = findViewById(R.id.register_name_text_input_layout);
         fullNameTextInputLayout.setTypeface(sourceSansProLight);
         fullNameEditText = findViewById(R.id.register_name_edit_text);
         fullNameEditText.setTypeface(sourceSansProLight);
+        fullNameEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                fullNameTextInputLayout.setError(null);
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (s.length() > 0) {
+                                isFullNameValid(s.toString().trim());
+                            }
+                        }
+                    }, 3000);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) { }
+        });
+    }
+
+    private void setupUsernameEditText() {
         usernameTextInputLayout = findViewById(R.id.register_username_text_input_layout);
         usernameTextInputLayout.setTypeface(sourceSansProLight);
         usernameEditText = findViewById(R.id.register_username_edit_text);
+        usernameEditText.setFilters(new InputFilter[] {
+                new InputFilter.AllCaps() {
+                    @Override
+                    public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
+                        return String.valueOf(source).toLowerCase();
+                    }
+                }
+        });
         usernameEditText.setTypeface(sourceSansProLight);
+        usernameEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                usernameTextInputLayout.setError(null);
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (s.length() > 0) {
+                                isUsernameValid(s.toString().trim());
+                            }
+                        }
+                    }, 3000);
+            }
+
+            @Override
+            public void afterTextChanged(Editable e) { }
+        });
+    }
+
+    private void setupEmailEditText() {
         emailTextInputLayout = findViewById(R.id.register_email_text_input_layout);
         emailTextInputLayout.setTypeface(sourceSansProLight);
         emailEditText = findViewById(R.id.register_email_edit_text);
         emailEditText.setTypeface(sourceSansProLight);
+        emailEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                emailTextInputLayout.setError(null);
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (s.length() > 0) {
+                                isEmailValid(s.toString().trim());
+                            }
+                        }
+                    }, 3000);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) { }
+        });
+    }
+
+    private void setupPasswordEditText() {
         passwordTextInputLayout = findViewById(R.id.register_password_text_input_layout);
         passwordTextInputLayout.setTypeface(sourceSansProLight);
-        passwordEditText = findViewById(R.id.register_password_edit_text);
+        passwordTextInputLayout.setPasswordVisibilityToggleEnabled(true);
+        passwordTextInputLayout.getPasswordVisibilityToggleDrawable().setTint(Color.WHITE);
+                passwordEditText = findViewById(R.id.register_password_edit_text);
         passwordEditText.setTypeface(sourceSansProLight);
+        passwordEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                passwordTextInputLayout.setError(null);
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (s.length() > 0) {
+                                isPasswordValid(s.toString().trim());
+                            }
+                        }
+                    }, 3000);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) { }
+        });
+    }
+
+    private void setupRegisterButton() {
         registerButton = findViewById(R.id.submit_button);
         registerButton.setBackgroundTintList(getResources().getColorStateList(R.color.colorAccent));
         registerButton.setTypeface(sourceSansProLight);
-
-        goToLoginButton = findViewById(R.id.login_text_view);
-        goToLoginButton.setTypeface(sourceSansProLight);
-
-        registerProgressBar = findViewById(R.id.register_progress_bar);
-
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -176,13 +294,6 @@ public class RegisterActivity extends AppCompatActivity {
 
             }
         });
-
-        goToLoginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                RegisterActivity.super.onBackPressed();
-            }
-        });
     }
 
     private void toggleProgressBar(boolean showProgressBar) {
@@ -202,10 +313,11 @@ public class RegisterActivity extends AppCompatActivity {
      *
      */
     private boolean areInputsValid(String fullName, String username, String email, String password) {
-        return (isFullNameValid(fullName) &&
-                isUsernameValid(username) &&
-                isEmailValid(email) &&
-                isPasswordValid(password));
+        boolean isFullNameValid = isFullNameValid(fullName);
+        boolean isUsernameValid = isUsernameValid(username);
+        boolean isEmailValid = isEmailValid(email);
+        boolean isPasswordValid = isPasswordValid(password);
+        return isFullNameValid && isUsernameValid && isEmailValid && isPasswordValid;
     }
 
     /**
@@ -255,7 +367,7 @@ public class RegisterActivity extends AppCompatActivity {
             return false;
         }
         if (!Pattern.matches("^[a-z0-9._']+", username)) {
-            usernameTextInputLayout.setError("Username can only contain lowercase letters, numbers, period and underscore");
+            usernameTextInputLayout.setError("Username can only contain letters, numbers, period and underscore");
             return false;
         }
         if (Pattern.matches(".*([a-z0-9])\\1{5,}.*", username)) {

@@ -38,7 +38,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
-import com.mikechoch.prism.activity.MainActivity;
 import com.mikechoch.prism.activity.UsersActivity;
 import com.mikechoch.prism.helper.MyTimeUnit;
 
@@ -58,9 +57,9 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
     private final int PRISM_POST_VIEW_TYPE = 1;
 
     private Context context;
-    private Wallpaper wallpaper;
-    private ArrayList<String> wallpaperKeys;
-    private HashMap<String, Wallpaper> wallpaperHashMap;
+    private PrismPost prismPost;
+    private ArrayList<String> prismPostKeys;
+    private HashMap<String, PrismPost> prismPostHashMap;
 
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
@@ -68,10 +67,10 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
     private int screenWidth;
     private int screenHeight;
 
-    public PrismPostRecyclerViewAdapter(Context context, ArrayList<String> wallpaperKeys, HashMap<String, Wallpaper> wallpaperHashMap, int[] screenDimens) {
+    public PrismPostRecyclerViewAdapter(Context context, ArrayList<String> prismPostKeys, HashMap<String, PrismPost> prismPostHashMap, int[] screenDimens) {
         this.context = context;
-        this.wallpaperKeys = wallpaperKeys;
-        this.wallpaperHashMap = wallpaperHashMap;
+        this.prismPostKeys = prismPostKeys;
+        this.prismPostHashMap = prismPostHashMap;
         this.screenWidth = screenDimens[0];
         this.screenHeight = screenDimens[1];
 
@@ -98,21 +97,21 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.setData(wallpaperHashMap.get(wallpaperKeys.get(position)));
+        holder.setData(prismPostHashMap.get(prismPostKeys.get(position)));
     }
 
     @Override
     public int getItemCount() {
-        return wallpaperHashMap.size();
+        return prismPostHashMap.size();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
 
-        private Wallpaper wallpaper;
+        private PrismPost prismPost;
         private ImageView userProfilePicImageView;
-        private TextView wallpaperUserTextView;
-        private TextView wallpaperDateTextView;
-        private ImageView wallpaperImageView;
+        private TextView prismUserTextView;
+        private TextView prismPostDateTextView;
+        private ImageView prismPostImageView;
         private ImageView likeHeartAnimationImageView;
         private TextView likesCountTextView;
         private ImageView likeButton;
@@ -151,9 +150,9 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             // Image initializations
             progressBar = itemView.findViewById(R.id.image_progress_bar);
             userProfilePicImageView = itemView.findViewById(R.id.recycler_view_profile_pic_image_view);
-            wallpaperUserTextView = itemView.findViewById(R.id.recycler_view_user_text_view);
-            wallpaperDateTextView = itemView.findViewById(R.id.recycler_view_date_text_view);
-            wallpaperImageView = itemView.findViewById(R.id.recycler_view_image_image_view);
+            prismUserTextView = itemView.findViewById(R.id.recycler_view_user_text_view);
+            prismPostDateTextView = itemView.findViewById(R.id.recycler_view_date_text_view);
+            prismPostImageView = itemView.findViewById(R.id.recycler_view_image_image_view);
             likeHeartAnimationImageView = itemView.findViewById(R.id.recycler_view_like_heart);
             repostIrisAnimationImageView = itemView.findViewById(R.id.recycler_view_repost_iris);
 
@@ -167,16 +166,16 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             repostsCountTextView = itemView.findViewById(R.id.shares_count_text_view);
         }
 
-        public void setData(Wallpaper wallpaperObject) {
-            this.wallpaper = wallpaperObject;
+        public void setData(PrismPost prismPostObject) {
+            this.prismPost = prismPostObject;
 
             /*
              * Post ID
              */
-            String postId = this.wallpaper.getPostid();
-            String postDate = getFancyDateDifferenceString(wallpaper.getTimestamp() * -1);
-            final int[] likeCount = {this.wallpaper.getLikes()};
-//            int repostCount = this.wallpaper.getReposts();
+            String postId = this.prismPost.getPostid();
+            String postDate = getFancyDateDifferenceString(prismPost.getTimestamp() * -1);
+            final int[] likeCount = {this.prismPost.getLikes()};
+//            int repostCount = this.prismPost.getReposts();
             int repostCount = 4;
             boolean postLiked = CurrentUser.userLikedPosts.containsKey(postId);
 //            boolean postReposted = CurrentUser.userRepostedPost.containsKey(postId);
@@ -188,7 +187,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             Glide.with(context)
                     .asBitmap()
                     .thumbnail(0.05f)
-                    .load(wallpaper.getImage())
+                    .load(prismPost.getImage())
                     .apply(new RequestOptions().centerCrop())
                     .into(new BitmapImageViewTarget(userProfilePicImageView) {
                         @Override
@@ -198,10 +197,10 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                             userProfilePicImageView.setImageDrawable(drawable);
                         }
                     });
-            wallpaperUserTextView.setText(wallpaper.getUsername());
-            wallpaperUserTextView.setTypeface(sourceSansProBold);
-            wallpaperDateTextView.setText(postDate);
-            wallpaperDateTextView.setTypeface(sourceSansProLight);
+            prismUserTextView.setText(prismPost.getUsername());
+            prismUserTextView.setTypeface(sourceSansProBold);
+            prismPostDateTextView.setText(postDate);
+            prismPostDateTextView.setTypeface(sourceSansProLight);
 
             /*
              * Image
@@ -209,15 +208,15 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             progressBar.setVisibility(View.VISIBLE);
 
             /*
-             * wallpaperImageView will have a width of 90% of the screen
-             * wallpaperImageView will have a max height of 60% of the screen
+             * prismPostImageView will have a width of 90% of the screen
+             * prismPostImageView will have a max height of 60% of the screen
              * This causes any images that are stronger in height to not span the entire screen
              */
-            wallpaperImageView.getLayoutParams().width = (int) (screenWidth * 0.9);
-            wallpaperImageView.setMaxHeight((int) (screenHeight * 0.6));
+            prismPostImageView.getLayoutParams().width = (int) (screenWidth * 0.9);
+            prismPostImageView.setMaxHeight((int) (screenHeight * 0.6));
 
             /*
-             * GestureDetector used to replace the wallpaperImageView TouchListener
+             * GestureDetector used to replace the prismPostImageView TouchListener
              * This allows detection of Single, Long, and Double tap gestures
              */
             final GestureDetector gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
@@ -242,7 +241,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                 public boolean onDoubleTap(MotionEvent e) {
                     System.out.println("Image Double Tapped");
 
-                    String postId = wallpaper.getPostid();
+                    String postId = prismPost.getPostid();
                     boolean postLiked = !CurrentUser.userLikedPosts.containsKey(postId);
                     Drawable heartButtonDrawable = createLikeDrawable(postLiked);
                     likeButton.setImageDrawable(heartButtonDrawable);
@@ -256,12 +255,12 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                     String likeStringTail = likeCount[0] == 1 ? " like" : " likes";
                     likesCountTextView.setText(likeCount[0] + likeStringTail);
 
-                    handleLikeButtonClick(wallpaper);
+                    handleLikeButtonClick(prismPost);
                     return super.onDoubleTap(e);
                 }
             });
 
-            wallpaperImageView.setOnTouchListener(new View.OnTouchListener() {
+            prismPostImageView.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View view, MotionEvent motionEvent) {
                     /*
@@ -274,17 +273,17 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             });
 
             /*
-             * Using the Glide library to populate the wallpaperImageView
+             * Using the Glide library to populate the prismPostImageView
              * asBitmap: converts to Bitmap
              * thumbnail: previews a 5% loaded image while the rest of the image is being loaded
-             * load: loads the wallpaper URI
+             * load: loads the prismPost URI
              * listener: confirms if the image was uploaded properly or not
-             * into: the loaded image will be placed inside the wallpaperImageView
+             * into: the loaded image will be placed inside the prismPostImageView
              */
             Glide.with(context)
                     .asBitmap()
                     .thumbnail(0.05f)
-                    .load(wallpaper.getImage())
+                    .load(prismPost.getImage())
                     .listener(new RequestListener<Bitmap>() {
                         @Override
                         public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
@@ -300,7 +299,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                             return false;
                         }
                     })
-                    .into(wallpaperImageView);
+                    .into(prismPostImageView);
 
             /*
              * Animation
@@ -367,7 +366,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             likeButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    String postId = wallpaper.getPostid();
+                    String postId = prismPost.getPostid();
                     boolean postLiked = !CurrentUser.userLikedPosts.containsKey(postId);
                     Drawable heartButtonDrawable = createLikeDrawable(postLiked);
                     likeButton.setImageDrawable(heartButtonDrawable);
@@ -381,7 +380,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                     String likeStringTail = likeCount[0] == 1 ? " like" : " likes";
                     likesCountTextView.setText(likeCount[0] + likeStringTail);
 
-                    handleLikeButtonClick(wallpaper);
+                    handleLikeButtonClick(prismPost);
                 }
             });
 
@@ -553,9 +552,9 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
          * operation UNLIKE (performLike = false): decrement like count in DB (-1) and remove
          * the item from the userLikedPosts HashMap
          */
-        private void handleLikeButtonClick(Wallpaper wallpaper) {
+        private void handleLikeButtonClick(PrismPost prismPost) {
             // TODO: Double click should force like to true at all times
-            String postId = wallpaper.getPostid();
+            String postId = prismPost.getPostid();
             long timestamp = Calendar.getInstance().getTimeInMillis();
             boolean performLike = !CurrentUser.userLikedPosts.containsKey(postId);
 
@@ -563,15 +562,11 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             postReference.runTransaction(new Transaction.Handler() {
                 @Override
                 public Transaction.Result doTransaction(MutableData mutableData) {
-                    Wallpaper w = mutableData.getValue(Wallpaper.class);
+                    PrismPost w = mutableData.getValue(PrismPost.class);
                     if (w == null) {
                         mutableData.setValue(0);
                     } else {
-                        int likes = w.getLikes();
                         if (performLike) {
-                            // increment likes count
-                            mutableData.child(Key.POST_LIKES).setValue(likes + 1);
-
                             // add postId to user's liked section
                             userReference.child(Key.DB_REF_USER_LIKES).child(postId).setValue(timestamp);
 
@@ -583,11 +578,6 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                                     .child(CurrentUser.user.getDisplayName())
                                     .setValue(CurrentUser.user.getUid());
                         } else {
-                            int dislikeCount = likes == 0 ? 0 : likes - 1;
-
-                            // decrement likes count
-                            mutableData.child(Key.POST_LIKES).setValue(dislikeCount);
-
                             // remove postId from user's liked section
                             userReference.child(Key.DB_REF_USER_LIKES).child(postId).removeValue();
 

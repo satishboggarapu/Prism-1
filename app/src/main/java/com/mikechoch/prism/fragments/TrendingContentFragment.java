@@ -14,7 +14,7 @@ import android.view.ViewGroup;
 import com.google.firebase.database.DataSnapshot;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.PrismPostRecyclerViewAdapter;
-import com.mikechoch.prism.Wallpaper;
+import com.mikechoch.prism.PrismPost;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,8 +32,8 @@ public class TrendingContentFragment extends Fragment {
     private PrismPostRecyclerViewAdapter trendingContentRecyclerViewAdapter;
     private SwipeRefreshLayout trendingContentSwipeRefreshLayout;
 
-    private ArrayList<String> popularityOrderWallpaperKeys;
-    private HashMap<String, Wallpaper> wallpaperHashMap;
+    private ArrayList<String> popularityOrderedPrismPostKeys;
+    private HashMap<String, PrismPost> prismPostHashMap;
 
     private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
 
@@ -56,8 +56,8 @@ public class TrendingContentFragment extends Fragment {
         screenWidth = getActivity().getWindowManager().getDefaultDisplay().getWidth();
         screenHeight = getActivity().getWindowManager().getDefaultDisplay().getHeight();
 
-        popularityOrderWallpaperKeys = new ArrayList<>();
-        wallpaperHashMap = new HashMap<>();
+        popularityOrderedPrismPostKeys = new ArrayList<>();
+        prismPostHashMap = new HashMap<>();
     }
 
     @Override
@@ -68,7 +68,7 @@ public class TrendingContentFragment extends Fragment {
         trendingContentRecyclerView = view.findViewById(R.id.trending_content_recycler_view);
         trendingContentRecyclerView.setItemAnimator(new DefaultItemAnimator());
         trendingContentRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        trendingContentRecyclerViewAdapter = new PrismPostRecyclerViewAdapter(getContext(), popularityOrderWallpaperKeys, wallpaperHashMap, new int[]{screenWidth, screenHeight});
+        trendingContentRecyclerViewAdapter = new PrismPostRecyclerViewAdapter(getContext(), popularityOrderedPrismPostKeys, prismPostHashMap, new int[]{screenWidth, screenHeight});
         trendingContentRecyclerView.setAdapter(trendingContentRecyclerViewAdapter);
 
         trendingContentSwipeRefreshLayout = view.findViewById(R.id.trending_content_swipe_refresh_layout);
