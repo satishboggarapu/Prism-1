@@ -1,11 +1,12 @@
 package com.mikechoch.prism;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
@@ -37,6 +38,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
+import com.mikechoch.prism.activity.MainActivity;
+import com.mikechoch.prism.activity.UsersActivity;
 import com.mikechoch.prism.helper.MyTimeUnit;
 
 import java.util.ArrayList;
@@ -49,7 +52,7 @@ import java.util.concurrent.TimeUnit;
  * Created by mikechoch on 1/21/18.
  */
 
-public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
+public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPostRecyclerViewAdapter.ViewHolder> {
 
     private final int PROGRESS_BAR_VIEW_TYPE = 0;
     private final int PRISM_POST_VIEW_TYPE = 1;
@@ -65,7 +68,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     private int screenWidth;
     private int screenHeight;
 
-    public RecyclerViewAdapter(Context context, ArrayList<String> wallpaperKeys, HashMap<String, Wallpaper> wallpaperHashMap, int[] screenDimens) {
+    public PrismPostRecyclerViewAdapter(Context context, ArrayList<String> wallpaperKeys, HashMap<String, Wallpaper> wallpaperHashMap, int[] screenDimens) {
         this.context = context;
         this.wallpaperKeys = wallpaperKeys;
         this.wallpaperHashMap = wallpaperHashMap;
@@ -127,8 +130,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         private Animation moreButtonBounceAnimation;
         private AnimationBounceInterpolator interpolator;
 
-        private DatabaseReference userReference;
         private FirebaseAuth auth;
+        private DatabaseReference userReference;
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -174,6 +177,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             String postDate = getFancyDateDifferenceString(wallpaper.getTimestamp() * -1);
             final int[] likeCount = {this.wallpaper.getLikes()};
 //            int repostCount = this.wallpaper.getReposts();
+            int repostCount = 4;
             boolean postLiked = CurrentUser.userLikedPosts.containsKey(postId);
 //            boolean postReposted = CurrentUser.userRepostedPost.containsKey(postId);
 
@@ -249,7 +253,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                     likeHeartAnimationImageView.startAnimation(likeHeartBounceAnimation);
 
                     likeCount[0] += postLiked ? 1 : -1;
-                    likesCountTextView.setText(likeCount[0] + " like(s)");
+                    String likeStringTail = likeCount[0] == 1 ? " like" : " likes";
+                    likesCountTextView.setText(likeCount[0] + likeStringTail);
 
                     handleLikeButtonClick(wallpaper);
                     return super.onDoubleTap(e);
@@ -349,7 +354,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             /*
              * Like
              */
-            likesCountTextView.setText(likeCount[0] + " like(s)");
+            String likeStringTail = likeCount[0] == 1 ? " like" : " likes";
+            likesCountTextView.setText(likeCount[0] + likeStringTail);
             likesCountTextView.setTypeface(sourceSansProLight);
 
             Drawable heartButtonDrawable = createLikeDrawable(postLiked);
@@ -372,17 +378,28 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                     likeHeartAnimationImageView.startAnimation(likeHeartBounceAnimation);
 
                     likeCount[0] += postLiked ? 1 : -1;
-                    likesCountTextView.setText(likeCount[0] + " like(s)");
+                    String likeStringTail = likeCount[0] == 1 ? " like" : " likes";
+                    likesCountTextView.setText(likeCount[0] + likeStringTail);
 
                     handleLikeButtonClick(wallpaper);
+                }
+            });
+
+            likesCountTextView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent userLikesIntent = new Intent(context, UsersActivity.class);
+                    userLikesIntent.putExtra("LikeRepostTitle", "Likes");
+                    context.startActivity(userLikesIntent);
+                    ((Activity) context).overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
                 }
             });
 
             /*
              * Repost
              */
-            int repostCount = 4;
-            repostsCountTextView.setText(repostCount + " share(s)");
+            String repostStringTail = repostCount == 1 ? " repost" : " reposts";
+            repostsCountTextView.setText(repostCount + repostStringTail);
             repostsCountTextView.setTypeface(sourceSansProLight);
 
             final boolean[] reposted = {false};
@@ -401,6 +418,16 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                         repostButton.setImageTintList(repostColor);
                         repostButton.startAnimation(shareButtonBounceAnimation);
                     }
+                }
+            });
+
+            repostsCountTextView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent userLikesIntent = new Intent(context, UsersActivity.class);
+                    userLikesIntent.putExtra("LikeRepostTitle", "Reposts");
+                    context.startActivity(userLikesIntent);
+                    ((Activity) context).overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
                 }
             });
 

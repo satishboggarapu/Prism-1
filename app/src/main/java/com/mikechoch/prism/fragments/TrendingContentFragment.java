@@ -11,15 +11,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-import com.mikechoch.prism.Key;
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.RecyclerViewAdapter;
+import com.mikechoch.prism.PrismPostRecyclerViewAdapter;
 import com.mikechoch.prism.Wallpaper;
 
 import java.util.ArrayList;
@@ -35,7 +29,7 @@ public class TrendingContentFragment extends Fragment {
     private int screenHeight;
 
     private RecyclerView trendingContentRecyclerView;
-    private RecyclerViewAdapter trendingContentRecyclerViewAdapter;
+    private PrismPostRecyclerViewAdapter trendingContentRecyclerViewAdapter;
     private SwipeRefreshLayout trendingContentSwipeRefreshLayout;
 
     private ArrayList<String> popularityOrderWallpaperKeys;
@@ -74,7 +68,7 @@ public class TrendingContentFragment extends Fragment {
         trendingContentRecyclerView = view.findViewById(R.id.trending_content_recycler_view);
         trendingContentRecyclerView.setItemAnimator(new DefaultItemAnimator());
         trendingContentRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        trendingContentRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), popularityOrderWallpaperKeys, wallpaperHashMap, new int[]{screenWidth, screenHeight});
+        trendingContentRecyclerViewAdapter = new PrismPostRecyclerViewAdapter(getContext(), popularityOrderWallpaperKeys, wallpaperHashMap, new int[]{screenWidth, screenHeight});
         trendingContentRecyclerView.setAdapter(trendingContentRecyclerViewAdapter);
 
         trendingContentSwipeRefreshLayout = view.findViewById(R.id.trending_content_swipe_refresh_layout);
