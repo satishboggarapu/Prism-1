@@ -4,7 +4,7 @@ package com.mikechoch.prism;
  * Created by mikechoch on 1/21/18.
  */
 
-public class Wallpaper {
+public class PrismPost {
 
     // DO NOT CHANGE ANYTHING IN THIS FILE //
     // THESE HAVE TO BE SAME AS "POST_*" KEYS //
@@ -16,10 +16,10 @@ public class Wallpaper {
     private int likes;
     private String postid;
 
-    public Wallpaper() {
+    public PrismPost() {
     }
 
-//    public Wallpaper(String image, String caption, String username, String uid, long timestamp, int likes, String  postid) {
+//    public PrismPost(String image, String caption, String username, String uid, long timestamp, int likes, String  postid) {
 //        this.image = image;
 //        this.caption = caption;
 //        this.username = username;
@@ -29,7 +29,7 @@ public class Wallpaper {
 //        this.postid = postid;
 //    }
 
-    public Wallpaper(String image, String caption, String username, String uid, long timestamp, String  postid) {
+    public PrismPost(String image, String caption, String username, String uid, long timestamp, String  postid) {
         this.image = image;
         this.caption = caption;
         this.username = username;

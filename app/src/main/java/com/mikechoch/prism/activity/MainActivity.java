@@ -25,8 +25,6 @@ import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.RecyclerView;
-import android.text.SpannableStringBuilder;
-import android.text.style.ImageSpan;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
@@ -51,9 +49,9 @@ import com.google.firebase.storage.UploadTask;
 import com.mikechoch.prism.CurrentUser;
 import com.mikechoch.prism.Default;
 import com.mikechoch.prism.Key;
+import com.mikechoch.prism.PrismPost;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.ViewPagerAdapter;
-import com.mikechoch.prism.Wallpaper;
 import com.mikechoch.prism.fragments.MainContentFragment;
 
 
@@ -320,17 +318,17 @@ public class MainActivity extends FragmentActivity {
                 DatabaseReference userPostRef = userReference.child(Key.DB_REF_USER_UPLOADS).child(postId);
                 userPostRef.setValue(timestamp);
 
-                Wallpaper wallpaper = new Wallpaper(imageUri, description, username, userId, timestamp, postId);
+                PrismPost prismPost = new PrismPost(imageUri, description, username, userId, timestamp, postId);
 
                 RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
                 if (mainContentRecyclerView != null) {
-                    MainContentFragment.dateOrderWallpaperKeys.add(0, postId);
-                    MainContentFragment.wallpaperHashMap.put(postId, wallpaper);
+                    MainContentFragment.dateOrderedPrismPostKeys.add(0, postId);
+                    MainContentFragment.prismPostHashMap.put(postId, prismPost);
                     mainContentRecyclerView.getAdapter().notifyItemInserted(0);
                     mainContentRecyclerView.smoothScrollToPosition(0);
                 }
 
-                reference.setValue(wallpaper).addOnSuccessListener(new OnSuccessListener<Void>() {
+                reference.setValue(prismPost).addOnSuccessListener(new OnSuccessListener<Void>() {
                     @SuppressLint("NewApi")
                     @Override
                     public void onSuccess(Void aVoid) {

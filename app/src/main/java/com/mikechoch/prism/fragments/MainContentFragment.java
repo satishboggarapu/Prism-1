@@ -23,9 +23,9 @@ import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.CurrentUser;
 import com.mikechoch.prism.Default;
 import com.mikechoch.prism.Key;
+import com.mikechoch.prism.PrismPost;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.PrismPostRecyclerViewAdapter;
-import com.mikechoch.prism.Wallpaper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,8 +41,8 @@ public class MainContentFragment extends Fragment {
      */
     private DatabaseReference databaseReference;
 
-    public static ArrayList<String> dateOrderWallpaperKeys;
-    public static HashMap<String, Wallpaper> wallpaperHashMap;
+    public static ArrayList<String> dateOrderedPrismPostKeys;
+    public static HashMap<String, PrismPost> prismPostHashMap;
 
     private RecyclerView mainContentRecyclerView;
     private PrismPostRecyclerViewAdapter mainContentRecyclerViewAdapter;
@@ -74,8 +74,8 @@ public class MainContentFragment extends Fragment {
         screenWidth = getActivity().getWindowManager().getDefaultDisplay().getWidth();
         screenHeight = getActivity().getWindowManager().getDefaultDisplay().getHeight();
 
-        dateOrderWallpaperKeys = new ArrayList<>();
-        wallpaperHashMap = new HashMap<>();
+        dateOrderedPrismPostKeys = new ArrayList<>();
+        prismPostHashMap = new HashMap<>();
 
         databaseReference = Default.ALL_POSTS_REFERENCE;
         refreshData();
@@ -141,7 +141,7 @@ public class MainContentFragment extends Fragment {
             }
         });
 
-        mainContentRecyclerViewAdapter = new PrismPostRecyclerViewAdapter(getContext(), dateOrderWallpaperKeys, wallpaperHashMap, new int[]{screenWidth, screenHeight});
+        mainContentRecyclerViewAdapter = new PrismPostRecyclerViewAdapter(getContext(), dateOrderedPrismPostKeys, prismPostHashMap, new int[]{screenWidth, screenHeight});
         mainContentRecyclerView.setAdapter(mainContentRecyclerViewAdapter);
 
         /*
@@ -213,21 +213,21 @@ public class MainContentFragment extends Fragment {
             getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    if (dateOrderWallpaperKeys.size() > 0) {
-                        mainContentRecyclerViewAdapter.notifyItemRangeRemoved(0, dateOrderWallpaperKeys.size());
+                    if (dateOrderedPrismPostKeys.size() > 0) {
+                        mainContentRecyclerViewAdapter.notifyItemRangeRemoved(0, dateOrderedPrismPostKeys.size());
                     }
                 }
             });
-            dateOrderWallpaperKeys.clear();
-            wallpaperHashMap.clear();
+            dateOrderedPrismPostKeys.clear();
+            prismPostHashMap.clear();
 
             for (DataSnapshot postSnapshot : snapshots[0].getChildren()) {
                 String postKey = postSnapshot.getKey();
-                if (!dateOrderWallpaperKeys.contains(postKey)) {
-                    Wallpaper wallpaper = postSnapshot.getValue(Wallpaper.class);
-                    wallpaper.setLikes((int) postSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount());
-                    dateOrderWallpaperKeys.add(postKey);
-                    wallpaperHashMap.put(postKey, wallpaper);
+                if (!dateOrderedPrismPostKeys.contains(postKey)) {
+                    PrismPost prismPost = postSnapshot.getValue(PrismPost.class);
+                    prismPost.setLikes((int) postSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount());
+                    dateOrderedPrismPostKeys.add(postKey);
+                    prismPostHashMap.put(postKey, prismPost);
                 }
 
             }
@@ -249,8 +249,8 @@ public class MainContentFragment extends Fragment {
      * Calls the FetchOldDataTask after checking if more data exists in the cloud database
      */
     private void fetchOldData() {
-        String lastPostId = dateOrderWallpaperKeys.get(dateOrderWallpaperKeys.size() - 1);
-        long lastPostTimestamp = wallpaperHashMap.get(lastPostId).getTimestamp();
+        String lastPostId = dateOrderedPrismPostKeys.get(dateOrderedPrismPostKeys.size() - 1);
+        long lastPostTimestamp = prismPostHashMap.get(lastPostId).getTimestamp();
         Query query = databaseReference.orderByChild(Key.POST_TIMESTAMP).startAt(lastPostTimestamp).limitToFirst(Default.IMAGE_LOAD_COUNT);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -288,16 +288,16 @@ public class MainContentFragment extends Fragment {
              */
             for (DataSnapshot postSnapshot : snapshots[0].getChildren()) {
                 String postKey = postSnapshot.getKey();
-                if (!dateOrderWallpaperKeys.contains(postKey)) {
-                    Wallpaper wallpaper = postSnapshot.getValue(Wallpaper.class);
-                    wallpaper.setLikes((int) postSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount());
-                    dateOrderWallpaperKeys.add(postKey);
-                    wallpaperHashMap.put(postKey, wallpaper);
+                if (!dateOrderedPrismPostKeys.contains(postKey)) {
+                    PrismPost prismPost = postSnapshot.getValue(PrismPost.class);
+                    prismPost.setLikes((int) postSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount());
+                    dateOrderedPrismPostKeys.add(postKey);
+                    prismPostHashMap.put(postKey, prismPost);
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            if (dateOrderWallpaperKeys.size() > 0) {
-                                mainContentRecyclerViewAdapter.notifyItemInserted(dateOrderWallpaperKeys.size());
+                            if (dateOrderedPrismPostKeys.size() > 0) {
+                                mainContentRecyclerViewAdapter.notifyItemInserted(dateOrderedPrismPostKeys.size());
                             }
                         }
                     });
