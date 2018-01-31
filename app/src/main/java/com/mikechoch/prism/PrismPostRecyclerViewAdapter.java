@@ -38,7 +38,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
-import com.mikechoch.prism.activity.UsersActivity;
+import com.mikechoch.prism.activity.LikeRepostActivity;
 import com.mikechoch.prism.helper.MyTimeUnit;
 
 import java.util.ArrayList;
@@ -387,8 +387,9 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             likesCountTextView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent userLikesIntent = new Intent(context, UsersActivity.class);
-                    userLikesIntent.putExtra("LikeRepostTitle", "Likes");
+                    Intent userLikesIntent = new Intent(context, LikeRepostActivity.class);
+                    userLikesIntent.putExtra("LikeRepostBoolean", 1); // Like = 1, Repost = 0
+                    userLikesIntent.putExtra("LikeRepostPostId", postId);
                     context.startActivity(userLikesIntent);
                     ((Activity) context).overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
                 }
@@ -423,9 +424,10 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             repostsCountTextView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent userLikesIntent = new Intent(context, UsersActivity.class);
-                    userLikesIntent.putExtra("LikeRepostTitle", "Reposts");
-                    context.startActivity(userLikesIntent);
+                    Intent userRepostsIntent = new Intent(context, LikeRepostActivity.class);
+                    userRepostsIntent.putExtra("LikeRepostBoolean", 0); // Like = 1, Repost = 0
+                    userRepostsIntent.putExtra("LikeRepostPostId", postId);
+                    context.startActivity(userRepostsIntent);
                     ((Activity) context).overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
                 }
             });

@@ -1,0 +1,203 @@
+package com.mikechoch.prism.activity;
+
+import android.content.Intent;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
+import com.mikechoch.prism.Default;
+import com.mikechoch.prism.Key;
+import com.mikechoch.prism.PrismUser;
+import com.mikechoch.prism.R;
+import com.mikechoch.prism.UsersRecyclerViewAdapter;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Created by mikechoch on 1/30/18.
+ */
+
+public class LikeRepostActivity extends AppCompatActivity {
+
+    /*
+     * Global variables
+     */
+    private Toolbar toolbar;
+
+    private DatabaseReference databaseReference;
+
+    private RecyclerView usersRecyclerView;
+    private UsersRecyclerViewAdapter usersRecyclerViewAdapter;
+
+    private ArrayList<PrismUser> prismUserArrayList;
+
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+//        getMenuInflater().inflate(R.menu.context_menu, menu);
+        return true;
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.users_activity_layout);
+        databaseReference = Default.ALL_POSTS_REFERENCE;
+
+        Intent intent = getIntent();
+        int activityCode = intent.getIntExtra("LikeRepostBoolean", -1);
+        String postId = intent.getStringExtra("LikeRepostPostId");
+        String toolbarTitle;
+
+        switch (activityCode) {
+            case 1: {
+                toolbarTitle = "Likes";
+                getListOfUsers(Key.DB_REF_POST_LIKED_USERS, postId);
+                break;
+            }
+            case 0: {
+                toolbarTitle = "Reposts";
+                getListOfUsers(Key.DB_REF_POST_REPOSTED_USERS, postId);
+                break;
+            }
+            default: {
+                toolbarTitle = "Error";
+                break;
+            }
+        }
+
+        toolbar = findViewById(R.id.toolbar);
+        toolbar.setTitle(toolbarTitle);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        prismUserArrayList = new ArrayList<>();
+
+        // TODO: populate users ArrayList
+
+        usersRecyclerView = findViewById(R.id.users_recycler_view);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        DefaultItemAnimator defaultItemAnimator = new DefaultItemAnimator();
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(this, linearLayoutManager.getOrientation());
+        dividerItemDecoration.setDrawable(this.getResources().getDrawable(R.drawable.recycler_view_divider));
+        usersRecyclerView.setLayoutManager(linearLayoutManager);
+        usersRecyclerView.setItemAnimator(defaultItemAnimator);
+        usersRecyclerView.addItemDecoration(dividerItemDecoration);
+
+        usersRecyclerViewAdapter = new UsersRecyclerViewAdapter(this, prismUserArrayList);
+        usersRecyclerView.setAdapter(usersRecyclerViewAdapter);
+
+    }
+
+    private void getListOfUsers(String DB_REF_POST_GET_USERS_KEY, String postId) {
+        databaseReference.child("-L42rwMzf26Kp9i5oJE_").child(DB_REF_POST_GET_USERS_KEY)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            HashMap<String, String> mapOfUsers = new HashMap<>();
+                            mapOfUsers.putAll((Map) dataSnapshot.getValue());
+                            fetchUserDetails(mapOfUsers);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+
+    }
+
+    private void fetchUserDetails(HashMap<String, String> mapOfUsers) {
+        DatabaseReference usersRef = Default.USERS_REFERENCE;
+        usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    for (Map.Entry<String, String> entry : mapOfUsers.entrySet()) {
+                        String userId = entry.getValue();
+                        PrismUser prismUser = new PrismUser();
+                        prismUser.setUsername(entry.getKey());
+                        prismUser.setUid(userId);
+                        if (dataSnapshot.hasChild(userId)) {
+                            DataSnapshot user = dataSnapshot.child(userId);
+                            if (user.hasChild("fullname")) {
+                                prismUser.setFullName((String) user.child("fullname").getValue());
+                            }
+                            if (user.hasChild("profile_pic")) {
+                                // TODO: make this work
+                            }
+                        }
+                        prismUserArrayList.add(prismUser);
+                    }
+                }
+                usersRecyclerViewAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        finish();
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+    }
+
+
+    /**
+     * 
+     */
+    private class LikeRepostTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void v) {
+            super.onPostExecute(v);
+        }
+
+    }
+}

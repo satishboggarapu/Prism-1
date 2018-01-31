@@ -40,7 +40,7 @@
             android:screenOrientation="portrait"/>
 
         <activity
-            android:name=".activity.UsersActivity"
+            android:name=".activity.LikeRepostActivity"
             android:screenOrientation="portrait"/>
 
     </application>
