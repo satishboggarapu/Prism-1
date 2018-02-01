@@ -3,22 +3,44 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!--<TextView-->
-        <!--android:id="@+id/profile_text_view"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_centerHorizontal="true"-->
-        <!--android:layout_alignParentTop="true"-->
-        <!--android:text="Profile"-->
-        <!--android:textSize="30sp"-->
-        <!--android:textColor="@android:color/white"/>-->
+    <ImageView
+        android:id="@+id/profile_frag_profile_picture_image_view"
+        android:layout_width="130dp"
+        android:layout_height="130dp"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="20dp"
+        android:cropToPadding="false"
+        android:elevation="5dp"
+        android:foreground="@drawable/profile_pic_upload_selector"/>
+
+    <TextView
+        android:id="@+id/profile_frag_username_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/profile_frag_profile_picture_image_view"
+        android:layout_marginTop="16dp"
+        android:textSize="24sp"
+        android:textColor="@android:color/white"/>
+
+    <TextView
+        android:id="@+id/profile_frag_full_name_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/profile_frag_username_text_view"
+        android:layout_marginTop="8dp"
+        android:textSize="18sp"
+        android:textColor="@android:color/white"/>
+
 
     <Button
         android:id="@+id/logout_button"
         android:transitionName="submit_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_below="@id/register_fields_relative_layout"
         android:layout_marginBottom="24dp"

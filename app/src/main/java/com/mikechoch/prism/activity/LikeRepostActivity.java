@@ -11,6 +11,8 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ProgressBar;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -20,7 +22,7 @@ import com.mikechoch.prism.Default;
 import com.mikechoch.prism.Key;
 import com.mikechoch.prism.PrismUser;
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.UsersRecyclerViewAdapter;
+import com.mikechoch.prism.LikeRepostUsersRecyclerViewAdapter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,7 +42,8 @@ public class LikeRepostActivity extends AppCompatActivity {
     private DatabaseReference databaseReference;
 
     private RecyclerView usersRecyclerView;
-    private UsersRecyclerViewAdapter usersRecyclerViewAdapter;
+    private LikeRepostUsersRecyclerViewAdapter usersRecyclerViewAdapter;
+    private ProgressBar likeRepostProgressBar;
 
     private ArrayList<PrismUser> prismUserArrayList;
 
@@ -70,7 +73,7 @@ public class LikeRepostActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.users_activity_layout);
+        setContentView(R.layout.like_repost_activity_layout);
         databaseReference = Default.ALL_POSTS_REFERENCE;
 
         Intent intent = getIntent();
@@ -100,11 +103,13 @@ public class LikeRepostActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        likeRepostProgressBar = findViewById(R.id.like_repost_progress_bar);
+
         prismUserArrayList = new ArrayList<>();
 
         // TODO: populate users ArrayList
 
-        usersRecyclerView = findViewById(R.id.users_recycler_view);
+        usersRecyclerView = findViewById(R.id.like_repost_users_recycler_view);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         DefaultItemAnimator defaultItemAnimator = new DefaultItemAnimator();
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(this, linearLayoutManager.getOrientation());
@@ -113,13 +118,13 @@ public class LikeRepostActivity extends AppCompatActivity {
         usersRecyclerView.setItemAnimator(defaultItemAnimator);
         usersRecyclerView.addItemDecoration(dividerItemDecoration);
 
-        usersRecyclerViewAdapter = new UsersRecyclerViewAdapter(this, prismUserArrayList);
+        usersRecyclerViewAdapter = new LikeRepostUsersRecyclerViewAdapter(this, prismUserArrayList);
         usersRecyclerView.setAdapter(usersRecyclerViewAdapter);
 
     }
 
     private void getListOfUsers(String DB_REF_POST_GET_USERS_KEY, String postId) {
-        databaseReference.child("-L42rwMzf26Kp9i5oJE_").child(DB_REF_POST_GET_USERS_KEY)
+        databaseReference.child(postId).child(DB_REF_POST_GET_USERS_KEY)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -127,12 +132,14 @@ public class LikeRepostActivity extends AppCompatActivity {
                             HashMap<String, String> mapOfUsers = new HashMap<>();
                             mapOfUsers.putAll((Map) dataSnapshot.getValue());
                             fetchUserDetails(mapOfUsers);
+                        } else {
+                            usersRecyclerView.setVisibility(View.VISIBLE);
+                            likeRepostProgressBar.setVisibility(View.GONE);
                         }
                     }
 
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
-
                     }
                 });
 
@@ -162,11 +169,12 @@ public class LikeRepostActivity extends AppCompatActivity {
                     }
                 }
                 usersRecyclerViewAdapter.notifyDataSetChanged();
+                usersRecyclerView.setVisibility(View.VISIBLE);
+                likeRepostProgressBar.setVisibility(View.GONE);
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
             }
         });
 
@@ -178,26 +186,4 @@ public class LikeRepostActivity extends AppCompatActivity {
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
     }
 
-
-    /**
-     * 
-     */
-    private class LikeRepostTask extends AsyncTask<Void, Void, Void> {
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void v) {
-            super.onPostExecute(v);
-        }
-
-    }
 }

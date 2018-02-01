@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
@@ -37,9 +38,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.Default;
+import com.mikechoch.prism.DefaultProfilePicture;
 import com.mikechoch.prism.Key;
 import com.mikechoch.prism.R;
 
+import java.util.Random;
 import java.util.regex.Pattern;
 
 public class RegisterActivity extends AppCompatActivity {
@@ -56,6 +59,8 @@ public class RegisterActivity extends AppCompatActivity {
     private Button registerButton;
     private TextView goToLoginButton;
     private ProgressBar registerProgressBar;
+
+    private Uri defaultProfilePic;
 
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
@@ -95,8 +100,15 @@ public class RegisterActivity extends AppCompatActivity {
         setupUsernameEditText();
         setupEmailEditText();
         setupPasswordEditText();
+        // TODO: Save Default profile pic to cloud database
+        generateDefaultProfilePic();
         setupRegisterButton();
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
     }
 
     private void setupFullNameEditText() {
@@ -217,6 +229,14 @@ public class RegisterActivity extends AppCompatActivity {
         });
     }
 
+    private void generateDefaultProfilePic() {
+        Random random = new Random();
+        int defaultProfPic = random.nextInt(10);
+        defaultProfilePic = Uri.parse(
+                DefaultProfilePicture.values()[defaultProfPic].getProfilePicture());
+
+    }
+
     private void setupRegisterButton() {
         registerButton = findViewById(R.id.submit_button);
         registerButton.setBackgroundTintList(getResources().getColorStateList(R.color.colorAccent));
@@ -302,11 +322,6 @@ public class RegisterActivity extends AppCompatActivity {
         registerButton.setVisibility(buttonVisibility);
         goToLoginButton.setVisibility(buttonVisibility);
         registerProgressBar.setVisibility(progressVisibility);
-    }
-
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
     }
 
     /**

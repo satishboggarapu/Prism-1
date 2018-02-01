@@ -65,6 +65,7 @@ public class ImageUploadActivity extends AppCompatActivity {
         switch (id) {
             case android.R.id.home:
                 finish();
+                overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
                 break;
             default:
                 break;
@@ -103,7 +104,7 @@ public class ImageUploadActivity extends AppCompatActivity {
         // Initialize the uploadedImageImageView and give it 60% of screen height
         uploadedImageImageView = findViewById(R.id.uploaded_image_image_view);
         uploadedImageImageView.getLayoutParams().height = (int) (screenHeight * 0.6);
-        uploadedImageImageView.setForeground(getResources().getDrawable(R.drawable.upload_selector));
+        uploadedImageImageView.setForeground(getResources().getDrawable(R.drawable.image_upload_selector));
         uploadedImageImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -113,7 +114,7 @@ public class ImageUploadActivity extends AppCompatActivity {
 
         // Initialize the uploadButton and setup onClickListener
         uploadButton = findViewById(R.id.upload_button_card_view);
-        uploadButton.setForeground(getResources().getDrawable(R.drawable.upload_selector));
+        uploadButton.setForeground(getResources().getDrawable(R.drawable.profile_pic_upload_selector));
         uploadButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -127,6 +128,7 @@ public class ImageUploadActivity extends AppCompatActivity {
                 data.putExtra("ImageDescription", imageDescriptionEditText.getText().toString().trim());
                 setResult(RESULT_OK, data);
                 finish();
+                overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
 
                 /*
                  * Old method of getting image in cloud, not connected to MainActivity
@@ -173,6 +175,7 @@ public class ImageUploadActivity extends AppCompatActivity {
                 } else {
                     if (uploadedImageImageView.getDrawable() == null) {
                         finish();
+                        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
                     }
                 }
                 break;
