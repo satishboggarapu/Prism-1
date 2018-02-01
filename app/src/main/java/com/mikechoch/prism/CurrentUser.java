@@ -8,7 +8,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 /**
@@ -22,16 +21,17 @@ public class CurrentUser {
 
     public static FirebaseUser user;
     public static HashMap userLikedPosts; // KEY: String postID   VALUE: long timestamp
+    public static HashMap userRepostedPosts; // KEY: String postID   VALUE: long timestamp
 
     public CurrentUser() {
         auth = FirebaseAuth.getInstance();
         user = auth.getCurrentUser();
         userReference = Default.USERS_REFERENCE.child(user.getUid());
-        refreshUserLikedPosts();
+        refreshUserLikedAndRepostedPosts();
 
     }
 
-    public static void refreshUserLikedPosts() {
+    public static void refreshUserLikedAndRepostedPosts() {
         userLikedPosts = new HashMap<String, Long>();
         userReference.child(Key.DB_REF_USER_LIKES).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -43,5 +43,18 @@ public class CurrentUser {
             @Override
             public void onCancelled(DatabaseError databaseError) { }
         });
+
+        userReference.child(Key.DB_REF_USER_REPOSTS).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    userRepostedPosts.putAll((Map) dataSnapshot.getValue());
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) { }
+        });
     }
+
 }

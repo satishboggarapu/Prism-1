@@ -15,6 +15,7 @@ public class Key {
     public static final String DB_REF_USER_PROFILES = "USERS";
     public static final String DB_REF_USER_UPLOADS = "USER_UPLOADS";
     public static final String DB_REF_USER_LIKES = "USER_LIKES";
+    public static final String DB_REF_USER_REPOSTS = "USER_REPOSTS";
     public static final String DB_REF_USER_PROFILE_FULL_NAME = "fullname";
     public static final String DB_REF_USER_PROFILE_USERNAME = "username";
 
