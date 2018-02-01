@@ -3,6 +3,7 @@ package com.mikechoch.prism;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.widget.RecyclerView;
@@ -19,12 +20,13 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Created by mikechoch on 1/21/18.
  */
 
-public class UsersRecyclerViewAdapter extends RecyclerView.Adapter<UsersRecyclerViewAdapter.ViewHolder> {
+public class LikeRepostUsersRecyclerViewAdapter extends RecyclerView.Adapter<LikeRepostUsersRecyclerViewAdapter.ViewHolder> {
 
     private Context context;
     private ArrayList<PrismUser> prismUserArrayList;
@@ -32,7 +34,7 @@ public class UsersRecyclerViewAdapter extends RecyclerView.Adapter<UsersRecycler
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
 
-    public UsersRecyclerViewAdapter(Context context, ArrayList<PrismUser> prismUserArrayList) {
+    public LikeRepostUsersRecyclerViewAdapter(Context context, ArrayList<PrismUser> prismUserArrayList) {
         this.context = context;
         this.prismUserArrayList = prismUserArrayList;
 
@@ -43,7 +45,7 @@ public class UsersRecyclerViewAdapter extends RecyclerView.Adapter<UsersRecycler
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(
-                R.layout.users_recycler_view_item_layout, parent, false));
+                R.layout.like_repost_users_recycler_view_item_layout, parent, false));
     }
 
     @Override
@@ -61,6 +63,7 @@ public class UsersRecyclerViewAdapter extends RecyclerView.Adapter<UsersRecycler
         private PrismUser prismUser;
         private ImageView userProfilePicture;
         private TextView usernameTextView;
+        private TextView userFullNameText;
 
         private FirebaseAuth auth;
         private DatabaseReference userReference;
@@ -74,15 +77,19 @@ public class UsersRecyclerViewAdapter extends RecyclerView.Adapter<UsersRecycler
 
             userProfilePicture = itemView.findViewById(R.id.user_profile_picture_image_view);
             usernameTextView = itemView.findViewById(R.id.username_text_view);
+            userFullNameText = itemView.findViewById(R.id.full_name_text_view);
         }
 
         public void setData(PrismUser prismUser) {
             this.prismUser = prismUser;
 
+            Random random = new Random();
+            int defaultProfPic = random.nextInt(10);
+            Uri uri = Uri.parse(String.valueOf(DefaultProfilePicture.values()[defaultProfPic].getProfilePicture()));
             Glide.with(context)
                     .asBitmap()
                     .thumbnail(0.05f)
-                    .load(this.prismUser.getProfilePicture())
+                    .load(uri)
                     .apply(new RequestOptions().centerCrop())
                     .into(new BitmapImageViewTarget(userProfilePicture) {
                         @Override
@@ -94,7 +101,10 @@ public class UsersRecyclerViewAdapter extends RecyclerView.Adapter<UsersRecycler
                     });
 
             usernameTextView.setText(prismUser.getUsername());
-            usernameTextView.setTypeface(sourceSansProLight);
+            usernameTextView.setTypeface(sourceSansProBold);
+
+            userFullNameText.setText(prismUser.getFullName());
+            userFullNameText.setTypeface(sourceSansProLight);
 
         }
     }
