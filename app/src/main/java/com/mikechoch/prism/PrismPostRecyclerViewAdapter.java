@@ -530,7 +530,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         private AlertDialog createRepostConfirmationAlertDialog() {
             AlertDialog.Builder repostConfirmationAlertDialogBuilder = new AlertDialog.Builder(context);
             repostConfirmationAlertDialogBuilder.setTitle("This post will show on your profile, are you sure you want to repost?");
-            repostConfirmationAlertDialogBuilder.setPositiveButton("REPOST", new DialogInterface.OnClickListener() {
+            repostConfirmationAlertDialogBuilder
+                    .setPositiveButton("REPOST", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     // TODO: Change image to be reposted
@@ -562,7 +563,6 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
          * the item from the userLikedPosts HashMap
          */
         private void handleLikeButtonClick(PrismPost prismPost) {
-            // TODO: Double click should force like to true at all times
             String postId = prismPost.getPostid();
             long timestamp = Calendar.getInstance().getTimeInMillis();
             boolean performLike = !CurrentUser.userLikedPosts.containsKey(postId);
@@ -571,13 +571,14 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             postReference.runTransaction(new Transaction.Handler() {
                 @Override
                 public Transaction.Result doTransaction(MutableData mutableData) {
-                    PrismPost w = mutableData.getValue(PrismPost.class);
-                    if (w == null) {
+                    PrismPost post = mutableData.getValue(PrismPost.class);
+                    if (post == null) {
                         mutableData.setValue(0);
                     } else {
                         if (performLike) {
                             // add postId to user's liked section
-                            userReference.child(Key.DB_REF_USER_LIKES).child(postId).setValue(timestamp);
+                            userReference.child(Key.DB_REF_USER_LIKES)
+                                    .child(postId).setValue(timestamp);
 
                             // add postId and timestamp to userLikedPosts hashMap
                             CurrentUser.userLikedPosts.put(postId, timestamp);
@@ -588,7 +589,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                                     .setValue(CurrentUser.user.getUid());
                         } else {
                             // remove postId from user's liked section
-                            userReference.child(Key.DB_REF_USER_LIKES).child(postId).removeValue();
+                            userReference.child(Key.DB_REF_USER_LIKES)
+                                    .child(postId).removeValue();
 
                             // remove the postId and timestamp from userLikedPosts hashMap
                             CurrentUser.userLikedPosts.remove(postId);
@@ -608,5 +610,58 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                 }
             });
         }
+
+        private void handleRepostButtonClick(PrismPost prismPost) {
+            String postId = prismPost.getPostid();
+            long timestamp = Calendar.getInstance().getTimeInMillis();
+            boolean performRepost = !CurrentUser.userRepostedPosts.containsKey(postId);
+
+            DatabaseReference postReference = Default.ALL_POSTS_REFERENCE.child(postId);
+            postReference.runTransaction(new Transaction.Handler() {
+                @Override
+                public Transaction.Result doTransaction(MutableData mutableData) {
+                    PrismPost post = mutableData.getValue(PrismPost.class);
+                    if (post == null) {
+                        mutableData.setValue(0);
+                    } else {
+                        if (performRepost) {
+                            // add postId to user's reposts section
+                            userReference.child(Key.DB_REF_USER_REPOSTS)
+                                    .child(postId).setValue(timestamp);
+
+                            // add postId and timestamp to userRepostedPosts hashMap
+                            CurrentUser.userRepostedPosts.put(postId, timestamp);
+
+                            // add the user to REPOSTED_USERS list for this post
+                            postReference.child(Key.DB_REF_POST_REPOSTED_USERS)
+                                    .child(CurrentUser.user.getDisplayName())
+                                    .setValue(CurrentUser.user.getUid());
+
+                        } else {
+                            // remove postId from user's reposts section
+                            userReference.child(Key.DB_REF_USER_LIKES)
+                                    .child(postId).removeValue();
+
+                            // remove the postId and timestamp from userRepostedPosts hashMap
+                            CurrentUser.userRepostedPosts.remove(postId);
+
+                            // remove the user from REPOSTED_USERS list for this post
+                            postReference.child(Key.DB_REF_POST_REPOSTED_USERS)
+                                    .child(CurrentUser.user.getDisplayName())
+                                    .removeValue();
+                        }
+                    }
+                    return Transaction.success(mutableData);
+                }
+
+                @Override
+                public void onComplete(DatabaseError databaseError, boolean b, DataSnapshot dataSnapshot) {
+
+                }
+            });
+        }
+
+
+
     }
 }

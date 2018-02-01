@@ -172,7 +172,7 @@ public class MainContentFragment extends Fragment {
      */
     private void refreshData() {
         Query query = databaseReference.orderByChild(Key.POST_TIMESTAMP).limitToFirst(Default.IMAGE_LOAD_COUNT);
-        CurrentUser.refreshUserLikedPosts();
+        CurrentUser.refreshUserLikedAndRepostedPosts();
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
