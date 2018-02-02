@@ -29,7 +29,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.Default;
-import com.mikechoch.prism.Key;
 import com.mikechoch.prism.R;
 
 public class LoginActivity extends AppCompatActivity {
@@ -51,7 +50,7 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.login_activity);
+        setContentView(R.layout.login_activity_layout);
 
         auth = FirebaseAuth.getInstance();
 
