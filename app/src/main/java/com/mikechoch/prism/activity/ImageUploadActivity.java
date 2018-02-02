@@ -128,7 +128,7 @@ public class ImageUploadActivity extends AppCompatActivity {
                  * Then ImageUploadActivity is finished
                  */
                 Intent data = new Intent();
-                data.putExtra("ImageUri", imageUri);
+                data.putExtra("ImageUri", imageUri.toString());
                 data.putExtra("ImageDescription", imageDescriptionEditText.getText().toString().trim());
                 setResult(RESULT_OK, data);
                 finish();

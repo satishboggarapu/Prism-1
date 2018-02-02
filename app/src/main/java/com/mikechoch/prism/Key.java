@@ -9,7 +9,8 @@ public class Key {
     // DO NOT CHANGE ANY OF THESE //
     // THESE ARE LINKED TO MANY OTHER THINGS //
 
-    public static final String STORAGE_IMAGE_REF = "PostImage";
+    public static final String STORAGE_POST_IMAGES_REF = "PostImage";
+    public static final String STORAGE_USER_PROFILE_IMAGE_REF = "UserProfiles";
 
 
     public static final String DB_REF_USER_PROFILES = "USERS";
@@ -18,6 +19,8 @@ public class Key {
     public static final String DB_REF_USER_REPOSTS = "USER_REPOSTS";
     public static final String DB_REF_USER_PROFILE_FULL_NAME = "fullname";
     public static final String DB_REF_USER_PROFILE_USERNAME = "username";
+    public static final String DB_REF_USER_PROFILE_PIC = "profilepic";
+
 
     public static final String DB_REF_ALL_POSTS = "ALL_POSTS";
     public static final String DB_REF_POST_LIKED_USERS = "LIKED_USERS";

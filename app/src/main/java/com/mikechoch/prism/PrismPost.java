@@ -15,24 +15,13 @@ public class PrismPost {
     private long timestamp;
     private int likes;
     private String postid;
+    private String userProfilePicUri;
 
-    public PrismPost() {
-    }
+    public PrismPost() { }
 
-//    public PrismPost(String image, String caption, String username, String uid, long timestamp, int likes, String  postid) {
-//        this.image = image;
-//        this.caption = caption;
-//        this.username = username;
-//        this.uid = uid;
-//        this.timestamp = timestamp;
-//        this.likes = likes;
-//        this.postid = postid;
-//    }
-
-    public PrismPost(String image, String caption, String username, String uid, long timestamp, String  postid) {
+    public PrismPost(String image, String caption, String uid, long timestamp, String  postid) {
         this.image = image;
         this.caption = caption;
-        this.username = username;
         this.uid = uid;
         this.timestamp = timestamp;
         this.postid = postid;
@@ -40,6 +29,14 @@ public class PrismPost {
 
     public void setLikes(int likes) {
         this.likes = likes;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setUserProfilePicUri(String userProfilePicUri) {
+        this.userProfilePicUri = userProfilePicUri;
     }
 
     public String getImage() {
@@ -69,4 +66,9 @@ public class PrismPost {
     public String getPostid() {
         return postid;
     }
+
+    public String getUserProfilePicUri() {
+        return userProfilePicUri;
+    }
+
 }
