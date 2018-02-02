@@ -39,7 +39,8 @@ public class MainContentFragment extends Fragment {
     /*
      * Global variables
      */
-    private DatabaseReference databaseReference;
+    private DatabaseReference databaseReferenceAllPosts;
+    private DatabaseReference usersReference;
 
     public static ArrayList<String> dateOrderedPrismPostKeys;
     public static HashMap<String, PrismPost> prismPostHashMap;
@@ -77,7 +78,8 @@ public class MainContentFragment extends Fragment {
         dateOrderedPrismPostKeys = new ArrayList<>();
         prismPostHashMap = new HashMap<>();
 
-        databaseReference = Default.ALL_POSTS_REFERENCE;
+        databaseReferenceAllPosts = Default.ALL_POSTS_REFERENCE;
+        usersReference = Default.USERS_REFERENCE;
         refreshData();
     }
 
@@ -171,7 +173,7 @@ public class MainContentFragment extends Fragment {
      * Calls the RefreshDataTask after checking if more data exists in the cloud database
      */
     private void refreshData() {
-        Query query = databaseReference.orderByChild(Key.POST_TIMESTAMP).limitToFirst(Default.IMAGE_LOAD_COUNT);
+        Query query = databaseReferenceAllPosts.orderByChild(Key.POST_TIMESTAMP).limitToFirst(Default.IMAGE_LOAD_COUNT);
         CurrentUser.refreshUserLikedAndRepostedPosts();
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -229,18 +231,43 @@ public class MainContentFragment extends Fragment {
                     dateOrderedPrismPostKeys.add(postKey);
                     prismPostHashMap.put(postKey, prismPost);
                 }
-
             }
+
+            usersReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.exists()) {
+                        for (String postId: dateOrderedPrismPostKeys) {
+                            PrismPost post = prismPostHashMap.get(postId);
+                            DataSnapshot userSnapshot = dataSnapshot
+                                    .child(post.getUid());
+                            post.setUsername((String) userSnapshot
+                                    .child(Key.DB_REF_USER_PROFILE_USERNAME).getValue());
+                            post.setUserProfilePicUri((String) userSnapshot
+                                    .child(Key.DB_REF_USER_PROFILE_PIC).getValue());
+                            prismPostHashMap.put(postId, post);
+                        }
+                        // LAST THING THAT HAPPENS
+                        mainContentProgress.setVisibility(View.GONE);
+                        mainContentSwipeRefreshLayout.setRefreshing(false);
+                        mainContentRecyclerViewAdapter.notifyDataSetChanged();
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+
+
         return null;
         }
 
         @Override
         protected void onPostExecute(Void v) {
             super.onPostExecute(v);
-            // Stop refreshing since AsyncTask is finished
-            mainContentProgress.setVisibility(View.GONE);
-            mainContentSwipeRefreshLayout.setRefreshing(false);
-            mainContentRecyclerViewAdapter.notifyDataSetChanged();
+            // THIS IS NOT POST EXECUTE
         }
     }
 
@@ -251,7 +278,7 @@ public class MainContentFragment extends Fragment {
     private void fetchOldData() {
         String lastPostId = dateOrderedPrismPostKeys.get(dateOrderedPrismPostKeys.size() - 1);
         long lastPostTimestamp = prismPostHashMap.get(lastPostId).getTimestamp();
-        Query query = databaseReference.orderByChild(Key.POST_TIMESTAMP).startAt(lastPostTimestamp).limitToFirst(Default.IMAGE_LOAD_COUNT);
+        Query query = databaseReferenceAllPosts.orderByChild(Key.POST_TIMESTAMP).startAt(lastPostTimestamp).limitToFirst(Default.IMAGE_LOAD_COUNT);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {

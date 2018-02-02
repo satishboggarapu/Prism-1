@@ -39,8 +39,10 @@ import java.util.Calendar;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.storage.OnProgressListener;
@@ -65,6 +67,7 @@ public class MainActivity extends FragmentActivity {
     private StorageReference storageReference;
     private DatabaseReference userReference;
 
+    private Uri profilePictureUri;
     private Uri uploadedImageUri;
     private String uploadedImageDescription;
 
@@ -248,6 +251,7 @@ public class MainActivity extends FragmentActivity {
                     imageUploadProgressBar.setIndeterminate(false);
                     uploadingImageRelativeLayout.setVisibility(View.VISIBLE);
                     uploadedImageUri = Uri.parse(data.getStringExtra("ImageUri"));
+
                     uploadedImageDescription = data.getStringExtra("ImageDescription");
                     Glide.with(this)
                             .asBitmap()
@@ -268,17 +272,13 @@ public class MainActivity extends FragmentActivity {
             // If requestCode is for ProfilePictureUploadActivity
             case Default.PROFILE_PIC_UPLOAD_INTENT_REQUEST_CODE:
                 if (resultCode == RESULT_OK) {
-                    String profilePictureBitmap = data.getStringExtra("CroppedProfilePicture");
-
-
-                    // TODO: Push profile picture to cloud
-
+                    profilePictureUri = Uri.parse(data.getStringExtra("CroppedProfilePicture"));
 
                     ImageView profilePictureImageView = findViewById(R.id.profile_frag_profile_picture_image_view);
                     Glide.with(this)
                             .asBitmap()
                             .thumbnail(0.05f)
-                            .load(profilePictureBitmap)
+                            .load(profilePictureUri)
                             .apply(new RequestOptions().centerCrop())
                             .into(new BitmapImageViewTarget(profilePictureImageView) {
                                 @Override
@@ -292,6 +292,8 @@ public class MainActivity extends FragmentActivity {
                                     profilePictureImageView.setBackground(getResources().getDrawable(R.drawable.circle_profile_frame));
                                 }
                             });
+
+                    new ProfilePictureUploadTask().execute();
                 }
                 break;
             default:
@@ -334,8 +336,8 @@ public class MainActivity extends FragmentActivity {
      */
     @SuppressLint("SimpleDateFormat")
     private void uploadImageToCloud() {
-        StorageReference filePath = storageReference.child(Key.STORAGE_IMAGE_REF).child(uploadedImageUri.getLastPathSegment());
-        filePath.putFile(uploadedImageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+        StorageReference postImageRef = storageReference.child(Key.STORAGE_POST_IMAGES_REF).child(uploadedImageUri.getLastPathSegment());
+        postImageRef.putFile(uploadedImageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Uri downloadUrl = taskSnapshot.getDownloadUrl();
@@ -343,7 +345,6 @@ public class MainActivity extends FragmentActivity {
 
                 String imageUri = downloadUrl.toString();
                 String description = uploadedImageDescription;
-                String username = auth.getCurrentUser().getDisplayName();
                 String userId = auth.getCurrentUser().getUid();
                 Long timestamp = -1 * Calendar.getInstance().getTimeInMillis();
                 String postId = reference.getKey();
@@ -351,7 +352,7 @@ public class MainActivity extends FragmentActivity {
                 DatabaseReference userPostRef = userReference.child(Key.DB_REF_USER_UPLOADS).child(postId);
                 userPostRef.setValue(timestamp);
 
-                PrismPost prismPost = new PrismPost(imageUri, description, username, userId, timestamp, postId);
+                PrismPost prismPost = new PrismPost(imageUri, description, userId, timestamp, postId);
 
                 RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
                 if (mainContentRecyclerView != null) {
@@ -421,6 +422,44 @@ public class MainActivity extends FragmentActivity {
         @Override
         protected Void doInBackground(Void... params) {
             uploadImageToCloud();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void v) {
+            super.onPostExecute(v);
+        }
+
+    }
+
+    /**
+     *
+     */
+    private class ProfilePictureUploadTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            StorageReference profilePicRef = storageReference.child(Key.STORAGE_USER_PROFILE_IMAGE_REF).child(profilePictureUri.getLastPathSegment());
+            profilePicRef.putFile(profilePictureUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                    DatabaseReference userRef = userReference.child(Key.DB_REF_USER_PROFILE_PIC);
+                    userRef.setValue(downloadUrl.toString()).addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            System.out.println("Task successful");
+                        }
+                    });
+
+                }
+            });
             return null;
         }
 

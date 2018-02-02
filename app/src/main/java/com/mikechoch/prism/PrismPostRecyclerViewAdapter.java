@@ -191,10 +191,14 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             // TODO: check if a profile pic exists for user, if not use one of defaults at random
             Random random = new Random();
             int defaultProfPic = random.nextInt(10);
+
             Uri uri = Uri.parse(String.valueOf(DefaultProfilePicture.values()[defaultProfPic].getProfilePictureLow()));
+//            if (prismPost.getUserProfilePicUri() != null && !prismPost.getUserProfilePicUri().isEmpty()) {
+//                uri = prismPost.getUserProfilePicUri();
+//            }
             Glide.with(context)
                     .asBitmap()
-                    .load(uri)
+                    .load(prismPost.getUserProfilePicUri() != null ? prismPost.getUserProfilePicUri() : uri)
                     .apply(new RequestOptions().fitCenter())
                     .into(new BitmapImageViewTarget(userProfilePicImageView) {
                         @Override
