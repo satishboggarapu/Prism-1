@@ -17,6 +17,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -53,6 +54,7 @@ public class ImageUploadActivity extends AppCompatActivity {
     private CardView uploadButton;
     private Toolbar toolbar;
     private TextView toolbarTextView;
+    private ProgressBar uploadImageProgressBar;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

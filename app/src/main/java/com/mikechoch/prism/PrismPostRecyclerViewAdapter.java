@@ -179,10 +179,10 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             String postId = this.prismPost.getPostid();
             String postDate = getFancyDateDifferenceString(prismPost.getTimestamp() * -1);
             final int[] likeCount = {this.prismPost.getLikes()};
-//            int repostCount = this.prismPost.getReposts();
+//            final int[] repostCount = {this.prismPost.getReposts()};
             int repostCount = 4;
             boolean postLiked = CurrentUser.userLikedPosts.containsKey(postId);
-//            boolean postReposted = CurrentUser.userRepostedPost.containsKey(postId);
+            boolean postReposted = CurrentUser.userRepostedPosts.containsKey(postId);
 
             /*
              * Username
