@@ -124,15 +124,14 @@ public class RegisterActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                fullNameTextInputLayout.setError(null);
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (s.length() > 0) {
-                                isFullNameValid(s.toString().trim());
-                            }
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (s.length() > 0) {
+                            isFullNameValid(s.toString().trim());
                         }
-                    }, 3000);
+                    }
+                }, 2000);
             }
 
             @Override
@@ -152,19 +151,18 @@ public class RegisterActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                usernameTextInputLayout.setError(null);
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (s.length() > 0) {
-                                isUsernameValid(s.toString().trim());
-                            }
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (s.length() > 0) {
+                            isUsernameValid(s.toString().trim());
                         }
-                    }, 3000);
+                    }
+                }, 2000);
             }
 
             @Override
-            public void afterTextChanged(Editable e) { }
+            public void afterTextChanged(Editable e) {}
         });
 
 
@@ -181,15 +179,14 @@ public class RegisterActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                emailTextInputLayout.setError(null);
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (s.length() > 0) {
-                                isEmailValid(s.toString().trim());
-                            }
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (s.length() > 0) {
+                            isEmailValid(s.toString().trim());
                         }
-                    }, 3000);
+                    }
+                }, 2000);
             }
 
             @Override
@@ -202,7 +199,7 @@ public class RegisterActivity extends AppCompatActivity {
         passwordTextInputLayout.setTypeface(sourceSansProLight);
         passwordTextInputLayout.setPasswordVisibilityToggleEnabled(true);
         passwordTextInputLayout.getPasswordVisibilityToggleDrawable().setTint(Color.WHITE);
-                passwordEditText = findViewById(R.id.register_password_edit_text);
+        passwordEditText = findViewById(R.id.register_password_edit_text);
         passwordEditText.setTypeface(sourceSansProLight);
         passwordEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -210,15 +207,14 @@ public class RegisterActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                passwordTextInputLayout.setError(null);
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (s.length() > 0) {
-                                isPasswordValid(s.toString().trim());
-                            }
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (s.length() > 0) {
+                            isPasswordValid(s.toString().trim());
                         }
-                    }, 3000);
+                    }
+                }, 2000);
             }
 
             @Override
@@ -346,21 +342,26 @@ public class RegisterActivity extends AppCompatActivity {
             return false;
         }
         if (!Pattern.matches("^[a-zA-Z ']+", fullName)) {
-            fullNameTextInputLayout.setError("Name can only have alphabets, space and apostrophe");
+            fullNameTextInputLayout.setError("Name can only contain letters, space, and apostrophe");
             return false;
         }
         if (Pattern.matches(".*(.)\\1{3,}.*", fullName)) {
-            fullNameTextInputLayout.setError("Name cannot have more than 3 repeating characters");
+            fullNameTextInputLayout.setError("Name cannot contain more than 3 repeating characters");
             return false;
         }
         if (Pattern.matches(".*(['])\\1{1,}.*", fullName)) {
-            fullNameTextInputLayout.setError("Name cannot have more than 1 apostrophe");
+            fullNameTextInputLayout.setError("Name cannot contain more than 1 apostrophe");
             return false;
         }
         if (!Character.isAlphabetic(fullName.charAt(0))) {
             fullNameTextInputLayout.setError("Name must start with a letter");
             return false;
         }
+        if (!Character.isAlphabetic(fullName.charAt(fullName.length()-1))) {
+            fullNameTextInputLayout.setError("Name must end with a letter");
+            return false;
+        }
+        fullNameTextInputLayout.setErrorEnabled(false);
         return true;
     }
 
@@ -379,21 +380,26 @@ public class RegisterActivity extends AppCompatActivity {
             return false;
         }
         if (!Pattern.matches("^[a-z0-9._']+", username)) {
-            usernameTextInputLayout.setError("Username can only contain letters, numbers, period and underscore");
+            usernameTextInputLayout.setError("Username can only contain lowercase letters, numbers, period, and underscore");
             return false;
         }
         if (Pattern.matches(".*([a-z0-9])\\1{5,}.*", username)) {
-            usernameTextInputLayout.setError("Username cannot have more than 3 repeating characters");
+            usernameTextInputLayout.setError("Username cannot contain more than 3 repeating characters");
             return false;
         }
         if (Pattern.matches(".*([._]){2,}.*", username)) {
-            usernameTextInputLayout.setError("Username cannot have more than 1 repeating symbol");
+            usernameTextInputLayout.setError("Username cannot contain more than 1 repeating symbol");
             return false;
         }
         if (!Character.isAlphabetic(username.charAt(0))) {
             usernameTextInputLayout.setError("Username must start with a letter");
             return false;
         }
+        if (!Character.isAlphabetic(username.charAt(username.length()-1)) && !Character.isDigit(username.charAt(username.length()-1))) {
+            usernameTextInputLayout.setError("Username must end with a letter or number");
+            return false;
+        }
+        usernameTextInputLayout.setErrorEnabled(false);
         return true;
 
     }
@@ -403,6 +409,7 @@ public class RegisterActivity extends AppCompatActivity {
      */
     private boolean isEmailValid(String email) {
         if (Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            emailTextInputLayout.setErrorEnabled(false);
             return true;
         } else {
             emailTextInputLayout.setError("Invalid email");
@@ -416,6 +423,7 @@ public class RegisterActivity extends AppCompatActivity {
     private boolean isPasswordValid(String password) {
         // TODO: Add more checks for valid password?
         if (password.length() > 5) {
+            passwordTextInputLayout.setErrorEnabled(false);
             return true;
         } else {
             passwordTextInputLayout.setError("Password must be at least 6 characters long");

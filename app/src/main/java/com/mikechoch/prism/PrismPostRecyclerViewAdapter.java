@@ -71,6 +71,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
     private int screenWidth;
     private int screenHeight;
 
+    private float scale;
+
     public PrismPostRecyclerViewAdapter(Context context, ArrayList<String> prismPostKeys, HashMap<String, PrismPost> prismPostHashMap, int[] screenDimens) {
         this.context = context;
         this.prismPostKeys = prismPostKeys;
@@ -80,6 +82,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
         this.sourceSansProLight = Typeface.createFromAsset(context.getAssets(), "fonts/SourceSansPro-Light.ttf");
         this.sourceSansProBold = Typeface.createFromAsset(context.getAssets(), "fonts/SourceSansPro-Black.ttf");
+
+        scale = context.getResources().getDisplayMetrics().density;
     }
 
     @Override
@@ -182,7 +186,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 //            final int[] repostCount = {this.prismPost.getReposts()};
             int repostCount = 4;
             boolean postLiked = CurrentUser.userLikedPosts.containsKey(postId);
-            boolean postReposted = CurrentUser.userRepostedPosts.containsKey(postId);
+//            boolean postReposted = CurrentUser.userRepostedPosts.containsKey(postId);
 
             /*
              * Username
@@ -196,6 +200,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 //            if (prismPost.getUserProfilePicUri() != null && !prismPost.getUserProfilePicUri().isEmpty()) {
 //                uri = prismPost.getUserProfilePicUri();
 //            }
+            System.out.println(prismPost.getUserProfilePicUri());
             Glide.with(context)
                     .asBitmap()
                     .load(prismPost.getUserProfilePicUri() != null ? prismPost.getUserProfilePicUri() : uri)
@@ -206,6 +211,12 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                             RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(context.getResources(), resource);
                             drawable.setCircular(true);
                             userProfilePicImageView.setImageDrawable(drawable);
+
+                            if (prismPost.getUserProfilePicUri() != null) {
+                                int whiteOutlinePadding = (int) (1 * scale);
+                                userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
+                                userProfilePicImageView.setBackground(context.getResources().getDrawable(R.drawable.circle_profile_frame));
+                            }
                         }
                     });
             prismUserTextView.setText(prismPost.getUsername());

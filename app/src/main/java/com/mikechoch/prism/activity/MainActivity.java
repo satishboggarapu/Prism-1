@@ -26,6 +26,7 @@ import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
 import android.widget.ImageView;
@@ -95,6 +96,7 @@ public class MainActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity_layout);
 
+        // Get the screen density of the current phone for later UI element scaling
         scale = getResources().getDisplayMetrics().density;
 
         // Generates current user's details
@@ -133,10 +135,10 @@ public class MainActivity extends FragmentActivity {
          * Selected tabs will be a ColorAccent and unselected tabs White
          */
         prismTabLayout.getTabAt(Default.VIEW_PAGER_HOME).setIcon(R.drawable.ic_image_filter_hdr_white_36dp);
-        prismTabLayout.getTabAt(Default.VIEW_PAGER_TRENDING).setIcon(R.drawable.ic_flash_white_36dp);
-        prismTabLayout.getTabAt(Default.VIEW_PAGER_SEARCH).setIcon(R.drawable.ic_magnify_white_36dp);
-        prismTabLayout.getTabAt(Default.VIEW_PAGER_NOTIFICATIONS).setIcon(R.drawable.ic_bell_white_36dp);
-        prismTabLayout.getTabAt(Default.VIEW_PAGER_PROFILE).setIcon(R.drawable.ic_account_white_36dp);
+//        prismTabLayout.getTabAt(Default.VIEW_PAGER_TRENDING).setIcon(R.drawable.ic_flash_white_36dp);
+        prismTabLayout.getTabAt(Default.VIEW_PAGER_SEARCH - 1).setIcon(R.drawable.ic_magnify_white_36dp);
+        prismTabLayout.getTabAt(Default.VIEW_PAGER_NOTIFICATIONS - 1).setIcon(R.drawable.ic_bell_white_36dp);
+        prismTabLayout.getTabAt(Default.VIEW_PAGER_PROFILE - 1).setIcon(R.drawable.ic_account_white_36dp);
         int tabUnselectedColor = Color.WHITE;
         int tabSelectedColor = getResources().getColor(R.color.colorAccent);
         prismTabLayout.getTabAt(Default.VIEW_PAGER_HOME).getIcon().setColorFilter(

@@ -1,6 +1,7 @@
 package com.mikechoch.prism.activity;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
@@ -93,6 +94,8 @@ public class LoginActivity extends AppCompatActivity {
 
         passwordTextInputLayout = findViewById(R.id.password_text_input_layout);
         passwordTextInputLayout.setTypeface(sourceSansProLight);
+        passwordTextInputLayout.setPasswordVisibilityToggleEnabled(true);
+        passwordTextInputLayout.getPasswordVisibilityToggleDrawable().setTint(Color.WHITE);
         passwordEditText = findViewById(R.id.password_edit_text);
         passwordEditText.setTypeface(sourceSansProLight);
         passwordEditText.addTextChangedListener(new TextWatcher() {

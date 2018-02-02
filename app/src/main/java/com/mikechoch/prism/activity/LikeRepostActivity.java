@@ -107,8 +107,6 @@ public class LikeRepostActivity extends AppCompatActivity {
 
         prismUserArrayList = new ArrayList<>();
 
-        // TODO: populate users ArrayList
-
         usersRecyclerView = findViewById(R.id.like_repost_users_recycler_view);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         DefaultItemAnimator defaultItemAnimator = new DefaultItemAnimator();

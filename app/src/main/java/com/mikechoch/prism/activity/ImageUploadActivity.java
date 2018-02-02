@@ -54,7 +54,6 @@ public class ImageUploadActivity extends AppCompatActivity {
     private CardView uploadButton;
     private Toolbar toolbar;
     private TextView toolbarTextView;
-    private ProgressBar uploadImageProgressBar;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

@@ -63,7 +63,7 @@
                 android:layout_height="wrap_content"
                 android:hint="Username"
                 android:inputType="text"
-                android:textColor="@android:color/white"/>
+                android:textColor="@android:color/white" />
 
         </android.support.design.widget.TextInputLayout>
 
