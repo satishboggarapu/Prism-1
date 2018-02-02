@@ -16,6 +16,7 @@ import android.text.InputType;
 import android.text.Spanned;
 import android.text.TextWatcher;
 import android.util.Patterns;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -40,6 +41,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.Default;
 import com.mikechoch.prism.DefaultProfilePicture;
 import com.mikechoch.prism.Key;
+import com.mikechoch.prism.PrismPost;
 import com.mikechoch.prism.R;
 
 import java.util.Random;
@@ -142,14 +144,7 @@ public class RegisterActivity extends AppCompatActivity {
         usernameTextInputLayout = findViewById(R.id.register_username_text_input_layout);
         usernameTextInputLayout.setTypeface(sourceSansProLight);
         usernameEditText = findViewById(R.id.register_username_edit_text);
-        usernameEditText.setFilters(new InputFilter[] {
-                new InputFilter.AllCaps() {
-                    @Override
-                    public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
-                        return String.valueOf(source).toLowerCase();
-                    }
-                }
-        });
+
         usernameEditText.setTypeface(sourceSansProLight);
         usernameEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -171,6 +166,8 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable e) { }
         });
+
+
     }
 
     private void setupEmailEditText() {
