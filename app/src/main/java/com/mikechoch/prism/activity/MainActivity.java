@@ -83,12 +83,16 @@ public class MainActivity extends FragmentActivity {
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
 
+    private float scale;
+
 
     @SuppressLint("NewApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity_layout);
+
+        scale = getResources().getDisplayMetrics().density;
 
         // Generates current user's details
         new CurrentUser();
@@ -261,6 +265,35 @@ public class MainActivity extends FragmentActivity {
                     new ImageUploadTask().execute();
                 }
                 break;
+            // If requestCode is for ProfilePictureUploadActivity
+            case Default.PROFILE_PIC_UPLOAD_INTENT_REQUEST_CODE:
+                if (resultCode == RESULT_OK) {
+                    String profilePictureBitmap = data.getStringExtra("CroppedProfilePicture");
+
+
+                    // TODO: Push profile picture to cloud
+
+
+                    ImageView profilePictureImageView = findViewById(R.id.profile_frag_profile_picture_image_view);
+                    Glide.with(this)
+                            .asBitmap()
+                            .thumbnail(0.05f)
+                            .load(profilePictureBitmap)
+                            .apply(new RequestOptions().centerCrop())
+                            .into(new BitmapImageViewTarget(profilePictureImageView) {
+                                @Override
+                                protected void setResource(Bitmap resource) {
+                                    RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), resource);
+                                    drawable.setCircular(true);
+                                    profilePictureImageView.setImageDrawable(drawable);
+
+                                    int whiteOutlinePadding = (int) (2 * scale);
+                                    profilePictureImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
+                                    profilePictureImageView.setBackground(getResources().getDrawable(R.drawable.circle_profile_frame));
+                                }
+                            });
+                }
+                break;
             default:
                 break;
         }
@@ -338,7 +371,7 @@ public class MainActivity extends FragmentActivity {
                         new Handler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                uploadingImageTextView.setText("Done.");
+                                uploadingImageTextView.setText("Done");
                             }
                         }, 1000);
 

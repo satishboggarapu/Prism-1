@@ -52,6 +52,7 @@ public class ImageUploadActivity extends AppCompatActivity {
     private TextView uploadButtonTextView;
     private CardView uploadButton;
     private Toolbar toolbar;
+    private TextView toolbarTextView;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -79,17 +80,20 @@ public class ImageUploadActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.image_upload_activity_layout);
 
+        // Create two typefaces
+        sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
+        sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
+
         // Setup the toolbar and back button to return to MainActivity
         toolbar = findViewById(R.id.toolbar);
+        toolbarTextView = findViewById(R.id.toolbar_text_view);
+        toolbarTextView.setTypeface(sourceSansProLight);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         // Get screen height for future use
         screenWidth = getWindowManager().getDefaultDisplay().getWidth();
         screenHeight = getWindowManager().getDefaultDisplay().getHeight();
-        // Create two typefaces
-        sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
-        sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
 
         // Initialize text related UI elements and assign typefaces
         uploadImageTitle = findViewById(R.id.uploaded_image_text_view_title);
@@ -119,12 +123,12 @@ public class ImageUploadActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 /*
-                 * When the uploadButton is clicked, a new Intent is created
+                 * When the uploadButton   is clicked, a new Intent is created
                  * This passes the uploaded image data (image and description) back to MainActivity
                  * Then ImageUploadActivity is finished
                  */
                 Intent data = new Intent();
-                data.putExtra("ImageUri", imageUri.toString());
+                data.putExtra("ImageUri", imageUri);
                 data.putExtra("ImageDescription", imageDescriptionEditText.getText().toString().trim());
                 setResult(RESULT_OK, data);
                 finish();
@@ -140,6 +144,12 @@ public class ImageUploadActivity extends AppCompatActivity {
 
         // Ask user to select an image to upload from phone gallery
         selectImageFromGallery();
+    }
+
+    @Override
+    public void onBackPressed() {
+        finish();
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
     }
 
     /**

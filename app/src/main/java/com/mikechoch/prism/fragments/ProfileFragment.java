@@ -1,6 +1,9 @@
 package com.mikechoch.prism.fragments;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
@@ -20,12 +23,16 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.google.firebase.auth.FirebaseAuth;
+import com.mikechoch.prism.Default;
 import com.mikechoch.prism.DefaultProfilePicture;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.activity.LoginActivity;
+import com.mikechoch.prism.activity.ProfilePictureUploadActivity;
 
 import java.lang.reflect.Type;
 import java.util.Random;
+
+import static android.app.Activity.RESULT_OK;
 
 /**
  * Created by mikechoch on 1/22/18.
@@ -42,6 +49,8 @@ public class ProfileFragment extends Fragment {
 
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
+
+    private String[] setProfilePicStrings = {"Choose from gallery", "Take a selfie"};
 
 
     public static final ProfileFragment newInstance(int title, String message) {
@@ -93,7 +102,27 @@ public class ProfileFragment extends Fragment {
         userProfilePicImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                AlertDialog.Builder profilePictureAlertDialog = new AlertDialog.Builder(getActivity());
+                profilePictureAlertDialog.setTitle("Set profile picture");
+                profilePictureAlertDialog.setItems(setProfilePicStrings, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which) {
+                            case 0:
+                                Intent imageUploadIntent = new Intent(getActivity(), ProfilePictureUploadActivity.class);
+                                getActivity().startActivityForResult(imageUploadIntent, Default.PROFILE_PIC_UPLOAD_INTENT_REQUEST_CODE);
+                                getActivity().overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+                                break;
+                            case 1:
+                                // TODO: Figure out camera feature
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                });
 
+                profilePictureAlertDialog.create().show();
             }
         });
 
@@ -120,4 +149,5 @@ public class ProfileFragment extends Fragment {
 
         return view;
     }
+
 }

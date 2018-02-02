@@ -21,4 +21,13 @@
 
     </android.support.v4.widget.SwipeRefreshLayout>
 
+    <ProgressBar
+        android:id="@+id/main_content_progress_bar"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_gravity="center"
+        android:indeterminate="true"
+        android:indeterminateDrawable="@drawable/circle_progress_foreground"
+        android:visibility="visible" />
+
 </android.support.design.widget.CoordinatorLayout>

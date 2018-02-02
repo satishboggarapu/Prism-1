@@ -88,7 +88,7 @@ public class MainContentFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.main_content_fragment_layout, container, false);
 
-        mainContentProgress = getActivity().findViewById(R.id.main_content_progress_bar);
+        mainContentProgress = view.findViewById(R.id.main_content_progress_bar);
 
         /*
          * The main purpose of this MainContentFragment is to be a Home page of the application
