@@ -63,7 +63,7 @@
                 android:layout_height="wrap_content"
                 android:hint="Username"
                 android:inputType="text"
-                android:textColor="@android:color/white"/>
+                android:textColor="@android:color/white" />
 
         </android.support.design.widget.TextInputLayout>
 
@@ -133,6 +133,7 @@
         android:id="@+id/register_progress_bar"
         android:layout_width="80dp"
         android:layout_height="80dp"
+        android:layout_centerHorizontal="true"
         android:layout_below="@id/register_fields_relative_layout"
         android:layout_marginTop="28dp"
         android:visibility="invisible"

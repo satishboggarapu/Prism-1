@@ -29,7 +29,7 @@ public class Default {
     public static final int IMAGE_LOAD_THRESHOLD = 3;
     public static final int IMAGE_LOAD_COUNT = 10;
 
-    public static final int VIEW_PAGER_SIZE = 5;
+    public static final int VIEW_PAGER_SIZE = 5 - 1;
     public static final int VIEW_PAGER_HOME = 0;
     public static final int VIEW_PAGER_TRENDING = 1;
     public static final int VIEW_PAGER_SEARCH = 2;

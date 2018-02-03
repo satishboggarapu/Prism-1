@@ -87,6 +87,7 @@
         android:id="@+id/login_progress_bar"
         android:layout_width="80dp"
         android:layout_height="80dp"
+        android:layout_centerHorizontal="true"
         android:layout_below="@id/login_fields_relative_layout"
         android:layout_marginTop="28dp"
         android:visibility="invisible"

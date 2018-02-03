@@ -23,8 +23,16 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
+import com.mikechoch.prism.CurrentUser;
 import com.mikechoch.prism.Default;
 import com.mikechoch.prism.DefaultProfilePicture;
+import com.mikechoch.prism.Key;
+import com.mikechoch.prism.PrismUser;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.activity.LoginActivity;
 import com.mikechoch.prism.activity.ProfilePictureUploadActivity;
@@ -41,6 +49,7 @@ import static android.app.Activity.RESULT_OK;
 public class ProfileFragment extends Fragment {
 
     private FirebaseAuth auth;
+    private DatabaseReference userReference;
 
     private ImageView userProfilePicImageView;
     private TextView userUsernameTextView;
@@ -50,6 +59,7 @@ public class ProfileFragment extends Fragment {
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
 
+    private float scale;
     private String[] setProfilePicStrings = {"Choose from gallery", "Take a selfie"};
 
 
@@ -69,7 +79,46 @@ public class ProfileFragment extends Fragment {
         int title = getArguments().getInt("Title");
         String message = getArguments().getString("Extra_Message");
 
+        scale = this.getResources().getDisplayMetrics().density;
+
         auth = FirebaseAuth.getInstance();
+        userReference = Default.USERS_REFERENCE.child(auth.getCurrentUser().getUid());
+//        userReference.addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                if (dataSnapshot.exists()) {
+//                    profilePic = (String) dataSnapshot.child(Key.DB_REF_USER_PROFILE_PIC).getValue();
+//
+//                    Random random = new Random();
+//                    int defaultProfPic = random.nextInt(10);
+//                    Uri uri = Uri.parse(String.valueOf(DefaultProfilePicture.values()[defaultProfPic].getProfilePicture()));
+//                    Glide.with(getActivity())
+//                            .asBitmap()
+//                            .thumbnail(0.05f)
+//                            .load(profilePic != null ? profilePic : uri)
+//                            .apply(new RequestOptions().fitCenter())
+//                            .into(new BitmapImageViewTarget(userProfilePicImageView) {
+//                                @Override
+//                                protected void setResource(Bitmap resource) {
+//                                    RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getActivity().getResources(), resource);
+//                                    drawable.setCircular(true);
+//                                    userProfilePicImageView.setImageDrawable(drawable);
+//
+//                                    if (profilePic != null) {
+//                                        int whiteOutlinePadding = (int) (1 * scale);
+//                                        userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
+//                                        userProfilePicImageView.setBackground(getActivity().getResources().getDrawable(R.drawable.circle_profile_frame));
+//                                    }
+//                                }
+//                            });
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//
+//            }
+//        });
 
         sourceSansProLight = Typeface.createFromAsset(getContext().getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getContext().getAssets(), "fonts/SourceSansPro-Black.ttf");
@@ -94,9 +143,15 @@ public class ProfileFragment extends Fragment {
                 .into(new BitmapImageViewTarget(userProfilePicImageView) {
                     @Override
                     protected void setResource(Bitmap resource) {
-                        RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), resource);
+                        RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getActivity().getResources(), resource);
                         drawable.setCircular(true);
                         userProfilePicImageView.setImageDrawable(drawable);
+
+//                        if (profilePic != null) {
+//                            int whiteOutlinePadding = (int) (1 * scale);
+//                            userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
+//                            userProfilePicImageView.setBackground(getActivity().getResources().getDrawable(R.drawable.circle_profile_frame));
+//                        }
                     }
                 });
         userProfilePicImageView.setOnClickListener(new View.OnClickListener() {
