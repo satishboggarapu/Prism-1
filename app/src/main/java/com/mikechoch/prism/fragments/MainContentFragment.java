@@ -228,6 +228,7 @@ public class MainContentFragment extends Fragment {
                 if (!dateOrderedPrismPostKeys.contains(postKey)) {
                     PrismPost prismPost = postSnapshot.getValue(PrismPost.class);
                     prismPost.setLikes((int) postSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount());
+                    prismPost.setReposts((int) postSnapshot.child(Key.DB_REF_POST_REPOSTED_USERS).getChildrenCount());
                     dateOrderedPrismPostKeys.add(postKey);
                     prismPostHashMap.put(postKey, prismPost);
                 }
@@ -318,6 +319,7 @@ public class MainContentFragment extends Fragment {
                 if (!dateOrderedPrismPostKeys.contains(postKey)) {
                     PrismPost prismPost = postSnapshot.getValue(PrismPost.class);
                     prismPost.setLikes((int) postSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount());
+                    prismPost.setReposts((int) postSnapshot.child(Key.DB_REF_POST_REPOSTED_USERS).getChildrenCount());
                     dateOrderedPrismPostKeys.add(postKey);
                     prismPostHashMap.put(postKey, prismPost);
                     getActivity().runOnUiThread(new Runnable() {

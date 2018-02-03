@@ -183,10 +183,9 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             String postId = this.prismPost.getPostid();
             String postDate = getFancyDateDifferenceString(prismPost.getTimestamp() * -1);
             final int[] likeCount = {this.prismPost.getLikes()};
-//            final int[] repostCount = {this.prismPost.getReposts()};
-            int repostCount = 4;
+            final int[] repostCount = {this.prismPost.getReposts()};
             boolean postLiked = CurrentUser.userLikedPosts.containsKey(postId);
-//            boolean postReposted = CurrentUser.userRepostedPosts.containsKey(postId);
+            boolean postReposted = CurrentUser.userRepostedPosts.containsKey(postId);
 
             /*
              * Username
@@ -420,25 +419,31 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             /*
              * Repost
              */
-            String repostStringTail = repostCount == 1 ? " repost" : " reposts";
-            repostsCountTextView.setText(repostCount + repostStringTail);
+            String repostStringTail = repostCount[0] == 1 ? " repost" : " reposts";
+            repostsCountTextView.setText(repostCount[0] + repostStringTail);
             repostsCountTextView.setTypeface(sourceSansProLight);
 
-            final boolean[] reposted = {false};
-            ColorStateList repostColor = getRepostColor(reposted[0]);
+            ColorStateList repostColor = getRepostColor(postReposted);
             repostButton.setImageTintList(repostColor);
             repostButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (!reposted[0]) {
-                        AlertDialog repostConfirmationAlertDialog = createRepostConfirmationAlertDialog();
-                        repostConfirmationAlertDialog.show();
-                    } else {
-                        // TODO: Change image to not be reposted
-
-                        ColorStateList repostColor = getRepostColor(false);
+                    String postId = prismPost.getPostid();
+                    boolean postReposted = CurrentUser.userRepostedPosts.containsKey(postId);
+                    if (postReposted) {
+                        ColorStateList repostColor = getRepostColor(!postReposted);
                         repostButton.setImageTintList(repostColor);
                         repostButton.startAnimation(shareButtonBounceAnimation);
+                        repostIrisAnimationImageView.startAnimation(unrepostIrisBounceAnimation);
+
+                        repostCount[0]--;
+                        String repostStringTail = repostCount[0] == 1 ? " repost" : " reposts";
+                        repostsCountTextView.setText(repostCount[0] + repostStringTail);
+
+                        handleRepostButtonClick(prismPost);
+                    } else {
+                        AlertDialog repostConfirmationAlertDialog = createRepostConfirmationAlertDialog(repostCount);
+                        repostConfirmationAlertDialog.show();
                     }
                 }
             });
@@ -542,19 +547,24 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         /**
          *
          */
-        private AlertDialog createRepostConfirmationAlertDialog() {
+        private AlertDialog createRepostConfirmationAlertDialog(int[] repostCount) {
             AlertDialog.Builder repostConfirmationAlertDialogBuilder = new AlertDialog.Builder(context);
             repostConfirmationAlertDialogBuilder.setTitle("This post will show on your profile, are you sure you want to repost?");
             repostConfirmationAlertDialogBuilder
                     .setPositiveButton("REPOST", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
-                    // TODO: Change image to be reposted
-
+                    handleRepostButtonClick(prismPost);
                     ColorStateList repostColor = getRepostColor(true);
                     repostButton.setImageTintList(repostColor);
                     repostButton.startAnimation(shareButtonBounceAnimation);
-                    repostIrisAnimationImageView.startAnimation(unrepostIrisBounceAnimation);
+                    repostIrisAnimationImageView.startAnimation(repostIrisBounceAnimation);
+
+                    repostCount[0]++;
+                    String repostStringTail = repostCount[0] == 1 ? " repost" : " reposts";
+                    repostsCountTextView.setText(repostCount[0] + repostStringTail);
+
+                    handleRepostButtonClick(prismPost);
 
                     dialogInterface.dismiss();
                 }

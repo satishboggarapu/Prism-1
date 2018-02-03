@@ -33,6 +33,7 @@ public class CurrentUser {
 
     public static void refreshUserLikedAndRepostedPosts() {
         userLikedPosts = new HashMap<String, Long>();
+        userRepostedPosts = new HashMap<String, Long>();
         userReference.child(Key.DB_REF_USER_LIKES).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
