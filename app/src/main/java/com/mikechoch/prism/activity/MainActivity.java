@@ -355,7 +355,8 @@ public class MainActivity extends FragmentActivity {
                 userPostRef.setValue(timestamp);
 
                 PrismPost prismPost = new PrismPost(imageUri, description, userId, timestamp, postId);
-
+                prismPost.setUsername(CurrentUser.username);
+                prismPost.setUserProfilePicUri(CurrentUser.userProfilePicUri);
                 RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
                 if (mainContentRecyclerView != null) {
                     MainContentFragment.dateOrderedPrismPostKeys.add(0, postId);

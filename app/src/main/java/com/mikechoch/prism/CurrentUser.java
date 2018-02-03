@@ -22,12 +22,16 @@ public class CurrentUser {
     public static FirebaseUser user;
     public static HashMap userLikedPosts; // KEY: String postID   VALUE: long timestamp
     public static HashMap userRepostedPosts; // KEY: String postID   VALUE: long timestamp
+    public static String userProfilePicUri;
+    public static String username;
+    public static String userFullName;
 
     public CurrentUser() {
         auth = FirebaseAuth.getInstance();
         user = auth.getCurrentUser();
         userReference = Default.USERS_REFERENCE.child(user.getUid());
         refreshUserLikedAndRepostedPosts();
+        getUserProfileDetails();
 
     }
 
@@ -58,4 +62,21 @@ public class CurrentUser {
         });
     }
 
+    public void getUserProfileDetails() {
+        userReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    userProfilePicUri = (String) dataSnapshot.child(Key.DB_REF_USER_PROFILE_PIC).getValue();
+                    username = (String) dataSnapshot.child(Key.DB_REF_USER_PROFILE_USERNAME).getValue();
+                    userFullName = (String) dataSnapshot.child(Key.DB_REF_USER_PROFILE_FULL_NAME).getValue();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
 }
