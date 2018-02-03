@@ -424,22 +424,20 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             repostsCountTextView.setText(repostCount + repostStringTail);
             repostsCountTextView.setTypeface(sourceSansProLight);
 
-            final boolean[] reposted = {false};
-            ColorStateList repostColor = getRepostColor(reposted[0]);
+            ColorStateList repostColor = getRepostColor(true);
             repostButton.setImageTintList(repostColor);
             repostButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (!reposted[0]) {
+                    if (true) {
                         AlertDialog repostConfirmationAlertDialog = createRepostConfirmationAlertDialog();
                         repostConfirmationAlertDialog.show();
                     } else {
-                        // TODO: Change image to not be reposted
-
                         ColorStateList repostColor = getRepostColor(false);
                         repostButton.setImageTintList(repostColor);
                         repostButton.startAnimation(shareButtonBounceAnimation);
                     }
+                    handleRepostButtonClick(prismPost);
                 }
             });
 
