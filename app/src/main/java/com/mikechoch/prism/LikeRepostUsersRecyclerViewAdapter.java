@@ -34,12 +34,16 @@ public class LikeRepostUsersRecyclerViewAdapter extends RecyclerView.Adapter<Lik
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
 
+    private float scale;
+
     public LikeRepostUsersRecyclerViewAdapter(Context context, ArrayList<PrismUser> prismUserArrayList) {
         this.context = context;
         this.prismUserArrayList = prismUserArrayList;
 
         this.sourceSansProLight = Typeface.createFromAsset(context.getAssets(), "fonts/SourceSansPro-Light.ttf");
         this.sourceSansProBold = Typeface.createFromAsset(context.getAssets(), "fonts/SourceSansPro-Black.ttf");
+
+        scale = context.getResources().getDisplayMetrics().density;
     }
 
     @Override
@@ -83,17 +87,24 @@ public class LikeRepostUsersRecyclerViewAdapter extends RecyclerView.Adapter<Lik
         public void setData(PrismUser prismUser) {
             this.prismUser = prismUser;
 
+            System.out.println("HI" + prismUser.getProfilePicture());
+
             Random random = new Random();
             int defaultProfPic = random.nextInt(10);
             Uri uri = Uri.parse(String.valueOf(DefaultProfilePicture.values()[defaultProfPic].getProfilePicture()));
             Glide.with(context)
                     .asBitmap()
                     .thumbnail(0.05f)
-                    .load(uri)
-                    .apply(new RequestOptions().centerCrop())
+                    .load(prismUser.getProfilePicture() != null ? prismUser.getProfilePicture() : uri)
                     .into(new BitmapImageViewTarget(userProfilePicture) {
                         @Override
                         protected void setResource(Bitmap resource) {
+                            if (prismUser.getProfilePicture() != null) {
+                                int whiteOutlinePadding = (int) (1 * scale);
+                                userProfilePicture.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
+                                userProfilePicture.setBackground(context.getResources().getDrawable(R.drawable.circle_profile_frame));
+                            }
+
                             RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(context.getResources(), resource);
                             drawable.setCircular(true);
                             userProfilePicture.setImageDrawable(drawable);

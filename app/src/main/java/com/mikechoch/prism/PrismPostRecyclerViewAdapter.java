@@ -42,8 +42,6 @@ import com.google.firebase.database.Transaction;
 import com.mikechoch.prism.activity.LikeRepostActivity;
 import com.mikechoch.prism.helper.MyTimeUnit;
 
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -64,6 +62,9 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
     private PrismPost prismPost;
     private ArrayList<String> prismPostKeys;
     private HashMap<String, PrismPost> prismPostHashMap;
+
+    private String[] morePostOptionsCurrentUser = {"Report post", "Share", "Delete"};
+    private String[] morePostOptions = {"Report post", "Share"};
 
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
@@ -183,10 +184,9 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             String postId = this.prismPost.getPostid();
             String postDate = getFancyDateDifferenceString(prismPost.getTimestamp() * -1);
             final int[] likeCount = {this.prismPost.getLikes()};
-//            final int[] repostCount = {this.prismPost.getReposts()};
-            int repostCount = 4;
+            final int[] repostCount = {this.prismPost.getReposts()};
             boolean postLiked = CurrentUser.userLikedPosts.containsKey(postId);
-//            boolean postReposted = CurrentUser.userRepostedPosts.containsKey(postId);
+            boolean postReposted = CurrentUser.userRepostedPosts.containsKey(postId);
 
             /*
              * Username
@@ -200,23 +200,21 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 //            if (prismPost.getUserProfilePicUri() != null && !prismPost.getUserProfilePicUri().isEmpty()) {
 //                uri = prismPost.getUserProfilePicUri();
 //            }
-            System.out.println(prismPost.getUserProfilePicUri());
             Glide.with(context)
                     .asBitmap()
                     .load(prismPost.getUserProfilePicUri() != null ? prismPost.getUserProfilePicUri() : uri)
-                    .apply(new RequestOptions().fitCenter())
                     .into(new BitmapImageViewTarget(userProfilePicImageView) {
                         @Override
                         protected void setResource(Bitmap resource) {
-                            RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(context.getResources(), resource);
-                            drawable.setCircular(true);
-                            userProfilePicImageView.setImageDrawable(drawable);
-
                             if (prismPost.getUserProfilePicUri() != null) {
                                 int whiteOutlinePadding = (int) (1 * scale);
                                 userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
                                 userProfilePicImageView.setBackground(context.getResources().getDrawable(R.drawable.circle_profile_frame));
                             }
+
+                            RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(context.getResources(), resource);
+                            drawable.setCircular(true);
+                            userProfilePicImageView.setImageDrawable(drawable);
                         }
                     });
             prismUserTextView.setText(prismPost.getUsername());
@@ -420,24 +418,32 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             /*
              * Repost
              */
-            String repostStringTail = repostCount == 1 ? " repost" : " reposts";
-            repostsCountTextView.setText(repostCount + repostStringTail);
+            String repostStringTail = repostCount[0] == 1 ? " repost" : " reposts";
+            repostsCountTextView.setText(repostCount[0] + repostStringTail);
             repostsCountTextView.setTypeface(sourceSansProLight);
 
-            ColorStateList repostColor = getRepostColor(true);
+            ColorStateList repostColor = getRepostColor(postReposted);
             repostButton.setImageTintList(repostColor);
             repostButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (true) {
-                        AlertDialog repostConfirmationAlertDialog = createRepostConfirmationAlertDialog();
-                        repostConfirmationAlertDialog.show();
-                    } else {
-                        ColorStateList repostColor = getRepostColor(false);
+                    String postId = prismPost.getPostid();
+                    boolean postReposted = CurrentUser.userRepostedPosts.containsKey(postId);
+                    if (postReposted) {
+                        ColorStateList repostColor = getRepostColor(!postReposted);
                         repostButton.setImageTintList(repostColor);
                         repostButton.startAnimation(shareButtonBounceAnimation);
+                        repostIrisAnimationImageView.startAnimation(unrepostIrisBounceAnimation);
+
+                        repostCount[0]--;
+                        String repostStringTail = repostCount[0] == 1 ? " repost" : " reposts";
+                        repostsCountTextView.setText(repostCount[0] + repostStringTail);
+
+                        handleRepostButtonClick(prismPost);
+                    } else {
+                        AlertDialog repostConfirmationAlertDialog = createRepostConfirmationAlertDialog(repostCount);
+                        repostConfirmationAlertDialog.show();
                     }
-                    handleRepostButtonClick(prismPost);
                 }
             });
 
@@ -461,6 +467,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                     moreButton.startAnimation(moreButtonBounceAnimation);
                     // TODO: Show more menu
                     // TODO: Decide what goes in more
+                    AlertDialog morePrismPostAlertDialog = createMorePrismPostAlertDialog(CurrentUser.user.getUid().equals(prismPost.getUid()));
+                    morePrismPostAlertDialog.show();
                 }
             });
         }
@@ -540,19 +548,24 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         /**
          *
          */
-        private AlertDialog createRepostConfirmationAlertDialog() {
+        private AlertDialog createRepostConfirmationAlertDialog(int[] repostCount) {
             AlertDialog.Builder repostConfirmationAlertDialogBuilder = new AlertDialog.Builder(context);
-            repostConfirmationAlertDialogBuilder.setTitle("This post will show on your profile, are you sure you want to repost?");
+            repostConfirmationAlertDialogBuilder.setTitle("This post will be shown on your profile, do you want to repost?");
             repostConfirmationAlertDialogBuilder
                     .setPositiveButton("REPOST", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
-                    // TODO: Change image to be reposted
-
+                    handleRepostButtonClick(prismPost);
                     ColorStateList repostColor = getRepostColor(true);
                     repostButton.setImageTintList(repostColor);
                     repostButton.startAnimation(shareButtonBounceAnimation);
-                    repostIrisAnimationImageView.startAnimation(unrepostIrisBounceAnimation);
+                    repostIrisAnimationImageView.startAnimation(repostIrisBounceAnimation);
+
+                    repostCount[0]++;
+                    String repostStringTail = repostCount[0] == 1 ? " repost" : " reposts";
+                    repostsCountTextView.setText(repostCount[0] + repostStringTail);
+
+                    handleRepostButtonClick(prismPost);
 
                     dialogInterface.dismiss();
                 }
@@ -563,6 +576,30 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                 }
             });
             return repostConfirmationAlertDialogBuilder.create();
+        }
+
+        /**
+         *
+         */
+        private AlertDialog createMorePrismPostAlertDialog(boolean isCurrentUser) {
+            AlertDialog.Builder profilePictureAlertDialog = new AlertDialog.Builder(context);
+            profilePictureAlertDialog.setItems(isCurrentUser ? morePostOptionsCurrentUser : morePostOptions, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    switch (which) {
+                        case 0:
+                            break;
+                        case 1:
+                            break;
+                        case 2:
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            });
+
+            return profilePictureAlertDialog.create();
         }
 
 

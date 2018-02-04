@@ -21,6 +21,32 @@
 
     </android.support.v4.widget.SwipeRefreshLayout>
 
+    <RelativeLayout
+        android:id="@+id/no_main_posts_relative_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/no_main_posts_image_view"
+            android:layout_width="92dp"
+            android:layout_height="92dp"
+            android:layout_centerInParent="true"
+            android:src="@drawable/ic_image_filter_hdr_white_36dp"
+            android:tint="@android:color/white"/>
+
+        <TextView
+            android:id="@+id/no_main_posts_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/no_main_posts_image_view"
+            android:layout_centerHorizontal="true"
+            android:text="No posts"
+            android:textColor="@android:color/white"/>
+
+    </RelativeLayout>
+
     <ProgressBar
         android:id="@+id/main_content_progress_bar"
         android:layout_width="80dp"

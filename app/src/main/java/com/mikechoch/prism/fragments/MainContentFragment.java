@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -45,6 +46,7 @@ public class MainContentFragment extends Fragment {
     public static ArrayList<String> dateOrderedPrismPostKeys;
     public static HashMap<String, PrismPost> prismPostHashMap;
 
+    private RelativeLayout noMainPostsRelativeLayout;
     private RecyclerView mainContentRecyclerView;
     private PrismPostRecyclerViewAdapter mainContentRecyclerViewAdapter;
     private ProgressBar mainContentProgress;
@@ -91,6 +93,7 @@ public class MainContentFragment extends Fragment {
         View view = inflater.inflate(R.layout.main_content_fragment_layout, container, false);
 
         mainContentProgress = view.findViewById(R.id.main_content_progress_bar);
+        noMainPostsRelativeLayout = view.findViewById(R.id.no_main_posts_relative_layout);
 
         /*
          * The main purpose of this MainContentFragment is to be a Home page of the application
@@ -178,97 +181,40 @@ public class MainContentFragment extends Fragment {
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    System.out.println(dataSnapshot.toString());
-                    DataSnapshot[] dataSnapshots = {dataSnapshot};
+                /*
+                 * Notify that all RecyclerView data will be cleared and then clear all data structures
+                 * Iterate through the DataSnapshot and add all new data to the data structures
+                 * Notify RecyclerView after items are added to data structures
+                 */
+                dateOrderedPrismPostKeys.clear();
+                prismPostHashMap.clear();
+                mainContentRecyclerViewAdapter.notifyDataSetChanged();
 
-                    new RefreshDataTask().execute(dataSnapshots);
+                if (dataSnapshot.exists()) {
+                    for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
+                        String postKey = postSnapshot.getKey();
+                        if (!dateOrderedPrismPostKeys.contains(postKey)) {
+                            PrismPost prismPost = postSnapshot.getValue(PrismPost.class);
+                            prismPost.setLikes((int) postSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount());
+                            prismPost.setReposts((int) postSnapshot.child(Key.DB_REF_POST_REPOSTED_USERS).getChildrenCount());
+                            dateOrderedPrismPostKeys.add(postKey);
+                            prismPostHashMap.put(postKey, prismPost);
+                        }
+                    }
+
+                    noMainPostsRelativeLayout.setVisibility(View.GONE);
+                    populateUserDetailsForAllPosts(true);
+                } else {
+                    noMainPostsRelativeLayout.setVisibility(View.VISIBLE);
+
+                    mainContentSwipeRefreshLayout.setRefreshing(false);
+                    mainContentProgress.setVisibility(View.GONE);
                 }
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
+            public void onCancelled(DatabaseError databaseError) { }
         });
-    }
-
-
-    /**
-     * AsyncTask for retrieving most recent data when you open the app or swipe refresh
-     */
-    private class RefreshDataTask extends AsyncTask<DataSnapshot, Void, Void> {
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-
-        @Override
-        protected Void doInBackground(DataSnapshot... snapshots) {
-            /*
-             * Notify that all RecyclerView data will be cleared and then clear all data structures
-             * Iterate through the DataSnapshot and add all new data to the data structures
-             * Notify RecyclerView after items are added to data structures
-             */
-            getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (dateOrderedPrismPostKeys.size() > 0) {
-                        mainContentRecyclerViewAdapter.notifyItemRangeRemoved(0, dateOrderedPrismPostKeys.size());
-                    }
-                }
-            });
-            dateOrderedPrismPostKeys.clear();
-            prismPostHashMap.clear();
-
-            for (DataSnapshot postSnapshot : snapshots[0].getChildren()) {
-                String postKey = postSnapshot.getKey();
-                if (!dateOrderedPrismPostKeys.contains(postKey)) {
-                    PrismPost prismPost = postSnapshot.getValue(PrismPost.class);
-                    prismPost.setLikes((int) postSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount());
-                    dateOrderedPrismPostKeys.add(postKey);
-                    prismPostHashMap.put(postKey, prismPost);
-                }
-            }
-
-            usersReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.exists()) {
-                        for (String postId: dateOrderedPrismPostKeys) {
-                            PrismPost post = prismPostHashMap.get(postId);
-                            DataSnapshot userSnapshot = dataSnapshot
-                                    .child(post.getUid());
-                            post.setUsername((String) userSnapshot
-                                    .child(Key.DB_REF_USER_PROFILE_USERNAME).getValue());
-                            post.setUserProfilePicUri((String) userSnapshot
-                                    .child(Key.DB_REF_USER_PROFILE_PIC).getValue());
-                            prismPostHashMap.put(postId, post);
-                        }
-                        // LAST THING THAT HAPPENS
-                        mainContentProgress.setVisibility(View.GONE);
-                        mainContentSwipeRefreshLayout.setRefreshing(false);
-                        mainContentRecyclerViewAdapter.notifyDataSetChanged();
-                    }
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
-            });
-
-
-        return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void v) {
-            super.onPostExecute(v);
-            // THIS IS NOT POST EXECUTE
-        }
     }
 
 
@@ -285,7 +231,28 @@ public class MainContentFragment extends Fragment {
                 if (dataSnapshot.exists()) {
                     System.out.println(dataSnapshot.toString());
                     DataSnapshot[] dataSnapshots = {dataSnapshot};
-                    new FetchOldDataTask().execute(dataSnapshots);
+
+                    for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
+                        String postKey = postSnapshot.getKey();
+                        if (!dateOrderedPrismPostKeys.contains(postKey)) {
+                            PrismPost prismPost = postSnapshot.getValue(PrismPost.class);
+                            prismPost.setLikes((int) postSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount());
+                            prismPost.setReposts((int) postSnapshot.child(Key.DB_REF_POST_REPOSTED_USERS).getChildrenCount());
+                            dateOrderedPrismPostKeys.add(postKey);
+                            prismPostHashMap.put(postKey, prismPost);
+                            getActivity().runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (dateOrderedPrismPostKeys.size() > 0) {
+                                        mainContentRecyclerViewAdapter.notifyItemInserted(dateOrderedPrismPostKeys.size());
+                                    }
+                                }
+                            });
+                        }
+                    }
+
+                    populateUserDetailsForAllPosts(false);
+
                 }
             }
 
@@ -295,50 +262,40 @@ public class MainContentFragment extends Fragment {
         });
     }
 
-
     /**
-     * AsyncTask for retrieving older data as you scroll in the RecyclerView
+     * Once all posts are loaded into the prismPostHashMap,
+     * this method iterates over each post, grabs user's details
+     * for the post like "profilePicUri" and "username" and
+     * updates the prismPost obejcts in that hashMap
      */
-    private class FetchOldDataTask extends AsyncTask<DataSnapshot, Void, Void> {
+    private void populateUserDetailsForAllPosts(boolean updateRecyclerViewAdapter) {
+        usersReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    for (String postId: dateOrderedPrismPostKeys) {
+                        PrismPost post = prismPostHashMap.get(postId);
+                        DataSnapshot userSnapshot = dataSnapshot
+                                .child(post.getUid());
+                        post.setUsername((String) userSnapshot
+                                .child(Key.DB_REF_USER_PROFILE_USERNAME).getValue());
+                        post.setUserProfilePicUri((String) userSnapshot
+                                .child(Key.DB_REF_USER_PROFILE_PIC).getValue());
+                        prismPostHashMap.put(postId, post);
+                    }
+                    mainContentSwipeRefreshLayout.setRefreshing(false);
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-
-        @Override
-        protected Void doInBackground(DataSnapshot... snapshots) {
-            /*
-             * Iterate through the DataSnapshot and add all older data to the data structures
-             * Notify RecyclerView after items are added to data structures
-             */
-            for (DataSnapshot postSnapshot : snapshots[0].getChildren()) {
-                String postKey = postSnapshot.getKey();
-                if (!dateOrderedPrismPostKeys.contains(postKey)) {
-                    PrismPost prismPost = postSnapshot.getValue(PrismPost.class);
-                    prismPost.setLikes((int) postSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount());
-                    dateOrderedPrismPostKeys.add(postKey);
-                    prismPostHashMap.put(postKey, prismPost);
-                    getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (dateOrderedPrismPostKeys.size() > 0) {
-                                mainContentRecyclerViewAdapter.notifyItemInserted(dateOrderedPrismPostKeys.size());
-                            }
-                        }
-                    });
+                    // gets called inside refreshData()
+                    if (updateRecyclerViewAdapter) {
+                        mainContentProgress.setVisibility(View.GONE);
+                        mainContentRecyclerViewAdapter.notifyDataSetChanged();
+                    }
                 }
-
             }
-            return null;
-        }
 
-        @Override
-        protected void onPostExecute(Void v) {
-            super.onPostExecute(v);
-            // Stop refreshing since AsyncTask is finished
-            mainContentSwipeRefreshLayout.setRefreshing(false);
-        }
+            @Override
+            public void onCancelled(DatabaseError databaseError) { }
+        });
     }
+
 }

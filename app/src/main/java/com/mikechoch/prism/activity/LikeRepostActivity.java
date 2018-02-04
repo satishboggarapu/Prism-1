@@ -159,8 +159,8 @@ public class LikeRepostActivity extends AppCompatActivity {
                             if (user.hasChild("fullname")) {
                                 prismUser.setFullName((String) user.child("fullname").getValue());
                             }
-                            if (user.hasChild("profile_pic")) {
-                                // TODO: make this work
+                            if (user.hasChild("profilepic")) {
+                                prismUser.setProfilePicture((String) user.child("profilepic").getValue());
                             }
                         }
                         prismUserArrayList.add(prismUser);

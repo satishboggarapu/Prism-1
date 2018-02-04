@@ -268,7 +268,7 @@ public class MainActivity extends FragmentActivity {
                                     imageUploadPreview.setImageDrawable(drawable);
                                 }
                             });
-                    new ImageUploadTask().execute();
+                    uploadImageToCloud();
                 }
                 break;
             // If requestCode is for ProfilePictureUploadActivity
@@ -295,12 +295,30 @@ public class MainActivity extends FragmentActivity {
                                 }
                             });
 
-                    new ProfilePictureUploadTask().execute();
+                    uploadProfilePictureToCloud();
                 }
                 break;
             default:
                 break;
         }
+    }
+
+    private void uploadProfilePictureToCloud() {
+        StorageReference profilePicRef = storageReference.child(Key.STORAGE_USER_PROFILE_IMAGE_REF).child(profilePictureUri.getLastPathSegment());
+        profilePicRef.putFile(profilePictureUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                DatabaseReference userRef = userReference.child(Key.DB_REF_USER_PROFILE_PIC);
+                userRef.setValue(downloadUrl.toString()).addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        System.out.println("Task successful");
+                    }
+                });
+
+            }
+        });
     }
 
 
@@ -355,7 +373,8 @@ public class MainActivity extends FragmentActivity {
                 userPostRef.setValue(timestamp);
 
                 PrismPost prismPost = new PrismPost(imageUri, description, userId, timestamp, postId);
-
+                prismPost.setUsername(CurrentUser.username);
+                prismPost.setUserProfilePicUri(CurrentUser.userProfilePicUri);
                 RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
                 if (mainContentRecyclerView != null) {
                     MainContentFragment.dateOrderedPrismPostKeys.add(0, postId);
@@ -410,67 +429,6 @@ public class MainActivity extends FragmentActivity {
         });
     }
 
-
-    /**
-     *
-     */
-    private class ImageUploadTask extends AsyncTask<Void, Void, Void> {
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            uploadImageToCloud();
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void v) {
-            super.onPostExecute(v);
-        }
-
-    }
-
-    /**
-     *
-     */
-    private class ProfilePictureUploadTask extends AsyncTask<Void, Void, Void> {
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-
-            StorageReference profilePicRef = storageReference.child(Key.STORAGE_USER_PROFILE_IMAGE_REF).child(profilePictureUri.getLastPathSegment());
-            profilePicRef.putFile(profilePictureUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                    Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                    DatabaseReference userRef = userReference.child(Key.DB_REF_USER_PROFILE_PIC);
-                    userRef.setValue(downloadUrl.toString()).addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void aVoid) {
-                            System.out.println("Task successful");
-                        }
-                    });
-
-                }
-            });
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void v) {
-            super.onPostExecute(v);
-        }
-
-    }
 
 
     /**
