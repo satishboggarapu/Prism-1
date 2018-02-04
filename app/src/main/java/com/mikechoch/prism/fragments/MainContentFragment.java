@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -45,6 +46,7 @@ public class MainContentFragment extends Fragment {
     public static ArrayList<String> dateOrderedPrismPostKeys;
     public static HashMap<String, PrismPost> prismPostHashMap;
 
+    private RelativeLayout noMainPostsRelativeLayout;
     private RecyclerView mainContentRecyclerView;
     private PrismPostRecyclerViewAdapter mainContentRecyclerViewAdapter;
     private ProgressBar mainContentProgress;
@@ -91,6 +93,7 @@ public class MainContentFragment extends Fragment {
         View view = inflater.inflate(R.layout.main_content_fragment_layout, container, false);
 
         mainContentProgress = view.findViewById(R.id.main_content_progress_bar);
+        noMainPostsRelativeLayout = view.findViewById(R.id.no_main_posts_relative_layout);
 
         /*
          * The main purpose of this MainContentFragment is to be a Home page of the application
@@ -178,23 +181,16 @@ public class MainContentFragment extends Fragment {
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    /*
-                    * Notify that all RecyclerView data will be cleared and then clear all data structures
-                    * Iterate through the DataSnapshot and add all new data to the data structures
-                    * Notify RecyclerView after items are added to data structures
-                    */
-                    getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (dateOrderedPrismPostKeys.size() > 0) {
-                                mainContentRecyclerViewAdapter.notifyItemRangeRemoved(0, dateOrderedPrismPostKeys.size());
-                            }
-                        }
-                    });
-                    dateOrderedPrismPostKeys.clear();
-                    prismPostHashMap.clear();
+                /*
+                 * Notify that all RecyclerView data will be cleared and then clear all data structures
+                 * Iterate through the DataSnapshot and add all new data to the data structures
+                 * Notify RecyclerView after items are added to data structures
+                 */
+                dateOrderedPrismPostKeys.clear();
+                prismPostHashMap.clear();
+                mainContentRecyclerViewAdapter.notifyDataSetChanged();
 
+                if (dataSnapshot.exists()) {
                     for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
                         String postKey = postSnapshot.getKey();
                         if (!dateOrderedPrismPostKeys.contains(postKey)) {
@@ -206,7 +202,13 @@ public class MainContentFragment extends Fragment {
                         }
                     }
 
+                    noMainPostsRelativeLayout.setVisibility(View.GONE);
                     populateUserDetailsForAllPosts(true);
+                } else {
+                    noMainPostsRelativeLayout.setVisibility(View.VISIBLE);
+
+                    mainContentSwipeRefreshLayout.setRefreshing(false);
+                    mainContentProgress.setVisibility(View.GONE);
                 }
             }
 

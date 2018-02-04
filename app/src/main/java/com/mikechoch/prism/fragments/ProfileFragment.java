@@ -83,42 +83,6 @@ public class ProfileFragment extends Fragment {
 
         auth = FirebaseAuth.getInstance();
         userReference = Default.USERS_REFERENCE.child(auth.getCurrentUser().getUid());
-//        userReference.addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                if (dataSnapshot.exists()) {
-//                    profilePic = (String) dataSnapshot.child(Key.DB_REF_USER_PROFILE_PIC).getValue();
-//
-//                    Random random = new Random();
-//                    int defaultProfPic = random.nextInt(10);
-//                    Uri uri = Uri.parse(String.valueOf(DefaultProfilePicture.values()[defaultProfPic].getProfilePicture()));
-//                    Glide.with(getActivity())
-//                            .asBitmap()
-//                            .thumbnail(0.05f)
-//                            .load(profilePic != null ? profilePic : uri)
-//                            .apply(new RequestOptions().fitCenter())
-//                            .into(new BitmapImageViewTarget(userProfilePicImageView) {
-//                                @Override
-//                                protected void setResource(Bitmap resource) {
-//                                    RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getActivity().getResources(), resource);
-//                                    drawable.setCircular(true);
-//                                    userProfilePicImageView.setImageDrawable(drawable);
-//
-//                                    if (profilePic != null) {
-//                                        int whiteOutlinePadding = (int) (1 * scale);
-//                                        userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
-//                                        userProfilePicImageView.setBackground(getActivity().getResources().getDrawable(R.drawable.circle_profile_frame));
-//                                    }
-//                                }
-//                            });
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-//
-//            }
-//        });
 
         sourceSansProLight = Typeface.createFromAsset(getContext().getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getContext().getAssets(), "fonts/SourceSansPro-Black.ttf");
@@ -157,27 +121,8 @@ public class ProfileFragment extends Fragment {
         userProfilePicImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AlertDialog.Builder profilePictureAlertDialog = new AlertDialog.Builder(getActivity());
-                profilePictureAlertDialog.setTitle("Set profile picture");
-                profilePictureAlertDialog.setItems(setProfilePicStrings, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        switch (which) {
-                            case 0:
-                                Intent imageUploadIntent = new Intent(getActivity(), ProfilePictureUploadActivity.class);
-                                getActivity().startActivityForResult(imageUploadIntent, Default.PROFILE_PIC_UPLOAD_INTENT_REQUEST_CODE);
-                                getActivity().overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
-                                break;
-                            case 1:
-                                // TODO: Figure out camera feature
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                });
-
-                profilePictureAlertDialog.create().show();
+                AlertDialog setProfilePictureAlertDialog = createSetProfilePictureAlertDialog();
+                setProfilePictureAlertDialog.show();
             }
         });
 
@@ -203,6 +148,33 @@ public class ProfileFragment extends Fragment {
         });
 
         return view;
+    }
+
+    /**
+     *
+     */
+    private AlertDialog createSetProfilePictureAlertDialog() {
+        AlertDialog.Builder profilePictureAlertDialog = new AlertDialog.Builder(getActivity());
+        profilePictureAlertDialog.setTitle("Set profile picture");
+        profilePictureAlertDialog.setItems(setProfilePicStrings, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case 0:
+                        Intent imageUploadIntent = new Intent(getActivity(), ProfilePictureUploadActivity.class);
+                        getActivity().startActivityForResult(imageUploadIntent, Default.PROFILE_PIC_UPLOAD_INTENT_REQUEST_CODE);
+                        getActivity().overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+                        break;
+                    case 1:
+                        // TODO: Figure out camera feature
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+
+        return profilePictureAlertDialog.create();
     }
 
 }

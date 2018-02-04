@@ -96,7 +96,7 @@ public class MainActivity extends FragmentActivity {
         scale = getResources().getDisplayMetrics().density;
 
         // Generates current user's details
-        new CurrentUser();
+        new CurrentUser(this);
         auth = FirebaseAuth.getInstance();
         storageReference = Default.STORAGE_REFERENCE;
         databaseReference = Default.ALL_POSTS_REFERENCE;
@@ -163,14 +163,10 @@ public class MainActivity extends FragmentActivity {
                     case 0:
                         RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
                         if (mainContentRecyclerView != null) {
-                            mainContentRecyclerView.smoothScrollToPosition(0);
+                            mainContentRecyclerView.smoothScrollToPosition(0); // todo smooth scroll only for items < 10
                         }
                         break;
                     case 1:
-                        RecyclerView trendingContentRecyclerView = MainActivity.this.findViewById(R.id.trending_content_recycler_view);
-                        if (trendingContentRecyclerView != null) {
-                            trendingContentRecyclerView.smoothScrollToPosition(0);
-                        }
                         break;
                     case 2:
                         break;
@@ -201,6 +197,7 @@ public class MainActivity extends FragmentActivity {
 
         // Check if user is logged in
         // Otherwise intent to LoginActivity
+        // todo put this at the top
         auth = FirebaseAuth.getInstance();
         if (auth.getCurrentUser() == null) {
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
@@ -368,21 +365,22 @@ public class MainActivity extends FragmentActivity {
                 DatabaseReference userPostRef = userReference.child(Key.DB_REF_USER_UPLOADS).child(postId);
                 userPostRef.setValue(timestamp);
 
+                // todo Figure out why LIKES and REPOSTS count are pushed to cloud
                 PrismPost prismPost = new PrismPost(imageUri, description, userId, timestamp, postId);
-                prismPost.setUsername(CurrentUser.username);
-                prismPost.setUserProfilePicUri(CurrentUser.user_profile_pic_uri);
-                RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
-                if (mainContentRecyclerView != null) {
-                    MainContentFragment.dateOrderedPrismPostKeys.add(0, postId);
-                    MainContentFragment.prismPostHashMap.put(postId, prismPost);
-                    mainContentRecyclerView.getAdapter().notifyItemInserted(0);
-                    mainContentRecyclerView.smoothScrollToPosition(0);
-                }
-
                 reference.setValue(prismPost).addOnSuccessListener(new OnSuccessListener<Void>() {
                     @SuppressLint("NewApi")
                     @Override
                     public void onSuccess(Void aVoid) {
+                        prismPost.setUsername(CurrentUser.username);
+                        prismPost.setUserProfilePicUri(CurrentUser.user_profile_pic_uri);
+                        RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
+                        if (mainContentRecyclerView != null) {
+                            MainContentFragment.dateOrderedPrismPostKeys.add(0, postId);
+                            MainContentFragment.prismPostHashMap.put(postId, prismPost);
+                            mainContentRecyclerView.getAdapter().notifyItemInserted(0);
+                            mainContentRecyclerView.smoothScrollToPosition(0);
+                        }
+
                         uploadingImageTextView.setText("Finishing up...");
                         imageUploadProgressBar.setProgress(100, Build.VERSION.SDK_INT >= Build.VERSION_CODES.N);
 
@@ -402,6 +400,8 @@ public class MainActivity extends FragmentActivity {
                     }
                 });
 
+
+
             }
         }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
             @SuppressLint("NewApi")
@@ -418,7 +418,7 @@ public class MainActivity extends FragmentActivity {
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                snackTime("Failed to upload image.");
+                snackTime("Failed to upload image");
                 uploadingImageRelativeLayout.setVisibility(View.GONE);
                 e.printStackTrace();
             }

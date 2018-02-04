@@ -63,6 +63,9 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
     private ArrayList<String> prismPostKeys;
     private HashMap<String, PrismPost> prismPostHashMap;
 
+    private String[] morePostOptionsCurrentUser = {"Report post", "Share", "Delete"};
+    private String[] morePostOptions = {"Report post", "Share"};
+
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
 
@@ -194,26 +197,21 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             int defaultProfPic = random.nextInt(10);
 
             Uri uri = Uri.parse(String.valueOf(DefaultProfilePicture.values()[defaultProfPic].getProfilePictureLow()));
-//            if (prismPost.getUserProfilePicUri() != null && !prismPost.getUserProfilePicUri().isEmpty()) {
-//                uri = prismPost.getUserProfilePicUri();
-//            }
-            System.out.println(prismPost.getUserProfilePicUri());
             Glide.with(context)
                     .asBitmap()
                     .load(prismPost.getUserProfilePicUri() != null ? prismPost.getUserProfilePicUri() : uri)
-                    .apply(new RequestOptions().fitCenter())
                     .into(new BitmapImageViewTarget(userProfilePicImageView) {
                         @Override
                         protected void setResource(Bitmap resource) {
-                            RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(context.getResources(), resource);
-                            drawable.setCircular(true);
-                            userProfilePicImageView.setImageDrawable(drawable);
-
                             if (prismPost.getUserProfilePicUri() != null) {
                                 int whiteOutlinePadding = (int) (1 * scale);
                                 userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
                                 userProfilePicImageView.setBackground(context.getResources().getDrawable(R.drawable.circle_profile_frame));
                             }
+
+                            RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(context.getResources(), resource);
+                            drawable.setCircular(true);
+                            userProfilePicImageView.setImageDrawable(drawable);
                         }
                     });
             prismUserTextView.setText(prismPost.getUsername());
@@ -466,6 +464,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                     moreButton.startAnimation(moreButtonBounceAnimation);
                     // TODO: Show more menu
                     // TODO: Decide what goes in more
+                    AlertDialog morePrismPostAlertDialog = createMorePrismPostAlertDialog(CurrentUser.user.getUid().equals(prismPost.getUid()));
+                    morePrismPostAlertDialog.show();
                 }
             });
         }
@@ -547,7 +547,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
          */
         private AlertDialog createRepostConfirmationAlertDialog(int[] repostCount) {
             AlertDialog.Builder repostConfirmationAlertDialogBuilder = new AlertDialog.Builder(context);
-            repostConfirmationAlertDialogBuilder.setTitle("This post will show on your profile, are you sure you want to repost?");
+            repostConfirmationAlertDialogBuilder.setTitle("This post will be shown on your profile, do you want to repost?");
             repostConfirmationAlertDialogBuilder
                     .setPositiveButton("REPOST", new DialogInterface.OnClickListener() {
                 @Override
@@ -573,6 +573,30 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                 }
             });
             return repostConfirmationAlertDialogBuilder.create();
+        }
+
+        /**
+         *
+         */
+        private AlertDialog createMorePrismPostAlertDialog(boolean isCurrentUser) {
+            AlertDialog.Builder profilePictureAlertDialog = new AlertDialog.Builder(context);
+            profilePictureAlertDialog.setItems(isCurrentUser ? morePostOptionsCurrentUser : morePostOptions, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    switch (which) {
+                        case 0:
+                            break;
+                        case 1:
+                            break;
+                        case 2:
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            });
+
+            return profilePictureAlertDialog.create();
         }
 
 

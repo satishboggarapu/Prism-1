@@ -357,7 +357,7 @@ public class RegisterActivity extends AppCompatActivity {
             fullNameTextInputLayout.setError("Name must start with a letter");
             return false;
         }
-        if (!Character.isAlphabetic(fullName.charAt(fullName.length()-1))) {
+        if (fullName.endsWith("'")) {
             fullNameTextInputLayout.setError("Name must end with a letter");
             return false;
         }
@@ -395,7 +395,7 @@ public class RegisterActivity extends AppCompatActivity {
             usernameTextInputLayout.setError("Username must start with a letter");
             return false;
         }
-        if (!Character.isAlphabetic(username.charAt(username.length()-1)) && !Character.isDigit(username.charAt(username.length()-1))) {
+        if (username.endsWith("_") || username.endsWith(".")) {
             usernameTextInputLayout.setError("Username must end with a letter or number");
             return false;
         }
