@@ -9,7 +9,6 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -26,7 +25,6 @@ import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
 import android.widget.ImageView;
@@ -40,10 +38,8 @@ import java.util.Calendar;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.storage.OnProgressListener;
@@ -374,7 +370,7 @@ public class MainActivity extends FragmentActivity {
 
                 PrismPost prismPost = new PrismPost(imageUri, description, userId, timestamp, postId);
                 prismPost.setUsername(CurrentUser.username);
-                prismPost.setUserProfilePicUri(CurrentUser.userProfilePicUri);
+                prismPost.setUserProfilePicUri(CurrentUser.user_profile_pic_uri);
                 RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
                 if (mainContentRecyclerView != null) {
                     MainContentFragment.dateOrderedPrismPostKeys.add(0, postId);

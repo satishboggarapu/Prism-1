@@ -182,10 +182,10 @@ public class ProfileFragment extends Fragment {
         });
 
         userUsernameTextView = view.findViewById(R.id.profile_frag_username_text_view);
-        userUsernameTextView.setText("mikechoch");
+        userUsernameTextView.setText(CurrentUser.username);
         userUsernameTextView.setTypeface(sourceSansProBold);
         userFullNameTextView = view.findViewById(R.id.profile_frag_full_name_text_view);
-        userFullNameTextView.setText("Michael DiCioccio");
+        userFullNameTextView.setText(CurrentUser.user_full_name);
         userFullNameTextView.setTypeface(sourceSansProLight);
 
         logoutButton = view.findViewById(R.id.logout_button);

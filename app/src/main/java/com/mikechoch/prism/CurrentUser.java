@@ -20,11 +20,11 @@ public class CurrentUser {
     private static FirebaseAuth auth;
 
     public static FirebaseUser user;
-    public static HashMap userLikedPosts; // KEY: String postID   VALUE: long timestamp
-    public static HashMap userRepostedPosts; // KEY: String postID   VALUE: long timestamp
-    public static String userProfilePicUri;
+    public static HashMap user_liked_posts; // KEY: String postID   VALUE: long timestamp
+    public static HashMap user_reposted_posts; // KEY: String postID   VALUE: long timestamp
+    public static String user_profile_pic_uri;
     public static String username;
-    public static String userFullName;
+    public static String user_full_name;
 
     public CurrentUser() {
         auth = FirebaseAuth.getInstance();
@@ -36,13 +36,13 @@ public class CurrentUser {
     }
 
     public static void refreshUserLikedAndRepostedPosts() {
-        userLikedPosts = new HashMap<String, Long>();
-        userRepostedPosts = new HashMap<String, Long>();
+        user_liked_posts = new HashMap<String, Long>();
+        user_reposted_posts = new HashMap<String, Long>();
         userReference.child(Key.DB_REF_USER_LIKES).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    userLikedPosts.putAll((Map) dataSnapshot.getValue());
+                    user_liked_posts.putAll((Map) dataSnapshot.getValue());
                 }
             }
             @Override
@@ -53,7 +53,7 @@ public class CurrentUser {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    userRepostedPosts.putAll((Map) dataSnapshot.getValue());
+                    user_reposted_posts.putAll((Map) dataSnapshot.getValue());
                 }
             }
 
@@ -67,9 +67,9 @@ public class CurrentUser {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    userProfilePicUri = (String) dataSnapshot.child(Key.DB_REF_USER_PROFILE_PIC).getValue();
+                    user_profile_pic_uri = (String) dataSnapshot.child(Key.DB_REF_USER_PROFILE_PIC).getValue();
                     username = (String) dataSnapshot.child(Key.DB_REF_USER_PROFILE_USERNAME).getValue();
-                    userFullName = (String) dataSnapshot.child(Key.DB_REF_USER_PROFILE_FULL_NAME).getValue();
+                    user_full_name = (String) dataSnapshot.child(Key.DB_REF_USER_PROFILE_FULL_NAME).getValue();
                 }
             }
 
