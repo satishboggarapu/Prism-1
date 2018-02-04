@@ -76,38 +76,12 @@ public class TrendingContentFragment extends Fragment {
         trendingContentSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                new TrendingContentTask().execute();
+                
             }
         });
 
         return view;
     }
 
-    /**
-     *
-     */
-    private class TrendingContentTask extends AsyncTask<DataSnapshot, Void, Void> {
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-
-        @Override
-        protected Void doInBackground(DataSnapshot... v) {
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void v) {
-            super.onPostExecute(v);
-            trendingContentSwipeRefreshLayout.setRefreshing(false);
-        }
-    }
 }
