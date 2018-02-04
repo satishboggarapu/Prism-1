@@ -83,42 +83,6 @@ public class ProfileFragment extends Fragment {
 
         auth = FirebaseAuth.getInstance();
         userReference = Default.USERS_REFERENCE.child(auth.getCurrentUser().getUid());
-//        userReference.addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                if (dataSnapshot.exists()) {
-//                    profilePic = (String) dataSnapshot.child(Key.DB_REF_USER_PROFILE_PIC).getValue();
-//
-//                    Random random = new Random();
-//                    int defaultProfPic = random.nextInt(10);
-//                    Uri uri = Uri.parse(String.valueOf(DefaultProfilePicture.values()[defaultProfPic].getProfilePicture()));
-//                    Glide.with(getActivity())
-//                            .asBitmap()
-//                            .thumbnail(0.05f)
-//                            .load(profilePic != null ? profilePic : uri)
-//                            .apply(new RequestOptions().fitCenter())
-//                            .into(new BitmapImageViewTarget(userProfilePicImageView) {
-//                                @Override
-//                                protected void setResource(Bitmap resource) {
-//                                    RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getActivity().getResources(), resource);
-//                                    drawable.setCircular(true);
-//                                    userProfilePicImageView.setImageDrawable(drawable);
-//
-//                                    if (profilePic != null) {
-//                                        int whiteOutlinePadding = (int) (1 * scale);
-//                                        userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
-//                                        userProfilePicImageView.setBackground(getActivity().getResources().getDrawable(R.drawable.circle_profile_frame));
-//                                    }
-//                                }
-//                            });
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-//
-//            }
-//        });
 
         sourceSansProLight = Typeface.createFromAsset(getContext().getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getContext().getAssets(), "fonts/SourceSansPro-Black.ttf");
@@ -163,10 +127,10 @@ public class ProfileFragment extends Fragment {
         });
 
         userUsernameTextView = view.findViewById(R.id.profile_frag_username_text_view);
-        userUsernameTextView.setText("mikechoch");
+        userUsernameTextView.setText(CurrentUser.username);
         userUsernameTextView.setTypeface(sourceSansProBold);
         userFullNameTextView = view.findViewById(R.id.profile_frag_full_name_text_view);
-        userFullNameTextView.setText("Michael DiCioccio");
+        userFullNameTextView.setText(CurrentUser.user_full_name);
         userFullNameTextView.setTypeface(sourceSansProLight);
 
         logoutButton = view.findViewById(R.id.logout_button);
