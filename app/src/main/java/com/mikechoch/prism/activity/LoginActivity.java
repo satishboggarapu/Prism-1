@@ -38,6 +38,8 @@ public class LoginActivity extends AppCompatActivity {
     /*
      * Globals
      */
+    private FirebaseAuth auth;
+
     private ImageView iconImageView;
     private TextInputLayout emailTextInputLayout;
     private EditText emailEditText;
@@ -50,7 +52,6 @@ public class LoginActivity extends AppCompatActivity {
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
 
-    private FirebaseAuth auth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

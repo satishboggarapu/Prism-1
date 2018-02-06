@@ -52,6 +52,10 @@ public class RegisterActivity extends AppCompatActivity {
     /*
      * Globals
      */
+    private FirebaseAuth auth;
+    private FirebaseAuth.AuthStateListener authStateListener;
+    private DatabaseReference usersDatabaseRef;
+
     private ImageView iconImageView;
     private TextInputLayout fullNameTextInputLayout;
     private EditText fullNameEditText;
@@ -70,10 +74,6 @@ public class RegisterActivity extends AppCompatActivity {
 
     private Uri defaultProfilePic;
 
-    private FirebaseAuth auth;
-    private FirebaseAuth.AuthStateListener authStateListener;
-
-    private DatabaseReference usersDatabaseRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
