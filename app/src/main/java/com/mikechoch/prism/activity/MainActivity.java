@@ -23,6 +23,8 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.ViewPager;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.animation.Animation;
@@ -106,6 +108,7 @@ public class MainActivity extends FragmentActivity {
         showFabAnimation = createFabShowAnimation(false);
         hideFabAnimation = createFabShowAnimation(true);
 
+        // Initialize normal and bold Prism font
         sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
 
@@ -162,8 +165,13 @@ public class MainActivity extends FragmentActivity {
                 switch (tabPosition) {
                     case 0:
                         RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
+                        LinearLayoutManager layoutManager  = (LinearLayoutManager) mainContentRecyclerView.getLayoutManager();
                         if (mainContentRecyclerView != null) {
-                            mainContentRecyclerView.smoothScrollToPosition(0); // todo smooth scroll only for items < 10
+                            if (layoutManager.findFirstVisibleItemPosition() < 10) {
+                                mainContentRecyclerView.smoothScrollToPosition(0);
+                            } else {
+                                mainContentRecyclerView.scrollToPosition(0);
+                            }
                         }
                         break;
                     case 1:

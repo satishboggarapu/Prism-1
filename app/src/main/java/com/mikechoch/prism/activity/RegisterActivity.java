@@ -49,6 +49,9 @@ import java.util.regex.Pattern;
 
 public class RegisterActivity extends AppCompatActivity {
 
+    /*
+     * Globals
+     */
     private ImageView iconImageView;
     private TextInputLayout fullNameTextInputLayout;
     private EditText fullNameEditText;
@@ -62,10 +65,10 @@ public class RegisterActivity extends AppCompatActivity {
     private TextView goToLoginButton;
     private ProgressBar registerProgressBar;
 
-    private Uri defaultProfilePic;
-
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
+
+    private Uri defaultProfilePic;
 
     private FirebaseAuth auth;
     private FirebaseAuth.AuthStateListener authStateListener;
@@ -77,34 +80,47 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.register_activity_layout);
 
+        // User authentication instance
         auth = FirebaseAuth.getInstance();
         usersDatabaseRef = FirebaseDatabase.getInstance().getReference().child(Key.DB_REF_USER_PROFILES);
 
+        // Initialize normal and bold Prism font
         sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
 
+        // Get the screen width and height of the current phone
         int screenHeight = getWindowManager().getDefaultDisplay().getHeight();
         int screenWidth = getWindowManager().getDefaultDisplay().getWidth();
 
+        // Initialize all UI elements for Register Activity
         iconImageView = findViewById(R.id.icon_image_view);
-        iconImageView.getLayoutParams().width = (int) (screenWidth * 0.3);
-        registerProgressBar = findViewById(R.id.register_progress_bar);
+        fullNameTextInputLayout = findViewById(R.id.register_name_text_input_layout);
+        fullNameEditText = findViewById(R.id.register_name_edit_text);
+        usernameTextInputLayout = findViewById(R.id.register_username_text_input_layout);
+        usernameEditText = findViewById(R.id.register_username_edit_text);
+        emailTextInputLayout = findViewById(R.id.register_email_text_input_layout);
+        emailEditText = findViewById(R.id.register_email_edit_text);
+        passwordTextInputLayout = findViewById(R.id.register_password_text_input_layout);
+        passwordEditText = findViewById(R.id.register_password_edit_text);
+        registerButton = findViewById(R.id.submit_button);
         goToLoginButton = findViewById(R.id.login_text_view);
-        goToLoginButton.setTypeface(sourceSansProLight);
-        goToLoginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                RegisterActivity.super.onBackPressed();
-            }
-        });
+        registerProgressBar = findViewById(R.id.register_progress_bar);
 
+        // Setup the image view at the top of the Register screen
+        // 30% of the screen will be the width and margin the image top by 1/16th of the height
+        iconImageView.getLayoutParams().width = (int) (screenWidth * 0.3);
+
+        // Setup all UI elements
         setupFullNameEditText();
         setupUsernameEditText();
         setupEmailEditText();
         setupPasswordEditText();
-        // TODO: Save Default profile pic to cloud database
-        generateDefaultProfilePic();
         setupRegisterButton();
+        setupLoginButton();
+
+        // TODO: Generate the default profile picture for the user when they create an account
+        // TODO: Save the generated Default profile pic to cloud database for reuse
+        generateDefaultProfilePic();
 
     }
 
@@ -113,10 +129,11 @@ public class RegisterActivity extends AppCompatActivity {
         super.onBackPressed();
     }
 
+    /**
+     * FullName EditTextLayout Typefaces are set and TextWatcher is setup for error handling
+     */
     private void setupFullNameEditText() {
-        fullNameTextInputLayout = findViewById(R.id.register_name_text_input_layout);
         fullNameTextInputLayout.setTypeface(sourceSansProLight);
-        fullNameEditText = findViewById(R.id.register_name_edit_text);
         fullNameEditText.setTypeface(sourceSansProLight);
         fullNameEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -139,10 +156,11 @@ public class RegisterActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Username EditTextLayout Typefaces are set and TextWatcher is setup for error handling
+     */
     private void setupUsernameEditText() {
-        usernameTextInputLayout = findViewById(R.id.register_username_text_input_layout);
         usernameTextInputLayout.setTypeface(sourceSansProLight);
-        usernameEditText = findViewById(R.id.register_username_edit_text);
 
         usernameEditText.setTypeface(sourceSansProLight);
         usernameEditText.addTextChangedListener(new TextWatcher() {
@@ -168,10 +186,11 @@ public class RegisterActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Email EditTextLayout Typefaces are set and TextWatcher is setup for error handling
+     */
     private void setupEmailEditText() {
-        emailTextInputLayout = findViewById(R.id.register_email_text_input_layout);
         emailTextInputLayout.setTypeface(sourceSansProLight);
-        emailEditText = findViewById(R.id.register_email_edit_text);
         emailEditText.setTypeface(sourceSansProLight);
         emailEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -194,12 +213,13 @@ public class RegisterActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Password EditTextLayout Typefaces are set and TextWatcher is setup for error handling
+     */
     private void setupPasswordEditText() {
-        passwordTextInputLayout = findViewById(R.id.register_password_text_input_layout);
         passwordTextInputLayout.setTypeface(sourceSansProLight);
         passwordTextInputLayout.setPasswordVisibilityToggleEnabled(true);
         passwordTextInputLayout.getPasswordVisibilityToggleDrawable().setTint(Color.WHITE);
-        passwordEditText = findViewById(R.id.register_password_edit_text);
         passwordEditText.setTypeface(sourceSansProLight);
         passwordEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -222,6 +242,9 @@ public class RegisterActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Generate a random Default profile picture
+     */
     private void generateDefaultProfilePic() {
         Random random = new Random();
         int defaultProfPic = random.nextInt(10);
@@ -230,10 +253,14 @@ public class RegisterActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Setup the register button
+     * When all fields are valid the button is enabled
+     * When clicked, an attempt to create the account with the entered credentials
+     */
     private void setupRegisterButton() {
-        registerButton = findViewById(R.id.submit_button);
-        registerButton.setBackgroundTintList(getResources().getColorStateList(R.color.colorAccent));
         registerButton.setTypeface(sourceSansProLight);
+        registerButton.setBackgroundTintList(getResources().getColorStateList(R.color.colorAccent));
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -253,8 +280,8 @@ public class RegisterActivity extends AppCompatActivity {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if (dataSnapshot.hasChild(userName)) {
-                            toggleProgressBar(false);
                             usernameTextInputLayout.setError("Username is taken. Try again");
+                            toggleProgressBar(false);
                             return;
                         }
                         // else -> attempt creation of new user
@@ -275,10 +302,11 @@ public class RegisterActivity extends AppCompatActivity {
 
                                         DatabaseReference accountReference = Default.ACCOUNT_REFERENCE.child(userName);
                                         accountReference.setValue(email);
+
+                                        intentToMainActivity();
+                                    } else {
+                                        // TODO: should an else be here based on user being null?
                                     }
-                                    startActivity(new Intent(RegisterActivity.this, MainActivity.class));
-                                    finish();
-                                    overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
                                 } else {
                                     toggleProgressBar(false);
                                     try {
@@ -301,14 +329,38 @@ public class RegisterActivity extends AppCompatActivity {
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
                         // TODO Log error
+                        toggleProgressBar(false);
                     }
                 });
-
-
             }
         });
     }
 
+    /**
+     * Intent to Main Activity from Register Activity
+     */
+    private void intentToMainActivity() {
+        startActivity(new Intent(RegisterActivity.this, MainActivity.class));
+        finish();
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+    }
+
+    /**
+     * Setup the button to take you back to Login Activity
+     */
+    private void setupLoginButton() {
+        goToLoginButton.setTypeface(sourceSansProLight);
+        goToLoginButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                RegisterActivity.super.onBackPressed();
+            }
+        });
+    }
+
+    /**
+     * Toggles the register button and login button to hide and shows the progress bar spinner
+     */
     private void toggleProgressBar(boolean showProgressBar) {
         int progressVisibility = showProgressBar ? View.VISIBLE : View.INVISIBLE;
         int buttonVisibility = showProgressBar ? View.INVISIBLE : View.VISIBLE;
@@ -318,7 +370,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     /**
-     *
+     * Verify that all inputs to the EditText fields are valid
      */
     private boolean areInputsValid(String fullName, String username, String email, String password) {
         boolean isFullNameValid = isFullNameValid(fullName);
@@ -330,7 +382,7 @@ public class RegisterActivity extends AppCompatActivity {
 
     /**
      * @param fullName
-     * @return
+     * @return: runs the current fullName through several checks to verify it is valid
      */
     private boolean isFullNameValid(String fullName) {
         if (fullName.length() < 2) {
@@ -367,7 +419,7 @@ public class RegisterActivity extends AppCompatActivity {
 
     /**
      * @param username
-     * @return
+     * @return: runs the current username through several checks to verify it is valid
      */
     private boolean isUsernameValid(String username) {
         if (username.length() < 5) {
@@ -405,7 +457,8 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     /**
-     *
+     * @param email
+     * @return: runs the current email through several checks to verify it is valid
      */
     private boolean isEmailValid(String email) {
         if (Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
@@ -418,7 +471,8 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     /**
-     *
+     * @param password
+     * @return: runs the current password through several checks to verify it is valid
      */
     private boolean isPasswordValid(String password) {
         // TODO: Add more checks for valid password?
@@ -431,19 +485,31 @@ public class RegisterActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Cleans the fullName entered and returns the clean version
+     */
     public String getFormattedFullName() {
         return fullNameEditText.getText().toString().trim().replaceAll(" +", " ");
 
     }
 
+    /**
+     * Cleans the username entered and returns the clean version
+     */
     public String getFormattedUsername() {
         return usernameEditText.getText().toString().trim().toLowerCase();
     }
 
+    /**
+     * Cleans the email entered and returns the clean version
+     */
     public String getFormattedEmail() {
         return emailEditText.getText().toString().trim().toLowerCase();
     }
 
+    /**
+     * Cleans the password entered and returns the clean version
+     */
     public String getFormattedPassword() {
         return passwordEditText.getText().toString().trim();
     }
