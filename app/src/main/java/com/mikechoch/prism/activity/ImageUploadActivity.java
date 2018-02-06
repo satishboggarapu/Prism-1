@@ -17,11 +17,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.mikechoch.prism.Default;
+import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.helper.ExifUtil;
 import com.mikechoch.prism.helper.FileChooser;

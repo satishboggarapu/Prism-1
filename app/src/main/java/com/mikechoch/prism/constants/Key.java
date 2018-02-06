@@ -1,4 +1,4 @@
-package com.mikechoch.prism;
+package com.mikechoch.prism.constants;
 
 /**
  * Created by parth on 1/22/18.

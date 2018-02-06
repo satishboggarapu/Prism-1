@@ -1,20 +1,22 @@
 package com.mikechoch.prism.fragments;
 
 import android.annotation.SuppressLint;
-import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -22,11 +24,12 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.CurrentUser;
-import com.mikechoch.prism.Default;
-import com.mikechoch.prism.Key;
+import com.mikechoch.prism.constants.Default;
+import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.PrismPost;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.PrismPostRecyclerViewAdapter;
+import com.mikechoch.prism.constants.Message;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -134,14 +137,13 @@ public class MainContentFragment extends Fragment {
         });
         mainContentRecyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
             @Override
-            public void onChildViewAttachedToWindow(View view) {
-            }
+            public void onChildViewAttachedToWindow(View view) { }
 
             @Override
             public void onChildViewDetachedFromWindow(View view) {
                 ImageView heartAnimationImageView = view.findViewById(R.id.recycler_view_like_heart);
-                heartAnimationImageView.setVisibility(View.INVISIBLE);
                 ImageView repostAnimationImageView = view.findViewById(R.id.recycler_view_repost_iris);
+                heartAnimationImageView.setVisibility(View.INVISIBLE);
                 repostAnimationImageView.setVisibility(View.INVISIBLE);
             }
         });
@@ -173,11 +175,14 @@ public class MainContentFragment extends Fragment {
 
 
     /**
-     * Calls the RefreshDataTask after checking if more data exists in the cloud database
+     *  Clears the data structure and pulls ALL_POSTS info again from cloud
+     *  Queries the ALL_POSTS data sorted by the post timestamp and pulls n
+     *  number of posts and loads them into an ArrayList of postIds and
+     *  a HashMap of PrismObjects
      */
     private void refreshData() {
         Query query = databaseReferenceAllPosts.orderByChild(Key.POST_TIMESTAMP).limitToFirst(Default.IMAGE_LOAD_COUNT);
-        CurrentUser.refreshUserLikedAndRepostedPosts();
+        CurrentUser.refreshUserLinkedPosts();
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -194,79 +199,93 @@ public class MainContentFragment extends Fragment {
                     for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
                         String postKey = postSnapshot.getKey();
                         if (!dateOrderedPrismPostKeys.contains(postKey)) {
-                            PrismPost prismPost = postSnapshot.getValue(PrismPost.class);
-                            prismPost.setLikes((int) postSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount());
-                            prismPost.setReposts((int) postSnapshot.child(Key.DB_REF_POST_REPOSTED_USERS).getChildrenCount());
+                            PrismPost prismPost = getPrismPostObject(postSnapshot);
                             dateOrderedPrismPostKeys.add(postKey);
                             prismPostHashMap.put(postKey, prismPost);
                         }
                     }
-
                     noMainPostsRelativeLayout.setVisibility(View.GONE);
                     populateUserDetailsForAllPosts(true);
                 } else {
+                    Log.i(Default.TAG_DB, Message.NO_DATA);
                     noMainPostsRelativeLayout.setVisibility(View.VISIBLE);
-
                     mainContentSwipeRefreshLayout.setRefreshing(false);
                     mainContentProgress.setVisibility(View.GONE);
                 }
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) { }
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e(Default.TAG_DB, databaseError.getMessage(), databaseError.toException());
+            }
         });
     }
 
 
     /**
-     * Calls the FetchOldDataTask after checking if more data exists in the cloud database
+     *  Pulls more data (for ALL_POSTS) from cloud, typically when user is about to
+     *  reach the end of the list. It first gets the timestamp of the last post in
+     *  the list and then queries more images starting from that last timestamp and
+     *  appends them back to the end of the arrayList and the HashMap
      */
     private void fetchOldData() {
         String lastPostId = dateOrderedPrismPostKeys.get(dateOrderedPrismPostKeys.size() - 1);
         long lastPostTimestamp = prismPostHashMap.get(lastPostId).getTimestamp();
-        Query query = databaseReferenceAllPosts.orderByChild(Key.POST_TIMESTAMP).startAt(lastPostTimestamp).limitToFirst(Default.IMAGE_LOAD_COUNT);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    System.out.println(dataSnapshot.toString());
-                    DataSnapshot[] dataSnapshots = {dataSnapshot};
-
-                    for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                        String postKey = postSnapshot.getKey();
-                        if (!dateOrderedPrismPostKeys.contains(postKey)) {
-                            PrismPost prismPost = postSnapshot.getValue(PrismPost.class);
-                            prismPost.setLikes((int) postSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount());
-                            prismPost.setReposts((int) postSnapshot.child(Key.DB_REF_POST_REPOSTED_USERS).getChildrenCount());
-                            dateOrderedPrismPostKeys.add(postKey);
-                            prismPostHashMap.put(postKey, prismPost);
-                            getActivity().runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (dateOrderedPrismPostKeys.size() > 0) {
-                                        mainContentRecyclerViewAdapter.notifyItemInserted(dateOrderedPrismPostKeys.size());
-                                    }
+        databaseReferenceAllPosts
+                .orderByChild(Key.POST_TIMESTAMP)
+                .startAt(lastPostTimestamp)
+                .limitToFirst(Default.IMAGE_LOAD_COUNT)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
+                                String postKey = postSnapshot.getKey();
+                                if (!dateOrderedPrismPostKeys.contains(postKey)) {
+                                    PrismPost prismPost = getPrismPostObject(postSnapshot);
+                                    dateOrderedPrismPostKeys.add(postKey);
+                                    prismPostHashMap.put(postKey, prismPost);
+                                    getActivity().runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            if (dateOrderedPrismPostKeys.size() > 0) {
+                                                mainContentRecyclerViewAdapter
+                                                        .notifyItemInserted(dateOrderedPrismPostKeys.size());
+                                            }
+                                        }
+                                    });
                                 }
-                            });
+                            }
+                            populateUserDetailsForAllPosts(false);
+                        } else {
+                            Log.i(Default.TAG_DB, Message.NO_DATA);
                         }
                     }
 
-                    populateUserDetailsForAllPosts(false);
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.e(Default.TAG_DB, databaseError.getMessage(), databaseError.toException());
+                    }
+                });
+    }
 
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-            }
-        });
+    /**
+     * Takes in a dataSnapshot object and parses its contents
+     * and returns a prismPost object
+     */
+    private PrismPost getPrismPostObject(DataSnapshot postSnapshot) {
+        PrismPost prismPost = postSnapshot.getValue(PrismPost.class);
+        prismPost.setLikes((int) postSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount());
+        prismPost.setReposts((int) postSnapshot.child(Key.DB_REF_POST_REPOSTED_USERS).getChildrenCount());
+        return prismPost;
     }
 
     /**
      * Once all posts are loaded into the prismPostHashMap,
      * this method iterates over each post, grabs user's details
      * for the post like "profilePicUri" and "username" and
-     * updates the prismPost obejcts in that hashMap
+     * updates the prismPost objects in that hashMap and then
+     * updates the RecyclerViewAdapter so the UI gets updated
      */
     private void populateUserDetailsForAllPosts(boolean updateRecyclerViewAdapter) {
         usersReference.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -275,8 +294,7 @@ public class MainContentFragment extends Fragment {
                 if (dataSnapshot.exists()) {
                     for (String postId: dateOrderedPrismPostKeys) {
                         PrismPost post = prismPostHashMap.get(postId);
-                        DataSnapshot userSnapshot = dataSnapshot
-                                .child(post.getUid());
+                        DataSnapshot userSnapshot = dataSnapshot.child(post.getUid());
                         post.setUsername((String) userSnapshot
                                 .child(Key.DB_REF_USER_PROFILE_USERNAME).getValue());
                         post.setUserProfilePicUri((String) userSnapshot
@@ -290,12 +308,23 @@ public class MainContentFragment extends Fragment {
                         mainContentProgress.setVisibility(View.GONE);
                         mainContentRecyclerViewAdapter.notifyDataSetChanged();
                     }
+                } else {
+                    Log.i(Default.TAG_DB, Message.NO_DATA);
                 }
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) { }
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e(Default.TAG_DB, databaseError.getMessage(), databaseError.toException());
+            }
         });
+    }
+
+    /**
+     * Shortcut for toasting a bread, I mean a String message
+     */
+    private void toast(String bread) {
+        Toast.makeText(getActivity(), bread, Toast.LENGTH_SHORT).show();
     }
 
 }
