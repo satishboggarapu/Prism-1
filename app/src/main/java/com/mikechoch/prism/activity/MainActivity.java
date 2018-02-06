@@ -46,8 +46,8 @@ import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.mikechoch.prism.CurrentUser;
-import com.mikechoch.prism.Default;
-import com.mikechoch.prism.Key;
+import com.mikechoch.prism.constants.Default;
+import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.PrismPost;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.ViewPagerAdapter;
@@ -372,7 +372,7 @@ public class MainActivity extends FragmentActivity {
                     @Override
                     public void onSuccess(Void aVoid) {
                         prismPost.setUsername(CurrentUser.username);
-                        prismPost.setUserProfilePicUri(CurrentUser.user_profile_pic_uri);
+                        prismPost.setUserProfilePicUri(CurrentUser.profile_pic_uri);
                         RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
                         if (mainContentRecyclerView != null) {
                             MainContentFragment.dateOrderedPrismPostKeys.add(0, postId);

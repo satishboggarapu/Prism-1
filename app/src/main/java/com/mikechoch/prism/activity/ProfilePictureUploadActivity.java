@@ -21,7 +21,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.mikechoch.prism.Default;
+import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.helper.ExifUtil;
 import com.mikechoch.prism.helper.FileChooser;
@@ -33,7 +33,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**

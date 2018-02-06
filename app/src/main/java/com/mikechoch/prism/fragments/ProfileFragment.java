@@ -1,7 +1,6 @@
 package com.mikechoch.prism.fragments;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -23,24 +22,15 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.CurrentUser;
-import com.mikechoch.prism.Default;
+import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.DefaultProfilePicture;
-import com.mikechoch.prism.Key;
-import com.mikechoch.prism.PrismUser;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.activity.LoginActivity;
 import com.mikechoch.prism.activity.ProfilePictureUploadActivity;
 
-import java.lang.reflect.Type;
 import java.util.Random;
-
-import static android.app.Activity.RESULT_OK;
 
 /**
  * Created by mikechoch on 1/22/18.

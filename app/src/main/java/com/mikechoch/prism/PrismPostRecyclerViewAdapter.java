@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
@@ -25,21 +26,27 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
-import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.bumptech.glide.request.target.Target;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.mikechoch.prism.activity.LikeRepostActivity;
+import com.mikechoch.prism.constants.Default;
+import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.helper.MyTimeUnit;
 
 import java.util.ArrayList;
@@ -140,6 +147,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
         private FirebaseAuth auth;
         private DatabaseReference userReference;
+        private StorageReference storageReference;
+        private DatabaseReference allPostsReference;
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -147,6 +156,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             // Cloud database initializations
             auth = FirebaseAuth.getInstance();
             userReference = Default.USERS_REFERENCE.child(auth.getCurrentUser().getUid());
+            storageReference = Default.STORAGE_REFERENCE.child(Key.STORAGE_POST_IMAGES_REF);
+            allPostsReference = Default.ALL_POSTS_REFERENCE;
 
             // Animation initializations
             likeHeartBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.like_animation);
@@ -585,10 +596,30 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                 public void onClick(DialogInterface dialog, int which) {
                     switch (which) {
                         case 0:
+                            // Report post
                             break;
                         case 1:
+                            // Share
                             break;
                         case 2:
+                            // Delete
+                            FirebaseStorage.getInstance().getReferenceFromUrl(prismPost.getImage())
+                                    .delete().addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()) {
+                                        if (task.isSuccessful()) {
+                                            String postId = prismPost.getPostid();
+                                            allPostsReference.child(postId).removeValue();
+                                            prismPostKeys.remove(postId);
+                                            prismPostHashMap.remove(postId);
+                                            notifyDataSetChanged();
+                                        } else {
+                                            Toast.makeText(context, "Unable to delete", Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                                }
+                            });
                             break;
                         default:
                             break;
@@ -604,10 +635,11 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
          * Check user_liked_posts HashMap if it contains the postId or not. If it contains
          * the postId, then user has already liked the post and perform UNLIKE operation
          * If it doesn't exist, user has not liked it yet, and perform LIKE operation
-         * operation LIKE (performLike = true): increment like count in DB (+1) and add the post
-         * id to the user_liked_posts HashMap with current timestamp as value
-         * operation UNLIKE (performLike = false): decrement like count in DB (-1) and remove
-         * the item from the user_liked_posts HashMap
+         * Operation LIKE (performLIKE = true): does 3 things. First it adds the the user's
+         * uid to the LIKED_USERS table under the post. Then it adds the postId to the
+         * USER_LIKES table under the user. Then it adds the postId and timestamp to the
+         * local user_liked_posts HashMap so that recycler view can update
+         * Operation UNLIKE (performLike = false): undoes above 3 things
          */
         private void handleLikeButtonClick(PrismPost prismPost) {
             String postId = prismPost.getPostid();
@@ -619,33 +651,34 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                 @Override
                 public Transaction.Result doTransaction(MutableData mutableData) {
                     PrismPost post = mutableData.getValue(PrismPost.class);
-                    if (post == null) {
-                        mutableData.setValue(0);
-                    } else {
+                    if (post != null) {
                         if (performLike) {
-                            // add postId to user's liked section
-                            userReference.child(Key.DB_REF_USER_LIKES)
-                                    .child(postId).setValue(timestamp);
 
-                            // add postId and timestamp to user_liked_posts hashMap
-                            CurrentUser.user_liked_posts.put(postId, timestamp);
-
-                            // add the user to LIKED_USERS list for this post
+                            // Add the user to LIKED_USERS list for this post
                             postReference.child(Key.DB_REF_POST_LIKED_USERS)
                                     .child(CurrentUser.user.getDisplayName())
                                     .setValue(CurrentUser.user.getUid());
-                        } else {
-                            // remove postId from user's liked section
+
+                            // Add postId to user's liked section
                             userReference.child(Key.DB_REF_USER_LIKES)
-                                    .child(postId).removeValue();
+                                    .child(postId).setValue(timestamp);
 
-                            // remove the postId and timestamp from user_liked_posts hashMap
-                            CurrentUser.user_liked_posts.remove(postId);
+                            // Add postId and timestamp to user_liked_posts hashMap
+                            CurrentUser.user_liked_posts.put(postId, timestamp);
 
-                            // remove the user from LIKED_USERS list for this post
+                        } else {
+
+                            // Remove the user from LIKED_USERS list for this post
                             postReference.child(Key.DB_REF_POST_LIKED_USERS)
                                     .child(CurrentUser.user.getDisplayName())
                                     .removeValue();
+
+                            // Remove postId from user's liked section
+                            userReference.child(Key.DB_REF_USER_LIKES)
+                                    .child(postId).removeValue();
+
+                            // Remove the postId and timestamp from user_liked_posts hashMap
+                            CurrentUser.user_liked_posts.remove(postId);
                         }
                     }
                     return Transaction.success(mutableData);
@@ -658,6 +691,16 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             });
         }
 
+        /**
+         * Check user_reposted_posts HashMap if it contains the postId or not. If it contains
+         * the postId, then user has already reposted the post and perform UNREPOST operation
+         * If it doesn't exist, user has not reposted it yet, and perform REPOST operation
+         * Operation REPOST (performRepost = true): does 3 things. First it adds the the user's
+         * uid to the REPOSTED_USERS table under the post. Then it adds the postId to the
+         * USER_REPOSTS table under the user. Then it adds the postId and timestamp to the
+         * local user_reposted_posts HashMap so that recycler view can update
+         * Operation UNREPOST (performRepost = false): undoes above 3 things
+         */
         private void handleRepostButtonClick(PrismPost prismPost) {
             String postId = prismPost.getPostid();
             long timestamp = Calendar.getInstance().getTimeInMillis();
@@ -668,31 +711,31 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                 @Override
                 public Transaction.Result doTransaction(MutableData mutableData) {
                     PrismPost post = mutableData.getValue(PrismPost.class);
-                    if (post == null) {
-                        mutableData.setValue(0);
-                    } else {
+                    if (post != null) {
                         if (performRepost) {
-                            // add postId to user's reposts section
+
+                            // Add postId to user's reposts section
                             userReference.child(Key.DB_REF_USER_REPOSTS)
                                     .child(postId).setValue(timestamp);
 
-                            // add postId and timestamp to user_reposted_posts hashMap
+                            // Add postId and timestamp to user_reposted_posts hashMap
                             CurrentUser.user_reposted_posts.put(postId, timestamp);
 
-                            // add the user to REPOSTED_USERS list for this post
+                            // Add the user to REPOSTED_USERS list for this post
                             postReference.child(Key.DB_REF_POST_REPOSTED_USERS)
                                     .child(CurrentUser.user.getDisplayName())
                                     .setValue(CurrentUser.user.getUid());
 
                         } else {
-                            // remove postId from user's reposts section
+
+                            // Remove postId from user's reposts section
                             userReference.child(Key.DB_REF_USER_LIKES)
                                     .child(postId).removeValue();
 
-                            // remove the postId and timestamp from user_reposted_posts hashMap
+                            // Remove the postId and timestamp from user_reposted_posts hashMap
                             CurrentUser.user_reposted_posts.remove(postId);
 
-                            // remove the user from REPOSTED_USERS list for this post
+                            // Remove the user from REPOSTED_USERS list for this post
                             postReference.child(Key.DB_REF_POST_REPOSTED_USERS)
                                     .child(CurrentUser.user.getDisplayName())
                                     .removeValue();
