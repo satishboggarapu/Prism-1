@@ -44,6 +44,7 @@ public class CurrentUser {
     public static String username;
     public static String full_name;
     public static String profile_pic_uri;
+    public static ProfilePicture profilePicture;
 
     public CurrentUser(Context context) {
 
@@ -134,9 +135,9 @@ public class CurrentUser {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    profile_pic_uri = (String) dataSnapshot.child(Key.DB_REF_USER_PROFILE_PIC).getValue();
-                    username = (String) dataSnapshot.child(Key.DB_REF_USER_PROFILE_USERNAME).getValue();
-                    full_name = (String) dataSnapshot.child(Key.DB_REF_USER_PROFILE_FULL_NAME).getValue();
+                    profile_pic_uri = (String) dataSnapshot.child(Key.USER_PROFILE_PIC).getValue();
+                    username = (String) dataSnapshot.child(Key.USER_PROFILE_USERNAME).getValue();
+                    full_name = (String) dataSnapshot.child(Key.USER_PROFILE_FULL_NAME).getValue();
                     updateUserProfilePageUI();
 
                 }
@@ -158,11 +159,13 @@ public class CurrentUser {
         TextView userUsernameTextView = ((Activity) context).findViewById(R.id.profile_frag_username_text_view);
         TextView userFullNameTextView = ((Activity) context).findViewById(R.id.profile_frag_full_name_text_view);
 
+        profilePicture = new ProfilePicture(profile_pic_uri);
+
         userUsernameTextView.setText(username);
         userFullNameTextView.setText(full_name);
         Glide.with(context)
                 .asBitmap()
-                .load(profile_pic_uri)
+                .load(profilePicture.hiResUri)
                 .apply(new RequestOptions().fitCenter())
                 .into(new BitmapImageViewTarget(userProfilePicImageView) {
                     @Override
@@ -171,7 +174,7 @@ public class CurrentUser {
                         drawable.setCircular(true);
                         userProfilePicImageView.setImageDrawable(drawable);
 
-                        if (profile_pic_uri != null) {
+                        if (!profilePicture.isDefault) {
                             int whiteOutlinePadding = (int) (1 * context.getResources().getDisplayMetrics().density);
                             userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
                             userProfilePicImageView.setBackground(context.getResources().getDrawable(R.drawable.circle_profile_frame));

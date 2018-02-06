@@ -8,7 +8,6 @@ public class Message {
 
      // Log.i()
      public static final String NO_DATA = "No data pulled from Firebase";
-     public static final String PROFILE_PIC_UPDATE_SUCCESS = "Profile picture updated successfully";
      public static final String LOGIN_ATTEMPT_FAIL = "Failed login attempt";
 
      // Log.e()

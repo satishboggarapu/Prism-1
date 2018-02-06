@@ -2,7 +2,6 @@ package com.mikechoch.prism.fragments;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -283,7 +282,7 @@ public class MainContentFragment extends Fragment {
     /**
      * Once all posts are loaded into the prismPostHashMap,
      * this method iterates over each post, grabs user's details
-     * for the post like "profilePicUri" and "username" and
+     * for the post like "profilePicUriString" and "username" and
      * updates the prismPost objects in that hashMap and then
      * updates the RecyclerViewAdapter so the UI gets updated
      */
@@ -296,9 +295,9 @@ public class MainContentFragment extends Fragment {
                         PrismPost post = prismPostHashMap.get(postId);
                         DataSnapshot userSnapshot = dataSnapshot.child(post.getUid());
                         post.setUsername((String) userSnapshot
-                                .child(Key.DB_REF_USER_PROFILE_USERNAME).getValue());
+                                .child(Key.USER_PROFILE_USERNAME).getValue());
                         post.setUserProfilePicUri((String) userSnapshot
-                                .child(Key.DB_REF_USER_PROFILE_PIC).getValue());
+                                .child(Key.USER_PROFILE_PIC).getValue());
                         prismPostHashMap.put(postId, post);
                     }
                     mainContentSwipeRefreshLayout.setRefreshing(false);

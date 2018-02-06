@@ -114,10 +114,6 @@ public class RegisterActivity extends AppCompatActivity {
         setupRegisterButton();
         setupLoginButton();
 
-        // TODO: Generate the default profile picture for the user when they create an account
-        // TODO: Save the generated Default profile pic to cloud database for reuse
-        generateDefaultProfilePic();
-
     }
 
     @Override
@@ -241,12 +237,9 @@ public class RegisterActivity extends AppCompatActivity {
     /**
      * Generate a random Default profile picture
      */
-    private void generateDefaultProfilePic() {
-        // TODO @mike this '10' should be replaced with DefaultProfilePicEnum.values().size() right?
-        int defaultProfPic = new Random().nextInt(10);
-        defaultProfilePic = Uri.parse(
-                DefaultProfilePicture.values()[defaultProfPic].getProfilePicture());
-
+    private String generateDefaultProfilePic() {
+        // TODO @mike this '10' should be replaced with DefaultProfilePictures.values().length right?
+        return String.valueOf(new Random().nextInt(10));
     }
 
     /**
@@ -293,15 +286,14 @@ public class RegisterActivity extends AppCompatActivity {
                                         String email = user.getEmail();
 
                                         DatabaseReference profileReference = usersDatabaseRef.child(uid);
-                                        profileReference.child(Key.DB_REF_USER_PROFILE_FULL_NAME).setValue(fullName);
-                                        profileReference.child(Key.DB_REF_USER_PROFILE_USERNAME).setValue(userName);
+                                        profileReference.child(Key.USER_PROFILE_FULL_NAME).setValue(fullName);
+                                        profileReference.child(Key.USER_PROFILE_USERNAME).setValue(userName);
+                                        profileReference.child(Key.USER_PROFILE_PIC).setValue(generateDefaultProfilePic());
 
                                         DatabaseReference accountReference = Default.ACCOUNT_REFERENCE.child(userName);
                                         accountReference.setValue(email);
 
                                         intentToMainActivity();
-                                    } else {
-                                        // TODO: should an else be here based on user being null?
                                     }
                                 } else {
                                     toggleProgressBar(false);

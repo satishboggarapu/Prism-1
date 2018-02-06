@@ -334,8 +334,8 @@ public class MainActivity extends FragmentActivity {
     }
 
     /**
-     * Takes the profilePicUri and stores the image to cloud. Once the image file is
-     * successfully uploaded to cloud successfully, it adds the profilePicUri to
+     * Takes the profilePicUriString and stores the image to cloud. Once the image file is
+     * successfully uploaded to cloud successfully, it adds the profilePicUriString to
      * the user's profile details section
      */
     private void uploadProfilePictureToCloud() {
@@ -345,13 +345,11 @@ public class MainActivity extends FragmentActivity {
             public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
                 if (task.isSuccessful()) {
                     Uri downloadUrl = task.getResult().getDownloadUrl();
-                    DatabaseReference userRef = userReference.child(Key.DB_REF_USER_PROFILE_PIC);
+                    DatabaseReference userRef = userReference.child(Key.USER_PROFILE_PIC);
                     userRef.setValue(downloadUrl.toString()).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                Log.i(Default.TAG_DB, Message.PROFILE_PIC_UPDATE_SUCCESS);
-                            } else {
+                            if (!task.isSuccessful()) {
                                 Log.wtf(Default.TAG_DB, Message.PROFILE_PIC_UPDATE_FAIL, task.getException());
                             }
                         }
