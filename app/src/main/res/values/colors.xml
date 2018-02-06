@@ -9,6 +9,8 @@
     <color name="secondaryProgressTint">#56ffffff</color>
     <color name="recyclerDividerColor">#56ffffff</color>
     <color name="hintTextColor">#aaffffff</color>
+    <color name="searchHintTextColor">#aa8e8e8e</color>
+    <color name="searchRippleColor">#aab4b4b4</color>
     <color name="disabledButtonColor">#8e8e8e</color>
     <color name="errorTextColor">#ff2626</color>
 </resources>

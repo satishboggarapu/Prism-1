@@ -6,145 +6,157 @@
     android:background="@color/backgroundColor"
     tools:context="com.mikechoch.prism.activity.RegisterActivity">
 
-    <ImageView
-        android:id="@+id/icon_image_view"
-        android:transitionName="icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_alignParentTop="true"
-        android:src="@drawable/splash_screen_lens" />
-
-    <RelativeLayout
-        android:id="@+id/register_fields_relative_layout"
+    <ScrollView
+        android:id="@+id/register_fields_scroll_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:paddingTop="80dp"
-        android:background="@android:color/transparent">
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@id/login_text_view"
+        android:background="@android:color/transparent"
+        android:isScrollContainer="false">
 
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/register_name_text_input_layout"
+        <RelativeLayout
+            android:id="@+id/register_fields_relative_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:theme="@style/TextLabel">
+            android:background="@android:color/transparent">
 
-            <EditText
-                android:id="@+id/register_name_edit_text"
+            <ImageView
+                android:id="@+id/icon_image_view"
+                android:transitionName="icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_alignParentTop="true"
+                android:src="@drawable/splash_screen_lens"
+                android:scaleType="fitCenter"/>
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/register_name_text_input_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Full name"
-                android:inputType="textCapWords"
-                android:textColor="@android:color/white"/>
+                android:layout_centerHorizontal="true"
+                android:layout_below="@id/icon_image_view"
+                android:layout_marginBottom="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginStart="16dp"
+                android:theme="@style/TextLabel">
 
-        </android.support.design.widget.TextInputLayout>
+                <EditText
+                    android:id="@+id/register_name_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Full name"
+                    android:inputType="textCapWords"
+                    android:textColor="@android:color/white"/>
 
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/register_username_text_input_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_below="@id/register_name_text_input_layout"
-            android:layout_marginBottom="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:theme="@style/TextLabel">
+            </android.support.design.widget.TextInputLayout>
 
-            <EditText
-                android:id="@+id/register_username_edit_text"
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/register_username_text_input_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Username"
-                android:inputType="text"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@id/register_name_text_input_layout"
+                android:layout_marginBottom="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:theme="@style/TextLabel">
+
+                <EditText
+                    android:id="@+id/register_username_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Username"
+                    android:inputType="text"
+                    android:textColor="@android:color/white" />
+
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/register_email_text_input_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@id/register_username_text_input_layout"
+                android:layout_marginBottom="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:theme="@style/TextLabel">
+
+                <EditText
+                    android:id="@+id/register_email_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Email"
+                    android:inputType="textEmailAddress"
+                    android:textColor="@android:color/white"/>
+
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/register_password_text_input_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@+id/register_email_text_input_layout"
+                android:layout_marginBottom="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:theme="@style/TextLabel">
+
+                <EditText
+                    android:id="@+id/register_password_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Password"
+                    android:inputType="textPassword"
+                    android:textColor="@android:color/white"/>
+
+            </android.support.design.widget.TextInputLayout>
+
+            <Button
+                android:id="@+id/submit_button"
+                android:transitionName="submit_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@id/register_password_text_input_layout"
+                android:layout_marginBottom="24dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="24dp"
+                android:padding="10dp"
+                android:text="CREATE ACCOUNT"
+                android:textSize="18sp"
                 android:textColor="@android:color/white" />
 
-        </android.support.design.widget.TextInputLayout>
+            <ProgressBar
+                android:id="@+id/register_progress_bar"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@id/register_password_text_input_layout"
+                android:layout_marginTop="28dp"
+                android:visibility="invisible"
+                android:indeterminate="true"
+                android:indeterminateDrawable="@drawable/circle_progress_foreground" />
 
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/register_email_text_input_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_below="@id/register_username_text_input_layout"
-            android:layout_marginBottom="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:theme="@style/TextLabel">
+        </RelativeLayout>
 
-            <EditText
-                android:id="@+id/register_email_edit_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Email"
-                android:inputType="textEmailAddress"
-                android:textColor="@android:color/white"/>
-
-        </android.support.design.widget.TextInputLayout>
-
-        <android.support.design.widget.TextInputLayout
-            android:id="@+id/register_password_text_input_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_below="@+id/register_email_text_input_layout"
-            android:layout_marginBottom="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:theme="@style/TextLabel">
-
-            <EditText
-                android:id="@+id/register_password_edit_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Password"
-                android:inputType="textPassword"
-                android:textColor="@android:color/white"/>
-
-        </android.support.design.widget.TextInputLayout>
-
-    </RelativeLayout>
-
-    <Button
-        android:id="@+id/submit_button"
-        android:transitionName="submit_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@id/register_fields_relative_layout"
-        android:layout_marginBottom="24dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="24dp"
-        android:padding="10dp"
-        android:text="CREATE ACCOUNT"
-        android:textSize="18sp"
-        android:textColor="@android:color/white" />
-
-    <ProgressBar
-        android:id="@+id/register_progress_bar"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@id/register_fields_relative_layout"
-        android:layout_marginTop="28dp"
-        android:visibility="invisible"
-        android:indeterminate="true"
-        android:indeterminateDrawable="@drawable/circle_progress_foreground" />
+    </ScrollView>
 
     <TextView
         android:id="@+id/login_text_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
         android:layout_alignParentBottom="true"
+        android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
         android:text="Already a member? Login"
         android:textSize="18sp"

@@ -1,7 +1,6 @@
 package com.mikechoch.prism.fragments;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -23,24 +22,15 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.CurrentUser;
-import com.mikechoch.prism.Default;
+import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.DefaultProfilePicture;
-import com.mikechoch.prism.Key;
-import com.mikechoch.prism.PrismUser;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.activity.LoginActivity;
 import com.mikechoch.prism.activity.ProfilePictureUploadActivity;
 
-import java.lang.reflect.Type;
 import java.util.Random;
-
-import static android.app.Activity.RESULT_OK;
 
 /**
  * Created by mikechoch on 1/22/18.
@@ -83,42 +73,6 @@ public class ProfileFragment extends Fragment {
 
         auth = FirebaseAuth.getInstance();
         userReference = Default.USERS_REFERENCE.child(auth.getCurrentUser().getUid());
-//        userReference.addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                if (dataSnapshot.exists()) {
-//                    profilePic = (String) dataSnapshot.child(Key.DB_REF_USER_PROFILE_PIC).getValue();
-//
-//                    Random random = new Random();
-//                    int defaultProfPic = random.nextInt(10);
-//                    Uri uri = Uri.parse(String.valueOf(DefaultProfilePicture.values()[defaultProfPic].getProfilePicture()));
-//                    Glide.with(getActivity())
-//                            .asBitmap()
-//                            .thumbnail(0.05f)
-//                            .load(profilePic != null ? profilePic : uri)
-//                            .apply(new RequestOptions().fitCenter())
-//                            .into(new BitmapImageViewTarget(userProfilePicImageView) {
-//                                @Override
-//                                protected void setResource(Bitmap resource) {
-//                                    RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getActivity().getResources(), resource);
-//                                    drawable.setCircular(true);
-//                                    userProfilePicImageView.setImageDrawable(drawable);
-//
-//                                    if (profilePic != null) {
-//                                        int whiteOutlinePadding = (int) (1 * scale);
-//                                        userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
-//                                        userProfilePicImageView.setBackground(getActivity().getResources().getDrawable(R.drawable.circle_profile_frame));
-//                                    }
-//                                }
-//                            });
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-//
-//            }
-//        });
 
         sourceSansProLight = Typeface.createFromAsset(getContext().getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getContext().getAssets(), "fonts/SourceSansPro-Black.ttf");
@@ -132,9 +86,11 @@ public class ProfileFragment extends Fragment {
         View view = inflater.inflate(R.layout.profile_fragment_layout, container, false);
 
         userProfilePicImageView = view.findViewById(R.id.profile_frag_profile_picture_image_view);
+
         Random random = new Random();
         int defaultProfPic = random.nextInt(10);
         Uri uri = Uri.parse(String.valueOf(DefaultProfilePicture.values()[defaultProfPic].getProfilePicture()));
+
         Glide.with(this)
                 .asBitmap()
                 .thumbnail(0.05f)
@@ -143,49 +99,30 @@ public class ProfileFragment extends Fragment {
                 .into(new BitmapImageViewTarget(userProfilePicImageView) {
                     @Override
                     protected void setResource(Bitmap resource) {
-                        RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getActivity().getResources(), resource);
-                        drawable.setCircular(true);
-                        userProfilePicImageView.setImageDrawable(drawable);
-
-//                        if (profilePic != null) {
+//                        if (userProfilePicImageView != null) {
 //                            int whiteOutlinePadding = (int) (1 * scale);
 //                            userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
 //                            userProfilePicImageView.setBackground(getActivity().getResources().getDrawable(R.drawable.circle_profile_frame));
 //                        }
+
+                        RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getActivity().getResources(), resource);
+                        drawable.setCircular(true);
+                        userProfilePicImageView.setImageDrawable(drawable);
                     }
                 });
         userProfilePicImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AlertDialog.Builder profilePictureAlertDialog = new AlertDialog.Builder(getActivity());
-                profilePictureAlertDialog.setTitle("Set profile picture");
-                profilePictureAlertDialog.setItems(setProfilePicStrings, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        switch (which) {
-                            case 0:
-                                Intent imageUploadIntent = new Intent(getActivity(), ProfilePictureUploadActivity.class);
-                                getActivity().startActivityForResult(imageUploadIntent, Default.PROFILE_PIC_UPLOAD_INTENT_REQUEST_CODE);
-                                getActivity().overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
-                                break;
-                            case 1:
-                                // TODO: Figure out camera feature
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                });
-
-                profilePictureAlertDialog.create().show();
+                AlertDialog setProfilePictureAlertDialog = createSetProfilePictureAlertDialog();
+                setProfilePictureAlertDialog.show();
             }
         });
 
         userUsernameTextView = view.findViewById(R.id.profile_frag_username_text_view);
-        userUsernameTextView.setText("mikechoch");
+        userUsernameTextView.setText(CurrentUser.username);
         userUsernameTextView.setTypeface(sourceSansProBold);
         userFullNameTextView = view.findViewById(R.id.profile_frag_full_name_text_view);
-        userFullNameTextView.setText("Michael DiCioccio");
+        userFullNameTextView.setText(CurrentUser.full_name);
         userFullNameTextView.setTypeface(sourceSansProLight);
 
         logoutButton = view.findViewById(R.id.logout_button);
@@ -203,6 +140,33 @@ public class ProfileFragment extends Fragment {
         });
 
         return view;
+    }
+
+    /**
+     *
+     */
+    private AlertDialog createSetProfilePictureAlertDialog() {
+        AlertDialog.Builder profilePictureAlertDialog = new AlertDialog.Builder(getActivity());
+        profilePictureAlertDialog.setTitle("Set profile picture");
+        profilePictureAlertDialog.setItems(setProfilePicStrings, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case 0:
+                        Intent imageUploadIntent = new Intent(getActivity(), ProfilePictureUploadActivity.class);
+                        getActivity().startActivityForResult(imageUploadIntent, Default.PROFILE_PIC_UPLOAD_INTENT_REQUEST_CODE);
+                        getActivity().overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+                        break;
+                    case 1:
+                        // TODO: Figure out camera feature
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+
+        return profilePictureAlertDialog.create();
     }
 
 }

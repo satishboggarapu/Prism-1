@@ -1,4 +1,4 @@
-package com.mikechoch.prism;
+package com.mikechoch.prism.constants;
 
 /**
  * Created by parth on 1/22/18.
@@ -9,8 +9,8 @@ public class Key {
     // DO NOT CHANGE ANY OF THESE //
     // THESE ARE LINKED TO MANY OTHER THINGS //
 
-    public static final String STORAGE_POST_IMAGES_REF = "PostImage";
-    public static final String STORAGE_USER_PROFILE_IMAGE_REF = "UserProfiles";
+    public static final String STORAGE_POST_IMAGES_REF = "POST_IMAGES";
+    public static final String STORAGE_USER_PROFILE_IMAGE_REF = "USER_PROFILES";
 
 
     public static final String DB_REF_USER_PROFILES = "USERS";

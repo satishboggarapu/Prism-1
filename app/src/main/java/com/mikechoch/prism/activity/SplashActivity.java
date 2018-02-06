@@ -58,8 +58,8 @@ public class SplashActivity extends AppCompatActivity {
         protected void onPostExecute(Void v) {
             super.onPostExecute(v);
             boolean isSignedIn = FirebaseAuth.getInstance().getCurrentUser() != null;
-            Intent intent = new Intent(SplashActivity.this, isSignedIn ?
-                    MainActivity.class : LoginActivity.class);
+            Intent intent = new Intent(SplashActivity.this,
+                    isSignedIn ? MainActivity.class : LoginActivity.class);
             int enterAnim = isSignedIn ? R.anim.fade_in : 0;
             int exitAnim = isSignedIn ? R.anim.fade_out : 0;
             ActivityOptionsCompat options = ActivityOptionsCompat.

@@ -1,15 +1,11 @@
-package com.mikechoch.prism;
+package com.mikechoch.prism.constants;
 
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.mikechoch.prism.constants.Key;
 
-import java.text.SimpleDateFormat;
-
-/**
- * Created by parth on 1/22/18.
- */
 
 public class Default {
 
@@ -35,4 +31,6 @@ public class Default {
     public static final int VIEW_PAGER_SEARCH = 2;
     public static final int VIEW_PAGER_NOTIFICATIONS = 3;
     public static final int VIEW_PAGER_PROFILE = 4;
+
+    public static final String TAG_DB = "Firebase Database";
 }

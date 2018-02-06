@@ -1,16 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/notifications_content_text_view"
+    <RelativeLayout
+        android:id="@+id/no_notifications_relative_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_alignParentTop="true"
-        android:text="Notifications"
-        android:textSize="30sp"
-        android:textColor="@android:color/white"/>
+        android:layout_gravity="center"
+        android:visibility="visible">
 
-</RelativeLayout>
+        <ImageView
+            android:id="@+id/no_notifications_image_view"
+            android:layout_width="92dp"
+            android:layout_height="92dp"
+            android:layout_centerInParent="true"
+            android:src="@drawable/no_notifications_icon"
+            android:tint="@android:color/white"/>
+
+        <TextView
+            android:id="@+id/no_notifications_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/no_notifications_image_view"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="36dp"
+            android:text="No notifications"
+            android:textColor="@android:color/white"/>
+
+    </RelativeLayout>
+
+    <!--<ProgressBar-->
+        <!--android:id="@+id/main_content_progress_bar"-->
+        <!--android:layout_width="80dp"-->
+        <!--android:layout_height="80dp"-->
+        <!--android:layout_gravity="center"-->
+        <!--android:indeterminate="true"-->
+        <!--android:indeterminateDrawable="@drawable/circle_progress_foreground"-->
+        <!--android:visibility="visible" />-->
+
+</android.support.design.widget.CoordinatorLayout>

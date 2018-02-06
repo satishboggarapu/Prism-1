@@ -47,6 +47,12 @@
             android:name=".activity.LikeRepostActivity"
             android:screenOrientation="portrait"/>
 
+        <activity
+            android:name=".activity.SearchActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="stateVisible"
+            android:theme="@style/SearchTheme"/>
+
     </application>
 
 </manifest>

@@ -10,11 +10,14 @@ public class PrismPost {
     // THESE HAVE TO BE SAME AS "POST_*" KEYS //
     private String image;
     private String caption;
-    private String username;
     private String uid;
     private long timestamp;
-    private int likes;
     private String postid;
+
+    // Attributes not saved in cloud
+    private int likes;
+    private int reposts;
+    private String username;
     private String userProfilePicUri;
 
     public PrismPost() { }
@@ -27,17 +30,7 @@ public class PrismPost {
         this.postid = postid;
     }
 
-    public void setLikes(int likes) {
-        this.likes = likes;
-    }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setUserProfilePicUri(String userProfilePicUri) {
-        this.userProfilePicUri = userProfilePicUri;
-    }
 
     public String getImage() {
         return image;
@@ -45,10 +38,6 @@ public class PrismPost {
 
     public String getCaption() {
         return caption;
-    }
-
-    public String getUsername() {
-        return username;
     }
 
     public String getUid() {
@@ -59,16 +48,43 @@ public class PrismPost {
         return timestamp;
     }
 
+    public String getPostid() {
+        return postid;
+    }
+
+
+    // Getters and Setters for attributes not saved in cloud
+    public void setLikes(int likes) {
+        this.likes = likes;
+    }
+
+    public void setReposts(int reposts) {
+        this.reposts = reposts;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setUserProfilePicUri(String userProfilePicUri) {
+        this.userProfilePicUri = userProfilePicUri;
+    }
+
     public int getLikes() {
         return likes;
     }
 
-    public String getPostid() {
-        return postid;
+    public int getReposts() {
+        return reposts;
+    }
+
+    public String getUsername() {
+        return username;
     }
 
     public String getUserProfilePicUri() {
         return userProfilePicUri;
     }
+
 
 }

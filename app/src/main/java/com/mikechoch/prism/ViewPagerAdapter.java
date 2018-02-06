@@ -4,11 +4,11 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 
+import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.fragments.MainContentFragment;
 import com.mikechoch.prism.fragments.NotificationsFragment;
 import com.mikechoch.prism.fragments.ProfileFragment;
 import com.mikechoch.prism.fragments.SearchFragment;
-import com.mikechoch.prism.fragments.TrendingContentFragment;
 
 /**
  * Created by mikechoch on 1/22/18.
