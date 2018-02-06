@@ -23,9 +23,9 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.ViewPager;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
@@ -35,25 +35,26 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.Calendar;
-
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.mikechoch.prism.CurrentUser;
-import com.mikechoch.prism.constants.Default;
-import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.PrismPost;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.ViewPagerAdapter;
+import com.mikechoch.prism.constants.Default;
+import com.mikechoch.prism.constants.Key;
+import com.mikechoch.prism.constants.Message;
 import com.mikechoch.prism.fragments.MainContentFragment;
+
+import java.util.Calendar;
 
 
 public class MainActivity extends FragmentActivity {
@@ -249,8 +250,10 @@ public class MainActivity extends FragmentActivity {
         prismTabLayout.getTabAt(Default.VIEW_PAGER_PROFILE - 1).setIcon(R.drawable.ic_account_white_36dp);
         int tabUnselectedColor = Color.WHITE;
         int tabSelectedColor = getResources().getColor(R.color.colorAccent);
+
         prismTabLayout.getTabAt(Default.VIEW_PAGER_HOME).getIcon().setColorFilter(
                 tabSelectedColor, PorterDuff.Mode.SRC_IN);
+
         prismTabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
@@ -331,22 +334,32 @@ public class MainActivity extends FragmentActivity {
     }
 
     /**
-     * TODO: @Parth comment
+     * Takes the profilePicUri and stores the image to cloud. Once the image file is
+     * successfully uploaded to cloud successfully, it adds the profilePicUri to
+     * the user's profile details section
      */
     private void uploadProfilePictureToCloud() {
         StorageReference profilePicRef = storageReference.child(Key.STORAGE_USER_PROFILE_IMAGE_REF).child(profilePictureUri.getLastPathSegment());
-        profilePicRef.putFile(profilePictureUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+        profilePicRef.putFile(profilePictureUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
             @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                DatabaseReference userRef = userReference.child(Key.DB_REF_USER_PROFILE_PIC);
-                userRef.setValue(downloadUrl.toString()).addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        System.out.println("Task successful");
-                    }
-                });
-
+            public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+                if (task.isSuccessful()) {
+                    Uri downloadUrl = task.getResult().getDownloadUrl();
+                    DatabaseReference userRef = userReference.child(Key.DB_REF_USER_PROFILE_PIC);
+                    userRef.setValue(downloadUrl.toString()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                Log.i(Default.TAG_DB, Message.PROFILE_PIC_UPDATE_SUCCESS);
+                            } else {
+                                Log.wtf(Default.TAG_DB, Message.PROFILE_PIC_UPDATE_FAIL, task.getException());
+                            }
+                        }
+                    });
+                } else {
+                    Log.e(Default.TAG_DB, Message.FILE_UPLOAD_FAIL, task.getException());
+                    toast("Unable to update profile picture");
+                }
             }
         });
     }
@@ -380,61 +393,51 @@ public class MainActivity extends FragmentActivity {
     }
 
     /**
-     * TODO: @Parth comment
+     *  Takes the uploadedImageUri (which is the image that user chooses from local storage)
+     *  and uploads the file to cloud. Once that is successful, the a new post is created in
+     *  ALL_POSTS section and the post details are pushed. Then the postId is added to the
+     *  USER_UPLOADS section for the current user
      */
     @SuppressLint("SimpleDateFormat")
     private void uploadImageToCloud() {
         StorageReference postImageRef = storageReference.child(Key.STORAGE_POST_IMAGES_REF).child(uploadedImageUri.getLastPathSegment());
-        postImageRef.putFile(uploadedImageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+        postImageRef.putFile(uploadedImageUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
             @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                DatabaseReference reference = databaseReference.push();
+            public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+                if (task.isSuccessful()) {
+                    Uri downloadUrl = task.getResult().getDownloadUrl();
+                    DatabaseReference postReference = databaseReference.push();
+                    PrismPost prismPost = createPrismPostObject(downloadUrl, postReference);
 
-                String imageUri = downloadUrl.toString();
-                String description = uploadedImageDescription;
-                String userId = auth.getCurrentUser().getUid();
-                Long timestamp = -1 * Calendar.getInstance().getTimeInMillis();
-                String postId = reference.getKey();
+                    // Add postId to USER_UPLOADS table
+                    DatabaseReference userPostRef = userReference.child(Key.DB_REF_USER_UPLOADS).child(prismPost.getPostid());
+                    userPostRef.setValue(prismPost.getTimestamp());
 
-                DatabaseReference userPostRef = userReference.child(Key.DB_REF_USER_UPLOADS).child(postId);
-                userPostRef.setValue(timestamp);
-
-                // todo Figure out why LIKES and REPOSTS count are pushed to cloud
-                PrismPost prismPost = new PrismPost(imageUri, description, userId, timestamp, postId);
-                reference.setValue(prismPost).addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @SuppressLint("NewApi")
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        prismPost.setUsername(CurrentUser.username);
-                        prismPost.setUserProfilePicUri(CurrentUser.profile_pic_uri);
-                        RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
-                        if (mainContentRecyclerView != null) {
-                            MainContentFragment.dateOrderedPrismPostKeys.add(0, postId);
-                            MainContentFragment.prismPostHashMap.put(postId, prismPost);
-                            mainContentRecyclerView.getAdapter().notifyItemInserted(0);
-                            mainContentRecyclerView.smoothScrollToPosition(0);
+                    // Create the post in cloud and on success, add the image to local recycler view adapter
+                    postReference.setValue(prismPost).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @SuppressLint("NewApi")
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                updateLocalRecyclerViewWithNewPost(prismPost);
+                            } else {
+                                uploadingImageTextView.setText("Failed to make the post");
+                                Log.wtf(Default.TAG_DB, Message.POST_UPLOAD_FAIL, task.getException());
+                            }
+                            imageUploadProgressBar.setProgress(100, Build.VERSION.SDK_INT >= Build.VERSION_CODES.N);
+                            // TODO: @Mike can we get rid of the runnable below?
+                            new  Handler().postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    uploadingImageRelativeLayout.setVisibility(View.GONE);
+                                }
+                            }, 2000);
                         }
-
-                        uploadingImageTextView.setText("Finishing up...");
-                        imageUploadProgressBar.setProgress(100, Build.VERSION.SDK_INT >= Build.VERSION_CODES.N);
-
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                uploadingImageTextView.setText("Done");
-                            }
-                        }, 1000);
-
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                uploadingImageRelativeLayout.setVisibility(View.GONE);
-                            }
-                        }, 2000);
-                    }
-                });
-
+                    });
+                } else {
+                    Log.e(Default.TAG_DB, Message.FILE_UPLOAD_FAIL, task.getException());
+                    toast("Failed to upload the image to cloud");
+                }
 
 
             }
@@ -450,15 +453,46 @@ public class MainActivity extends FragmentActivity {
                     }
                 });
             }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                snackTime("Failed to upload image");
-                uploadingImageRelativeLayout.setVisibility(View.GONE);
-                e.printStackTrace();
-            }
         });
     }
+
+    /**
+     * Takes new prismPost object that got uploaded to cloud and adds it to the recyclerViewAdapter
+     * and wraps up other UI elements such as textviews and progress spinners
+     * @param prismPost
+     */
+    private void updateLocalRecyclerViewWithNewPost(PrismPost prismPost) {
+        prismPost.setUsername(CurrentUser.username);
+        prismPost.setUserProfilePicUri(CurrentUser.profile_pic_uri);
+        RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
+        if (mainContentRecyclerView != null) {
+            MainContentFragment.dateOrderedPrismPostKeys.add(0, prismPost.getPostid());
+            MainContentFragment.prismPostHashMap.put(prismPost.getPostid(), prismPost);
+            mainContentRecyclerView.getAdapter().notifyItemInserted(0);
+            mainContentRecyclerView.smoothScrollToPosition(0);
+        }
+        uploadingImageTextView.setText("Finishing up...");
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                uploadingImageTextView.setText("Done");
+            }
+        }, 1000);
+    }
+
+    /**
+     * Takes in the downloadUri that was create in cloud and reference to the post that
+     * got created in cloud and prepares the PrismPost object that will be pushed
+     */
+    private PrismPost createPrismPostObject(Uri downloadUrl, DatabaseReference reference) {
+        String imageUri = downloadUrl.toString();
+        String description = uploadedImageDescription;
+        String userId = auth.getCurrentUser().getUid();
+        Long timestamp = -1 * Calendar.getInstance().getTimeInMillis();
+        String postId = reference.getKey();
+        return new PrismPost(imageUri, description, userId, timestamp, postId);
+    }
+
 
     /**
      * Shortcut for displaying a Toast message

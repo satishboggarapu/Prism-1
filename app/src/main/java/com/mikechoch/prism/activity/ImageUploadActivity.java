@@ -158,7 +158,7 @@ public class ImageUploadActivity extends AppCompatActivity {
     private void selectImageFromGallery() {
         Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT);
         galleryIntent.setType("image/*");
-        startActivityForResult(Intent.createChooser(galleryIntent, "Select a picture"), Default.GALLERY_INTENT_REQUEST);
+        startActivityForResult(Intent.createChooser(galleryIntent, "Select an image"), Default.GALLERY_INTENT_REQUEST);
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
     }
 
