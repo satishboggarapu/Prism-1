@@ -11,6 +11,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
@@ -37,6 +38,7 @@ import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.DefaultProfilePicture;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.R;
+import com.mikechoch.prism.constants.Message;
 
 import java.util.Random;
 import java.util.regex.Pattern;
@@ -174,7 +176,7 @@ public class RegisterActivity extends AppCompatActivity {
             }
 
             @Override
-            public void afterTextChanged(Editable e) {}
+            public void afterTextChanged(Editable e) { }
         });
 
 
@@ -240,8 +242,8 @@ public class RegisterActivity extends AppCompatActivity {
      * Generate a random Default profile picture
      */
     private void generateDefaultProfilePic() {
-        Random random = new Random();
-        int defaultProfPic = random.nextInt(10);
+        // TODO @mike this '10' should be replaced with DefaultProfilePicEnum.values().size() right?
+        int defaultProfPic = new Random().nextInt(10);
         defaultProfilePic = Uri.parse(
                 DefaultProfilePicture.values()[defaultProfPic].getProfilePicture());
 
@@ -303,6 +305,7 @@ public class RegisterActivity extends AppCompatActivity {
                                     }
                                 } else {
                                     toggleProgressBar(false);
+                                    Log.e(Default.TAG_DB, Message.USER_ACCOUNT_CREATION_FAIL);
                                     try {
                                         throw task.getException();
                                     } catch (FirebaseAuthWeakPasswordException weakPassword) {
@@ -322,8 +325,8 @@ public class RegisterActivity extends AppCompatActivity {
 
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
-                        // TODO Log error
                         toggleProgressBar(false);
+                        Log.e(Default.TAG_DB, Message.USER_EXIST_CHECK_FAIL, databaseError.toException());
                     }
                 });
             }
@@ -421,7 +424,6 @@ public class RegisterActivity extends AppCompatActivity {
             return false;
         }
         if (username.length() > 30) {
-            // TODO: show error
             usernameTextInputLayout.setError("Username cannot be longer than 30 characters");
             return false;
         }
