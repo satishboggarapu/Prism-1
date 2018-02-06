@@ -41,7 +41,7 @@ import java.util.HashMap;
 public class MainContentFragment extends Fragment {
 
     /*
-     * Global variables
+     * Globals
      */
     private DatabaseReference databaseReferenceAllPosts;
     private DatabaseReference usersReference;

@@ -86,9 +86,6 @@ public class LikeRepostUsersRecyclerViewAdapter extends RecyclerView.Adapter<Lik
 
         public void setData(PrismUser prismUser) {
             this.prismUser = prismUser;
-
-            System.out.println("HI" + prismUser.getProfilePicture());
-
             Random random = new Random();
             int defaultProfPic = random.nextInt(10);
             Uri uri = Uri.parse(String.valueOf(DefaultProfilePicture.values()[defaultProfPic].getProfilePicture()));

@@ -23,6 +23,8 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.ViewPager;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.animation.Animation;
@@ -57,16 +59,12 @@ import com.mikechoch.prism.fragments.MainContentFragment;
 public class MainActivity extends FragmentActivity {
 
     /*
-     * Global variables
+     * Globals
      */
     private FirebaseAuth auth;
     private DatabaseReference databaseReference;
     private StorageReference storageReference;
     private DatabaseReference userReference;
-
-    private Uri profilePictureUri;
-    private Uri uploadedImageUri;
-    private String uploadedImageDescription;
 
     private CoordinatorLayout mainCoordinateLayout;
     private TabLayout prismTabLayout;
@@ -85,15 +83,16 @@ public class MainActivity extends FragmentActivity {
 
     private float scale;
 
+    private Uri profilePictureUri;
+    private Uri uploadedImageUri;
+    private String uploadedImageDescription;
+
 
     @SuppressLint("NewApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity_layout);
-
-        // Get the screen density of the current phone for later UI element scaling
-        scale = getResources().getDisplayMetrics().density;
 
         // Generates current user's details
         new CurrentUser(this);
@@ -102,107 +101,11 @@ public class MainActivity extends FragmentActivity {
         databaseReference = Default.ALL_POSTS_REFERENCE;
         userReference = Default.USERS_REFERENCE.child(auth.getCurrentUser().getUid());
 
-        // Create uploadImageFab showing and hiding animations
-        showFabAnimation = createFabShowAnimation(false);
-        hideFabAnimation = createFabShowAnimation(true);
-
-        sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
-        sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
-
-        // Initialize the mainCoordinateLayout for the MainActivity layout
-        mainCoordinateLayout = findViewById(R.id.main_coordinate_layout);
-
-        /*
-         * Initialize ViewPager and TabLayout
-         * Give PageChangeListener control to TabLayout
-         * Create ViewPagerAdapter and set it for the ViewPager
-         */
-        prismTabLayout = findViewById(R.id.prism_tab_layout);
-        prismViewPager = findViewById(R.id.prism_view_pager);
-        prismViewPager.setOffscreenPageLimit(Default.VIEW_PAGER_SIZE);
-        prismViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(prismTabLayout));
-        ViewPagerAdapter prismViewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager());
-        prismViewPager.setAdapter(prismViewPagerAdapter);
-        prismTabLayout.setupWithViewPager(prismViewPager);
-
-        /*
-         * Setup for the TabLayout
-         * Give each tab an icon and set the listener for selecting, reselecting, and unselecting
-         * Selected tabs will be a ColorAccent and unselected tabs White
-         */
-        prismTabLayout.getTabAt(Default.VIEW_PAGER_HOME).setIcon(R.drawable.ic_image_filter_hdr_white_36dp);
-//        prismTabLayout.getTabAt(Default.VIEW_PAGER_TRENDING).setIcon(R.drawable.ic_flash_white_36dp);
-        prismTabLayout.getTabAt(Default.VIEW_PAGER_SEARCH - 1).setIcon(R.drawable.ic_magnify_white_36dp);
-        prismTabLayout.getTabAt(Default.VIEW_PAGER_NOTIFICATIONS - 1).setIcon(R.drawable.ic_bell_white_36dp);
-        prismTabLayout.getTabAt(Default.VIEW_PAGER_PROFILE - 1).setIcon(R.drawable.ic_account_white_36dp);
-        int tabUnselectedColor = Color.WHITE;
-        int tabSelectedColor = getResources().getColor(R.color.colorAccent);
-        prismTabLayout.getTabAt(Default.VIEW_PAGER_HOME).getIcon().setColorFilter(
-                tabSelectedColor, PorterDuff.Mode.SRC_IN);
-        prismTabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                tab.getIcon().setColorFilter(tabSelectedColor, PorterDuff.Mode.SRC_IN);
-                prismViewPager.setCurrentItem(tab.getPosition(), true);
-                if (tab.getPosition() <= Default.VIEW_PAGER_TRENDING && !uploadImageFab.isShown()) {
-                    uploadImageFab.startAnimation(showFabAnimation);
-                } else if (tab.getPosition() > Default.VIEW_PAGER_TRENDING && uploadImageFab.isShown()) {
-                    uploadImageFab.startAnimation(hideFabAnimation);
-                }
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-                tab.getIcon().setColorFilter(tabUnselectedColor, PorterDuff.Mode.SRC_IN);
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-                int tabPosition = tab.getPosition();
-                switch (tabPosition) {
-                    case 0:
-                        RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
-                        if (mainContentRecyclerView != null) {
-                            mainContentRecyclerView.smoothScrollToPosition(0); // todo smooth scroll only for items < 10
-                        }
-                        break;
-                    case 1:
-                        break;
-                    case 2:
-                        break;
-                    case 3:
-                        break;
-                    case 4:
-                        break;
-                    default:
-                        break;
-                }
-            }
-        });
-
-        // Initialize uploadImageFab and OnClickListener to take you to ImageUploadActivity
-        imageUploadPreview = findViewById(R.id.image_upload_preview);
-        uploadingImageTextView = findViewById(R.id.uploading_image_text_view);
-        uploadingImageRelativeLayout = findViewById(R.id.uploading_image_relative_layout);
-        imageUploadProgressBar = findViewById(R.id.image_upload_progress_bar);
-        uploadImageFab = findViewById(R.id.upload_image_fab);
-        uploadImageFab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent imageUploadIntent = new Intent( MainActivity.this, ImageUploadActivity.class);
-                startActivityForResult(imageUploadIntent, Default.IMAGE_UPLOAD_INTENT_REQUEST_CODE);
-                overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
-            }
-        });
-
         // Check if user is logged in
         // Otherwise intent to LoginActivity
-        // todo put this at the top
         auth = FirebaseAuth.getInstance();
         if (auth.getCurrentUser() == null) {
-            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            startActivity(intent);
+            intentToLoginActivity();
         }
 
         // Ask user for write permissions to external storage
@@ -210,8 +113,34 @@ public class MainActivity extends FragmentActivity {
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, Default.MY_PERMISSIONS_REQUEST_READ_MEDIA);
         }
-    }
 
+        // Get the screen density of the current phone for later UI element scaling
+        scale = getResources().getDisplayMetrics().density;
+
+        // Create uploadImageFab showing and hiding animations
+        showFabAnimation = createFabShowAnimation(false);
+        hideFabAnimation = createFabShowAnimation(true);
+
+        // Initialize normal and bold Prism font
+        sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
+        sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
+
+        // Initialize all UI elements for Main Activity
+        mainCoordinateLayout = findViewById(R.id.main_coordinate_layout);
+        prismTabLayout = findViewById(R.id.prism_tab_layout);
+        prismViewPager = findViewById(R.id.prism_view_pager);
+        imageUploadPreview = findViewById(R.id.image_upload_preview);
+        uploadingImageTextView = findViewById(R.id.uploading_image_text_view);
+        uploadingImageRelativeLayout = findViewById(R.id.uploading_image_relative_layout);
+        imageUploadProgressBar = findViewById(R.id.image_upload_progress_bar);
+        uploadImageFab = findViewById(R.id.upload_image_fab);
+
+        // Setup all UI elements
+        setupPrismViewPager();
+        setupPrismTabLayout();
+        setupUploadImageFab();
+
+    }
 
     /**
      * When a permission is allowed, this function will run and you can
@@ -229,7 +158,6 @@ public class MainActivity extends FragmentActivity {
                 break;
         }
     }
-
 
     /**
      * Called when an activity is intent with startActivityForResult and the result is intent back
@@ -296,6 +224,115 @@ public class MainActivity extends FragmentActivity {
         }
     }
 
+    /**
+     * Give PageChangeListener control to TabLayout
+     * Create ViewPagerAdapter and set it for the ViewPager
+     */
+    private void setupPrismViewPager() {
+        prismViewPager.setOffscreenPageLimit(Default.VIEW_PAGER_SIZE);
+        prismViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(prismTabLayout));
+        ViewPagerAdapter prismViewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager());
+        prismViewPager.setAdapter(prismViewPagerAdapter);
+        prismTabLayout.setupWithViewPager(prismViewPager);
+    }
+
+    /**
+     * Setup for the TabLayout
+     * Give each tab an icon and set the listener for selecting, reselecting, and unselecting
+     * Selected tabs will be a ColorAccent and unselected tabs White
+     */
+    private void setupPrismTabLayout() {
+        prismTabLayout.getTabAt(Default.VIEW_PAGER_HOME).setIcon(R.drawable.ic_image_filter_hdr_white_36dp);
+//        prismTabLayout.getTabAt(Default.VIEW_PAGER_TRENDING).setIcon(R.drawable.ic_flash_white_36dp);
+        prismTabLayout.getTabAt(Default.VIEW_PAGER_SEARCH - 1).setIcon(R.drawable.ic_magnify_white_36dp);
+        prismTabLayout.getTabAt(Default.VIEW_PAGER_NOTIFICATIONS - 1).setIcon(R.drawable.ic_bell_white_36dp);
+        prismTabLayout.getTabAt(Default.VIEW_PAGER_PROFILE - 1).setIcon(R.drawable.ic_account_white_36dp);
+        int tabUnselectedColor = Color.WHITE;
+        int tabSelectedColor = getResources().getColor(R.color.colorAccent);
+        prismTabLayout.getTabAt(Default.VIEW_PAGER_HOME).getIcon().setColorFilter(
+                tabSelectedColor, PorterDuff.Mode.SRC_IN);
+        prismTabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                tab.getIcon().setColorFilter(tabSelectedColor, PorterDuff.Mode.SRC_IN);
+                prismViewPager.setCurrentItem(tab.getPosition(), true);
+                if (tab.getPosition() <= Default.VIEW_PAGER_TRENDING && !uploadImageFab.isShown()) {
+                    uploadImageFab.startAnimation(showFabAnimation);
+                } else if (tab.getPosition() > Default.VIEW_PAGER_TRENDING && uploadImageFab.isShown()) {
+                    uploadImageFab.startAnimation(hideFabAnimation);
+                }
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+                tab.getIcon().setColorFilter(tabUnselectedColor, PorterDuff.Mode.SRC_IN);
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+                int tabPosition = tab.getPosition();
+                switch (tabPosition) {
+                    case 0:
+                        RecyclerView mainContentRecyclerView = MainActivity.this
+                                .findViewById(R.id.main_content_recycler_view);
+                        LinearLayoutManager layoutManager  = (LinearLayoutManager)
+                                mainContentRecyclerView.getLayoutManager();
+                        if (mainContentRecyclerView != null) {
+                            if (layoutManager.findFirstVisibleItemPosition() < 10) {
+                                mainContentRecyclerView.smoothScrollToPosition(0);
+                            } else {
+                                mainContentRecyclerView.scrollToPosition(0);
+                            }
+                        }
+                        break;
+                    case 1:
+                        break;
+                    case 2:
+                        break;
+                    case 3:
+                        break;
+                    case 4:
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+    }
+
+    /**
+     * Setup the UploadImageFab, so when it is clicked it will Intent to UploadImageActivity
+     */
+    private void setupUploadImageFab() {
+        uploadImageFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                intentToUploadImageActivity();
+            }
+        });
+    }
+
+    /**
+     * Intent to Login Activity from Main Activity
+     */
+    private void intentToLoginActivity() {
+        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+    }
+
+    /**
+     * Intent to Upload Image Activity from Main Activity
+     */
+    private void intentToUploadImageActivity() {
+        Intent imageUploadIntent = new Intent( MainActivity.this, ImageUploadActivity.class);
+        startActivityForResult(imageUploadIntent, Default.IMAGE_UPLOAD_INTENT_REQUEST_CODE);
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+    }
+
+    /**
+     * TODO: @Parth comment
+     */
     private void uploadProfilePictureToCloud() {
         StorageReference profilePicRef = storageReference.child(Key.STORAGE_USER_PROFILE_IMAGE_REF).child(profilePictureUri.getLastPathSegment());
         profilePicRef.putFile(profilePictureUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
@@ -313,7 +350,6 @@ public class MainActivity extends FragmentActivity {
             }
         });
     }
-
 
     /**
      * Takes in a boolean shouldHide and will create a hiding and showing animation
@@ -343,9 +379,8 @@ public class MainActivity extends FragmentActivity {
         return scaleAnimation;
     }
 
-
     /**
-     *
+     * TODO: @Parth comment
      */
     @SuppressLint("SimpleDateFormat")
     private void uploadImageToCloud() {
@@ -425,15 +460,12 @@ public class MainActivity extends FragmentActivity {
         });
     }
 
-
-
     /**
      * Shortcut for displaying a Toast message
      */
     private void toast(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
-
 
     /**
      * Shortcut for displaying a Snackbar message

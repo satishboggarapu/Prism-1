@@ -34,6 +34,11 @@ import com.mikechoch.prism.R;
 
 public class LoginActivity extends AppCompatActivity {
 
+    /*
+     * Globals
+     */
+    private FirebaseAuth auth;
+
     private ImageView iconImageView;
     private TextInputLayout emailTextInputLayout;
     private EditText emailEditText;
@@ -46,30 +51,58 @@ public class LoginActivity extends AppCompatActivity {
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
 
-    private FirebaseAuth auth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login_activity_layout);
 
+        // User authentication instance
         auth = FirebaseAuth.getInstance();
 
+        // Initialize normal and bold Prism font
         sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
 
+        // Get the screen width and height of the current phone
         int screenHeight = getWindowManager().getDefaultDisplay().getHeight();
         int screenWidth = getWindowManager().getDefaultDisplay().getWidth();
 
+        // Initialize all UI elements for Login Activity
         iconImageView = findViewById(R.id.icon_image_view);
+        emailTextInputLayout = findViewById(R.id.email_text_input_layout);
+        emailEditText = findViewById(R.id.email_edit_text);
+        passwordTextInputLayout = findViewById(R.id.password_text_input_layout);
+        passwordEditText = findViewById(R.id.password_edit_text);
+        loginButton = findViewById(R.id.submit_button);
+        goToRegisterButton = findViewById(R.id.register_text_view);
+        loginProgressBar = findViewById(R.id.login_progress_bar);
+
+        // Setup the image view at the top of the Login screen
+        // 50% of the screen will be the width and margin the image top by 1/16th of the height
         iconImageView.getLayoutParams().width = (int) (screenWidth * 0.5);
         RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) iconImageView.getLayoutParams();
         lp.setMargins(0, (screenHeight/16), 0, 0);
         iconImageView.setLayoutParams(lp);
 
-        emailTextInputLayout = findViewById(R.id.email_text_input_layout);
+        // Setup all UI elements
+        setupEmailEditText();
+        setupPasswordEditText();
+        setupLoginButton();
+        setupGoToRegisterButton();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
+    }
+
+    /**
+     * Email EditTextLayout Typefaces are set and TextWatcher is setup for error handling
+     */
+    private void setupEmailEditText() {
         emailTextInputLayout.setTypeface(sourceSansProLight);
-        emailEditText = findViewById(R.id.email_edit_text);
         emailEditText.setTypeface(sourceSansProLight);
         emailEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -91,12 +124,15 @@ public class LoginActivity extends AppCompatActivity {
 
             }
         });
+    }
 
-        passwordTextInputLayout = findViewById(R.id.password_text_input_layout);
+    /**
+     * Password EditTextLayout Typefaces are set and TextWatcher is setup for error handling
+     */
+    private void setupPasswordEditText() {
         passwordTextInputLayout.setTypeface(sourceSansProLight);
         passwordTextInputLayout.setPasswordVisibilityToggleEnabled(true);
         passwordTextInputLayout.getPasswordVisibilityToggleDrawable().setTint(Color.WHITE);
-        passwordEditText = findViewById(R.id.password_edit_text);
         passwordEditText.setTypeface(sourceSansProLight);
         passwordEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -119,29 +155,25 @@ public class LoginActivity extends AppCompatActivity {
 
             }
         });
+    }
 
-        loginButton = findViewById(R.id.submit_button);
+    /**
+     * Login button is disabled, formatting is set, and OnClickListener is setup
+     * When the login button is clicked, this should check whether it is a username or email
+     * Error handle for invalid credentials and otherwise go to MainActivity
+     */
+    private void setupLoginButton() {
         loginButton.setEnabled(false);
-        loginButton.setBackgroundTintList(getResources().getColorStateList(R.color.disabledButtonColor));
         loginButton.setTypeface(sourceSansProLight);
-
-        goToRegisterButton = findViewById(R.id.register_text_view);
-        goToRegisterButton.setTypeface(sourceSansProLight);
-
-        loginProgressBar = findViewById(R.id.login_progress_bar);
-
+        loginButton.setBackgroundTintList(getResources().getColorStateList(R.color.disabledButtonColor));
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // todo put below shit in a new toggle function
-                loginButton.setVisibility(View.INVISIBLE);
-                goToRegisterButton.setVisibility(View.INVISIBLE);
-                loginProgressBar.setVisibility(View.VISIBLE);
-
+                toggleLoginProgressBar(true);
                 String emailOrUsername = emailEditText.getText().toString().trim();
                 String password = passwordEditText.getText().toString().trim();
 
-                // if input is username, extract email from database
+                // If input is username, extract email from database
                 if (!emailOrUsername.contains("@")) {
                     DatabaseReference accountReference = Default.ACCOUNT_REFERENCE.child(emailOrUsername);
                     accountReference.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -152,15 +184,15 @@ public class LoginActivity extends AppCompatActivity {
                                 attemptLogin(email, password);
                             } else {
                                 toast("Could not find account with your username");
-                                // todo @mike: hide loading spinner here
+                                toggleLoginProgressBar(false);
                             }
                         }
 
                         @Override
                         public void onCancelled(DatabaseError databaseError) {
-                            toast("An error occurred");
-                            // todo @mike: hide loading spinner here
                             Log.wtf("Database Error", databaseError.getDetails());
+                            toast("An error occurred logging in");
+                            toggleLoginProgressBar(false);
                         }
                     });
                 } else {
@@ -170,23 +202,46 @@ public class LoginActivity extends AppCompatActivity {
 
             }
         });
+    }
 
+    /**
+     * Setup the register button TextView to go to RegisterActivity when clicked
+     */
+    private void setupGoToRegisterButton() {
+        goToRegisterButton.setTypeface(sourceSansProLight);
         goToRegisterButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent registerIntent = new Intent(LoginActivity.this, RegisterActivity.class);
-
-                Pair<View, String> iconPair = Pair.create(iconImageView, "icon");
-                Pair<View, String> submitButtonPair = Pair.create(loginButton, "submit_button");
-
-                ActivityOptionsCompat options = ActivityOptionsCompat.
-                        makeSceneTransitionAnimation(LoginActivity.this, iconPair, submitButtonPair);
-                startActivity(registerIntent, options.toBundle());
-                overridePendingTransition(0, 0);
+                intentToRegisterActivity();
             }
         });
     }
 
+    /**
+     * Intent to Register Activity from Login Activity
+     */
+    private void intentToRegisterActivity() {
+        Intent registerIntent = new Intent(LoginActivity.this, RegisterActivity.class);
+        Pair<View, String> iconPair = Pair.create(iconImageView, "icon");
+        ActivityOptionsCompat options = ActivityOptionsCompat.
+                makeSceneTransitionAnimation(LoginActivity.this, iconPair);
+        startActivity(registerIntent, options.toBundle());
+        overridePendingTransition(0, 0);
+    }
+
+    /**
+     * Intent to Main Activity from Login Activity
+     */
+    private void intentToMainActivity() {
+        startActivity(new Intent(LoginActivity.this, MainActivity.class));
+        finish();
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+    }
+
+    /**
+     * Perform validation checks before attempting sign in
+     * Also display a loading spinner until onComplete
+     */
     private void attemptLogin(String email, String password) {
         // todo perform validation checks before attempting sign in
         // todo also display a loading spinner until onComplete
@@ -194,28 +249,28 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if (task.isSuccessful()) {
-                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                    finish();
-                    overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+                    intentToMainActivity();
                 } else {
-                    // todo @mike: maybe you should put these in a function because we will be calling these a few times
                     passwordTextInputLayout.setError("Invalid email/username or password");
-                    loginButton.setVisibility(View.VISIBLE);
-                    goToRegisterButton.setVisibility(View.VISIBLE);
-                    loginProgressBar.setVisibility(View.INVISIBLE);
+                    toggleLoginProgressBar(false);
                 }
             }
         });
     }
 
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        finish();
+    /**
+     * Toggles the login button and register button to hide and shows the progress bar spinner
+     */
+    private void toggleLoginProgressBar(boolean isLoginAttempt) {
+        int progressVisibility = isLoginAttempt ? View.VISIBLE : View.INVISIBLE;
+        int buttonVisibility = isLoginAttempt ? View.INVISIBLE : View.VISIBLE;
+        loginButton.setVisibility(buttonVisibility);
+        goToRegisterButton.setVisibility(buttonVisibility);
+        loginProgressBar.setVisibility(progressVisibility);
     }
 
     /**
-     *
+     * Email/Username validation check
      */
     private boolean isEmailOrUsernameValid(String email) {
         // TODO: Add more checks for valid email?
@@ -223,7 +278,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     /**
-     *
+     * Password validation check
      */
     private boolean isPasswordValid(String password) {
         // TODO: Add more checks for valid password?
