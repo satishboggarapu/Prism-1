@@ -203,21 +203,15 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             /*
              * Username
              */
-            // TODO: Using Glide we need to populate the user's profile picture ImageView
-            // TODO: check if a profile pic exists for user, if not use one of defaults at random
-            Random random = new Random();
-            int defaultProfPic = random.nextInt(10);
-            Uri uri = Uri.parse(String.valueOf(DefaultProfilePicture.values()[defaultProfPic].getProfilePictureLow()));
-
             Glide.with(context)
                     .asBitmap()
                     .thumbnail(0.05f)
-                    .load(prismPost.getUserProfilePicUri() != null ? prismPost.getUserProfilePicUri() : uri)
+                    .load(CurrentUser.profilePicture.lowResUri)
                     .apply(new RequestOptions().fitCenter())
                     .into(new BitmapImageViewTarget(userProfilePicImageView) {
                         @Override
                         protected void setResource(Bitmap resource) {
-                            if (prismPost.getUserProfilePicUri() != null) {
+                            if (!CurrentUser.profilePicture.isDefault) {
                                 int whiteOutlinePadding = (int) (1 * scale);
                                 userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
                                 userProfilePicImageView.setBackground(context.getResources().getDrawable(R.drawable.circle_profile_frame));

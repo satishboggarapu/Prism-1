@@ -11,6 +11,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
@@ -37,6 +38,7 @@ import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.DefaultProfilePicture;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.R;
+import com.mikechoch.prism.constants.Message;
 
 import java.util.Random;
 import java.util.regex.Pattern;
@@ -112,10 +114,6 @@ public class RegisterActivity extends AppCompatActivity {
         setupRegisterButton();
         setupLoginButton();
 
-        // TODO: Generate the default profile picture for the user when they create an account
-        // TODO: Save the generated Default profile pic to cloud database for reuse
-        generateDefaultProfilePic();
-
     }
 
     @Override
@@ -174,7 +172,7 @@ public class RegisterActivity extends AppCompatActivity {
             }
 
             @Override
-            public void afterTextChanged(Editable e) {}
+            public void afterTextChanged(Editable e) { }
         });
 
 
@@ -239,12 +237,9 @@ public class RegisterActivity extends AppCompatActivity {
     /**
      * Generate a random Default profile picture
      */
-    private void generateDefaultProfilePic() {
-        Random random = new Random();
-        int defaultProfPic = random.nextInt(10);
-        defaultProfilePic = Uri.parse(
-                DefaultProfilePicture.values()[defaultProfPic].getProfilePicture());
-
+    private String generateDefaultProfilePic() {
+        // TODO @mike this '10' should be replaced with DefaultProfilePictures.values().length right?
+        return String.valueOf(new Random().nextInt(10));
     }
 
     /**
@@ -291,18 +286,18 @@ public class RegisterActivity extends AppCompatActivity {
                                         String email = user.getEmail();
 
                                         DatabaseReference profileReference = usersDatabaseRef.child(uid);
-                                        profileReference.child(Key.DB_REF_USER_PROFILE_FULL_NAME).setValue(fullName);
-                                        profileReference.child(Key.DB_REF_USER_PROFILE_USERNAME).setValue(userName);
+                                        profileReference.child(Key.USER_PROFILE_FULL_NAME).setValue(fullName);
+                                        profileReference.child(Key.USER_PROFILE_USERNAME).setValue(userName);
+                                        profileReference.child(Key.USER_PROFILE_PIC).setValue(generateDefaultProfilePic());
 
                                         DatabaseReference accountReference = Default.ACCOUNT_REFERENCE.child(userName);
                                         accountReference.setValue(email);
 
                                         intentToMainActivity();
-                                    } else {
-                                        // TODO: should an else be here based on user being null?
                                     }
                                 } else {
                                     toggleProgressBar(false);
+                                    Log.e(Default.TAG_DB, Message.USER_ACCOUNT_CREATION_FAIL);
                                     try {
                                         throw task.getException();
                                     } catch (FirebaseAuthWeakPasswordException weakPassword) {
@@ -322,8 +317,8 @@ public class RegisterActivity extends AppCompatActivity {
 
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
-                        // TODO Log error
                         toggleProgressBar(false);
+                        Log.e(Default.TAG_DB, Message.USER_EXIST_CHECK_FAIL, databaseError.toException());
                     }
                 });
             }
@@ -421,7 +416,6 @@ public class RegisterActivity extends AppCompatActivity {
             return false;
         }
         if (username.length() > 30) {
-            // TODO: show error
             usernameTextInputLayout.setError("Username cannot be longer than 30 characters");
             return false;
         }

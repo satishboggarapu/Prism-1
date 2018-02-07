@@ -3,6 +3,7 @@ package com.mikechoch.prism.activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.ActivityOptionsCompat;
@@ -12,6 +13,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -31,6 +33,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.R;
+import com.mikechoch.prism.constants.Message;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -41,7 +44,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private ImageView iconImageView;
     private TextInputLayout emailTextInputLayout;
-    private EditText emailEditText;
+    private EditText emailOrUsernameEditText;
     private TextInputLayout passwordTextInputLayout;
     private EditText passwordEditText;
     private Button loginButton;
@@ -71,7 +74,7 @@ public class LoginActivity extends AppCompatActivity {
         // Initialize all UI elements for Login Activity
         iconImageView = findViewById(R.id.icon_image_view);
         emailTextInputLayout = findViewById(R.id.email_text_input_layout);
-        emailEditText = findViewById(R.id.email_edit_text);
+        emailOrUsernameEditText = findViewById(R.id.email_edit_text);
         passwordTextInputLayout = findViewById(R.id.password_text_input_layout);
         passwordEditText = findViewById(R.id.password_edit_text);
         loginButton = findViewById(R.id.submit_button);
@@ -103,26 +106,26 @@ public class LoginActivity extends AppCompatActivity {
      */
     private void setupEmailEditText() {
         emailTextInputLayout.setTypeface(sourceSansProLight);
-        emailEditText.setTypeface(sourceSansProLight);
-        emailEditText.addTextChangedListener(new TextWatcher() {
+        emailOrUsernameEditText.setTypeface(sourceSansProLight);
+        emailOrUsernameEditText.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
+            public void beforeTextChanged(CharSequence s, int i, int i1, int i2) { }
 
             @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            public void onTextChanged(CharSequence s, int i, int i1, int i2) {
                 emailTextInputLayout.setErrorEnabled(false);
-                boolean isEmailAndPasswordValid = isEmailOrUsernameValid(emailEditText.getText().toString().trim()) &&
-                        isPasswordValid(passwordEditText.getText().toString().trim());
-                loginButton.setEnabled(isEmailAndPasswordValid);
-                int color = isEmailAndPasswordValid ? R.color.colorAccent : R.color.disabledButtonColor;
-                loginButton.setBackgroundTintList(getResources().getColorStateList(color));            }
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (s.length() > 0) {
+                            isEmailOrUsernameValid(s.toString().trim());
+                        }
+                    }
+                }, 2000);
+            }
 
             @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
+            public void afterTextChanged(Editable editable) { }
         });
     }
 
@@ -136,24 +139,23 @@ public class LoginActivity extends AppCompatActivity {
         passwordEditText.setTypeface(sourceSansProLight);
         passwordEditText.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
+            public void beforeTextChanged(CharSequence s, int i, int i1, int i2) { }
 
             @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            public void onTextChanged(CharSequence s, int i, int i1, int i2) {
                 passwordTextInputLayout.setErrorEnabled(false);
-                boolean isEmailAndPasswordValid = isEmailOrUsernameValid(emailEditText.getText().toString().trim()) &&
-                        isPasswordValid(passwordEditText.getText().toString().trim());
-                loginButton.setEnabled(isEmailAndPasswordValid);
-                int color = isEmailAndPasswordValid ? R.color.colorAccent : R.color.disabledButtonColor;
-                loginButton.setBackgroundTintList(getResources().getColorStateList(color));
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (s.length() > 0) {
+                            isPasswordValid(s.toString().trim());
+                        }
+                    }
+                }, 2000);
             }
 
             @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
+            public void afterTextChanged(Editable editable) { }
         });
     }
 
@@ -163,18 +165,22 @@ public class LoginActivity extends AppCompatActivity {
      * Error handle for invalid credentials and otherwise go to MainActivity
      */
     private void setupLoginButton() {
-        loginButton.setEnabled(false);
         loginButton.setTypeface(sourceSansProLight);
-        loginButton.setBackgroundTintList(getResources().getColorStateList(R.color.disabledButtonColor));
+        loginButton.setBackgroundTintList(getResources().getColorStateList(R.color.colorAccent));
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 toggleLoginProgressBar(true);
-                String emailOrUsername = emailEditText.getText().toString().trim();
-                String password = passwordEditText.getText().toString().trim();
+                String emailOrUsername = getFormattedEmailOrUsername();
+                String password = getFormattedPassword();
+
+                if (!isEmailOrUsernameValid(emailOrUsername) || !isPasswordValid(password)) {
+                    toggleLoginProgressBar(false);
+                    return;
+                }
 
                 // If input is username, extract email from database
-                if (!emailOrUsername.contains("@")) {
+                if (!isInputOfTypeEmail(emailOrUsername)) {
                     DatabaseReference accountReference = Default.ACCOUNT_REFERENCE.child(emailOrUsername);
                     accountReference.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
@@ -183,14 +189,14 @@ public class LoginActivity extends AppCompatActivity {
                                 String email = (String) dataSnapshot.getValue();
                                 attemptLogin(email, password);
                             } else {
-                                toast("Could not find account with your username");
+                                emailTextInputLayout.setError("Username not found");
                                 toggleLoginProgressBar(false);
                             }
                         }
 
                         @Override
                         public void onCancelled(DatabaseError databaseError) {
-                            Log.wtf("Database Error", databaseError.getDetails());
+                            Log.wtf(Default.TAG_DB, Message.USER_EXIST_CHECK_FAIL, databaseError.toException());
                             toast("An error occurred logging in");
                             toggleLoginProgressBar(false);
                         }
@@ -202,6 +208,14 @@ public class LoginActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    private String getFormattedPassword() {
+        return passwordEditText.getText().toString().trim();
+    }
+
+    private String getFormattedEmailOrUsername() {
+        return emailOrUsernameEditText.getText().toString().trim();
     }
 
     /**
@@ -243,8 +257,6 @@ public class LoginActivity extends AppCompatActivity {
      * Also display a loading spinner until onComplete
      */
     private void attemptLogin(String email, String password) {
-        // todo perform validation checks before attempting sign in
-        // todo also display a loading spinner until onComplete
         auth.signInWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
@@ -253,6 +265,7 @@ public class LoginActivity extends AppCompatActivity {
                 } else {
                     passwordTextInputLayout.setError("Invalid email/username or password");
                     toggleLoginProgressBar(false);
+                    Log.i(Default.TAG_DB, Message.LOGIN_ATTEMPT_FAIL, task.getException());
                 }
             }
         });
@@ -261,9 +274,9 @@ public class LoginActivity extends AppCompatActivity {
     /**
      * Toggles the login button and register button to hide and shows the progress bar spinner
      */
-    private void toggleLoginProgressBar(boolean isLoginAttempt) {
-        int progressVisibility = isLoginAttempt ? View.VISIBLE : View.INVISIBLE;
-        int buttonVisibility = isLoginAttempt ? View.INVISIBLE : View.VISIBLE;
+    private void toggleLoginProgressBar(boolean showProgressBar) {
+        int progressVisibility = showProgressBar ? View.VISIBLE : View.INVISIBLE;
+        int buttonVisibility = showProgressBar ? View.INVISIBLE : View.VISIBLE;
         loginButton.setVisibility(buttonVisibility);
         goToRegisterButton.setVisibility(buttonVisibility);
         loginProgressBar.setVisibility(progressVisibility);
@@ -273,20 +286,34 @@ public class LoginActivity extends AppCompatActivity {
      * Email/Username validation check
      */
     private boolean isEmailOrUsernameValid(String email) {
-        // TODO: Add more checks for valid email?
-        return true;
+        boolean isValid = (Patterns.EMAIL_ADDRESS.matcher(email).matches()) ||
+                (email.length() >=  5 && email.length() <= 30);
+        if (!isValid) {
+           emailTextInputLayout.setError("Invalid username/email");
+        }
+        return isValid;
     }
 
     /**
      * Password validation check
      */
     private boolean isPasswordValid(String password) {
-        // TODO: Add more checks for valid password?
-        if (password.length() > 5) {
-            return true;
-        }
-        return false;
+        return password.length() > 5;
     }
+
+    /**
+     * Checks to see if what user typed in the username/email editText
+     * is of type email or username. The purpose is that if the user
+     * enters an email, we can directly attemptLogin otherwise for username,
+     * we have to go to the database and extract the email for the given
+     * username
+     * @param emailOrUsername text from the email/username editText
+     * @return True if input is an email and False if it's a username
+     */
+    private boolean isInputOfTypeEmail(String emailOrUsername) {
+        return Patterns.EMAIL_ADDRESS.matcher(emailOrUsername).matches();
+    }
+
 
     /**
      * Shortcut for toasting a message

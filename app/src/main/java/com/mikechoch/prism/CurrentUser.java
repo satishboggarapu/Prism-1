@@ -46,6 +46,7 @@ public class CurrentUser {
     public static String username;
     public static String full_name;
     public static String profile_pic_uri;
+    public static ProfilePicture profilePicture;
 
     public CurrentUser(Context context) {
 
@@ -136,11 +137,10 @@ public class CurrentUser {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    profile_pic_uri = (String) dataSnapshot.child(Key.DB_REF_USER_PROFILE_PIC).getValue();
-                    username = (String) dataSnapshot.child(Key.DB_REF_USER_PROFILE_USERNAME).getValue();
-                    full_name = (String) dataSnapshot.child(Key.DB_REF_USER_PROFILE_FULL_NAME).getValue();
+                    profile_pic_uri = (String) dataSnapshot.child(Key.USER_PROFILE_PIC).getValue();
+                    username = (String) dataSnapshot.child(Key.USER_PROFILE_USERNAME).getValue();
+                    full_name = (String) dataSnapshot.child(Key.USER_PROFILE_FULL_NAME).getValue();
                     updateUserProfilePageUI();
-
                 }
             }
 
@@ -156,26 +156,23 @@ public class CurrentUser {
      * I don't like that this function is here but it needs to be this way :(
      */
     private void updateUserProfilePageUI() {
-        ImageView userProfilePicImageView = ((Activity) context).findViewById(R.id.profile_frag_profile_picture_image_view);;
+        ImageView userProfilePicImageView = ((Activity) context).findViewById(R.id.profile_frag_profile_picture_image_view);
         TextView userUsernameTextView = ((Activity) context).findViewById(R.id.profile_frag_username_text_view);
         TextView userFullNameTextView = ((Activity) context).findViewById(R.id.profile_frag_full_name_text_view);
 
         userUsernameTextView.setText(username);
         userFullNameTextView.setText(full_name);
+        profilePicture = new ProfilePicture(profile_pic_uri);
 
-
-        Random random = new Random();
-        int defaultProfPic = random.nextInt(10);
-        Uri uri = Uri.parse(String.valueOf(DefaultProfilePicture.values()[defaultProfPic].getProfilePicture()));
         Glide.with(context)
                 .asBitmap()
                 .thumbnail(0.05f)
-                .load(uri)
+                .load(profilePicture.hiResUri)
                 .apply(new RequestOptions().fitCenter())
                 .into(new BitmapImageViewTarget(userProfilePicImageView) {
                     @Override
                     protected void setResource(Bitmap resource) {
-                        if (profile_pic_uri != null) {
+                        if (!profilePicture.isDefault) {
                             int whiteOutlinePadding = (int) (1 * context.getResources().getDisplayMetrics().density);
                             userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
                             userProfilePicImageView.setBackground(context.getResources().getDrawable(R.drawable.circle_profile_frame));

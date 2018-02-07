@@ -86,30 +86,25 @@ public class ProfileFragment extends Fragment {
         View view = inflater.inflate(R.layout.profile_fragment_layout, container, false);
 
         userProfilePicImageView = view.findViewById(R.id.profile_frag_profile_picture_image_view);
-
-        Random random = new Random();
-        int defaultProfPic = random.nextInt(10);
-        Uri uri = Uri.parse(String.valueOf(DefaultProfilePicture.values()[defaultProfPic].getProfilePicture()));
-
-        Glide.with(this)
-                .asBitmap()
-                .thumbnail(0.05f)
-                .load(uri)
-                .apply(new RequestOptions().fitCenter())
-                .into(new BitmapImageViewTarget(userProfilePicImageView) {
-                    @Override
-                    protected void setResource(Bitmap resource) {
-//                        if (userProfilePicImageView != null) {
+//        Glide.with(this)
+//                .asBitmap()
+//                .thumbnail(0.05f)
+//                .load(CurrentUser.profilePicture.hiResUri)
+//                .apply(new RequestOptions().fitCenter())
+//                .into(new BitmapImageViewTarget(userProfilePicImageView) {
+//                    @Override
+//                    protected void setResource(Bitmap resource) {
+//                        if (!CurrentUser.profilePicture.isDefault) {
 //                            int whiteOutlinePadding = (int) (1 * scale);
 //                            userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
 //                            userProfilePicImageView.setBackground(getActivity().getResources().getDrawable(R.drawable.circle_profile_frame));
 //                        }
-
-                        RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getActivity().getResources(), resource);
-                        drawable.setCircular(true);
-                        userProfilePicImageView.setImageDrawable(drawable);
-                    }
-                });
+//
+//                        RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getActivity().getResources(), resource);
+//                        drawable.setCircular(true);
+//                        userProfilePicImageView.setImageDrawable(drawable);
+//                    }
+//                });
         userProfilePicImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
