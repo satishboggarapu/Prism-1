@@ -202,30 +202,33 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             /*
              * Username
              */
-            Uri userProfilePicUri = prismPost.getUserProfilePicture() != null ? prismPost.getUserProfilePicture().lowResUri : null;
-            Glide.with(context)
-                    .asBitmap()
-                    .thumbnail(0.05f)
-                    .load(userProfilePicUri)
-                    .apply(new RequestOptions().fitCenter())
-                    .into(new BitmapImageViewTarget(userProfilePicImageView) {
-                        @Override
-                        protected void setResource(Bitmap resource) {
-                            if (prismPost.getUserProfilePicture() != null && !prismPost.getUserProfilePicture().isDefault) {
-                                int whiteOutlinePadding = (int) (1 * scale);
-                                userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
-                                userProfilePicImageView.setBackground(context.getResources().getDrawable(R.drawable.circle_profile_frame));
-                            }
+            Uri userProfilePicUri = prismPost.getPrismUser() != null ?
+                    prismPost.getPrismUser().getProfilePicture().lowResUri : null;
+            if (prismPost.getPrismUser() != null) {
+                Glide.with(context)
+                        .asBitmap()
+                        .thumbnail(0.05f)
+                        .load(userProfilePicUri)
+                        .apply(new RequestOptions().fitCenter())
+                        .into(new BitmapImageViewTarget(userProfilePicImageView) {
+                            @Override
+                            protected void setResource(Bitmap resource) {
+                                if (!prismPost.getPrismUser().getProfilePicture().isDefault) {
+                                    int whiteOutlinePadding = (int) (1 * scale);
+                                    userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
+                                    userProfilePicImageView.setBackground(context.getResources().getDrawable(R.drawable.circle_profile_frame));
+                                }
 
-                            RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(context.getResources(), resource);
-                            drawable.setCircular(true);
-                            userProfilePicImageView.setImageDrawable(drawable);
-                        }
-                    });
-            prismUserTextView.setText(prismPost.getUsername());
-            prismUserTextView.setTypeface(sourceSansProBold);
-            prismPostDateTextView.setText(postDate);
-            prismPostDateTextView.setTypeface(sourceSansProLight);
+                                RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(context.getResources(), resource);
+                                drawable.setCircular(true);
+                                userProfilePicImageView.setImageDrawable(drawable);
+                            }
+                        });
+                prismUserTextView.setText(prismPost.getPrismUser().getUsername());
+                prismUserTextView.setTypeface(sourceSansProBold);
+                prismPostDateTextView.setText(postDate);
+                prismPostDateTextView.setTypeface(sourceSansProLight);
+            }
 
             /*
              * Image
@@ -472,7 +475,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                     moreButton.startAnimation(moreButtonBounceAnimation);
                     // TODO: Show more menu
                     // TODO: Decide what goes in more
-                    AlertDialog morePrismPostAlertDialog = createMorePrismPostAlertDialog(CurrentUser.user.getUid().equals(prismPost.getUid()));
+                    boolean isCurrentUserThePostCreator =  CurrentUser.user.getUid().equals(prismPost.getPrismUser().getUid());
+                    AlertDialog morePrismPostAlertDialog = createMorePrismPostAlertDialog(isCurrentUserThePostCreator);
                     morePrismPostAlertDialog.show();
                 }
             });

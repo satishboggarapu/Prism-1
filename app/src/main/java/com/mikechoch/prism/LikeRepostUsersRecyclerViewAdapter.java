@@ -86,27 +86,29 @@ public class LikeRepostUsersRecyclerViewAdapter extends RecyclerView.Adapter<Lik
 
         public void setData(PrismUser prismUser) {
             this.prismUser = prismUser;
-            Random random = new Random();
-            int defaultProfPic = random.nextInt(10);
-            Uri uri = Uri.parse(String.valueOf(DefaultProfilePicture.values()[defaultProfPic].getProfilePicture()));
-            Glide.with(context)
-                    .asBitmap()
-                    .thumbnail(0.05f)
-                    .load(prismUser.getProfilePicture() != null ? prismUser.getProfilePicture() : uri)
-                    .into(new BitmapImageViewTarget(userProfilePicture) {
-                        @Override
-                        protected void setResource(Bitmap resource) {
-                            if (prismUser.getProfilePicture() != null) {
-                                int whiteOutlinePadding = (int) (1 * scale);
-                                userProfilePicture.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
-                                userProfilePicture.setBackground(context.getResources().getDrawable(R.drawable.circle_profile_frame));
-                            }
+            if (prismUser.getProfilePicture() != null) {
+                Glide.with(context)
+                        .asBitmap()
+                        .thumbnail(0.05f)
+                        .load(prismUser.getProfilePicture().lowResUri)
+                        .into(new BitmapImageViewTarget(userProfilePicture) {
+                            @Override
+                            protected void setResource(Bitmap resource) {
+                                if (!prismUser.getProfilePicture().isDefault) {
+                                    int whiteOutlinePadding = (int) (1 * scale);
+                                    userProfilePicture.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
+                                    userProfilePicture.setBackground(context.getResources().getDrawable(R.drawable.circle_profile_frame));
+                                } else {
+                                    userProfilePicture.setPadding(0, 0, 0, 0);
+                                    userProfilePicture.setBackground(null);
+                                }
 
-                            RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(context.getResources(), resource);
-                            drawable.setCircular(true);
-                            userProfilePicture.setImageDrawable(drawable);
-                        }
-                    });
+                                RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(context.getResources(), resource);
+                                drawable.setCircular(true);
+                                userProfilePicture.setImageDrawable(drawable);
+                            }
+                        });
+            }
 
             usernameTextView.setText(prismUser.getUsername());
             usernameTextView.setTypeface(sourceSansProBold);

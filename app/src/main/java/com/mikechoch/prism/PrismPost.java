@@ -1,28 +1,29 @@
 package com.mikechoch.prism;
 
-/**
- * Created by mikechoch on 1/21/18.
- */
-
 public class PrismPost {
 
-    // DO NOT CHANGE ANYTHING IN THIS FILE //
-    // THESE HAVE TO BE SAME AS "POST_*" KEYS //
+    // --------------------------------------- //
+    // DO NOT CHANGE ANYTHING IN THIS FILE     //
+    // THESE HAVE TO BE SAME AS "POST_*" KEYS  //
+    // --------------------------------------- //
+
     private String image;
     private String caption;
-    private String uid;
-    private long timestamp;
     private String postId;
+    private long timestamp;
+    private String uid;
+
 
     // Attributes not saved in cloud
     private int likes;
     private int reposts;
-    private String username;
-    private ProfilePicture userProfilePicture;
+    private PrismUser prismUser;
 
+    // Empty Constructor required by Firebase to convert DataSnapshot to PrismPost.class
     public PrismPost() { }
 
-    public PrismPost(String image, String caption, String uid, long timestamp, String postId) {
+    // Constructor used when creating prismPost when user uploads the image
+    public PrismPost(String image, String caption, String uid, String postId, long timestamp) {
         this.image = image;
         this.caption = caption;
         this.uid = uid;
@@ -30,8 +31,7 @@ public class PrismPost {
         this.postId = postId;
     }
 
-
-
+    // Getters
     public String getImage() {
         return image;
     }
@@ -40,12 +40,14 @@ public class PrismPost {
         return caption;
     }
 
-    public String getUid() {
-        return uid;
-    }
-
     public long getTimestamp() {
         return timestamp;
+    }
+
+    // Try to not use this if possible, use getPrismUser().getUid() instead
+    // if getPrismUser() is not null;
+    public String getUid() {
+        return uid;
     }
 
     public String getPostId() {
@@ -53,23 +55,7 @@ public class PrismPost {
     }
 
 
-    // Getters and Setters for attributes not saved in cloud
-    public void setLikes(int likes) {
-        this.likes = likes;
-    }
-
-    public void setReposts(int reposts) {
-        this.reposts = reposts;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setUserProfilePicture(ProfilePicture profilePicture) {
-        this.userProfilePicture = profilePicture;
-    }
-
+    // Getters for attributes not saved in cloud
     public int getLikes() {
         return likes;
     }
@@ -78,12 +64,21 @@ public class PrismPost {
         return reposts;
     }
 
-    public String getUsername() {
-        return username;
+    public PrismUser getPrismUser() {
+        return prismUser;
     }
 
-    public ProfilePicture getUserProfilePicture() {
-        return userProfilePicture;
+    // Setters for attributes not saved in cloud
+    public void setLikes(int likes) {
+        this.likes = likes;
+    }
+
+    public void setReposts(int reposts) {
+        this.reposts = reposts;
+    }
+
+    public void setPrismUser(PrismUser prismUser) {
+        this.prismUser = prismUser;
     }
 
 
