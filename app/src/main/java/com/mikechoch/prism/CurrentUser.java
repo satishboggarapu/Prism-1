@@ -173,7 +173,8 @@ public class CurrentUser {
                     @Override
                     protected void setResource(Bitmap resource) {
                         if (!profilePicture.isDefault) {
-                            int whiteOutlinePadding = (int) (1 * context.getResources().getDisplayMetrics().density);
+                            float scale = context.getResources().getDisplayMetrics().density;
+                            int whiteOutlinePadding = (int) (2 * scale);
                             userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
                             userProfilePicImageView.setBackground(context.getResources().getDrawable(R.drawable.circle_profile_frame));
                         }

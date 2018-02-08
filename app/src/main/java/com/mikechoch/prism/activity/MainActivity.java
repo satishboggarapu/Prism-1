@@ -23,8 +23,10 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.ViewPager;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
@@ -32,6 +34,7 @@ import android.view.animation.ScaleAnimation;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -253,6 +256,12 @@ public class MainActivity extends FragmentActivity {
 
         prismTabLayout.getTabAt(Default.VIEW_PAGER_HOME).getIcon().setColorFilter(
                 tabSelectedColor, PorterDuff.Mode.SRC_IN);
+        prismTabLayout.getTabAt(Default.VIEW_PAGER_SEARCH - 1).getIcon().setColorFilter(
+                tabUnselectedColor, PorterDuff.Mode.SRC_IN);
+        prismTabLayout.getTabAt(Default.VIEW_PAGER_NOTIFICATIONS - 1).getIcon().setColorFilter(
+                tabUnselectedColor, PorterDuff.Mode.SRC_IN);
+        prismTabLayout.getTabAt(Default.VIEW_PAGER_PROFILE - 1).getIcon().setColorFilter(
+                tabUnselectedColor, PorterDuff.Mode.SRC_IN);
 
         prismTabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
@@ -293,6 +302,18 @@ public class MainActivity extends FragmentActivity {
                     case 2:
                         break;
                     case 3:
+                        ScrollView profileScrollView = MainActivity.this.findViewById(R.id.profile_scroll_view);
+                        RecyclerView profilePostsRecyclerView = MainActivity.this.findViewById(R.id.user_posts_recycler_view);
+                        StaggeredGridLayoutManager staggeredGridLayoutManager = (StaggeredGridLayoutManager) profilePostsRecyclerView.getLayoutManager();
+                        if (profileScrollView != null && profilePostsRecyclerView != null) {
+                            int[] positions = new int[staggeredGridLayoutManager.getSpanCount()];
+                            staggeredGridLayoutManager.findFirstVisibleItemPositions(positions);
+                            if (positions[0] < 10) {
+                                profileScrollView.smoothScrollTo(0, 0);
+                            } else {
+                                profileScrollView.scrollTo(0, 0);
+                            }
+                        }
                         break;
                     case 4:
                         break;
@@ -464,11 +485,18 @@ public class MainActivity extends FragmentActivity {
         prismPost.setUsername(CurrentUser.username);
         prismPost.setUserProfilePicture(CurrentUser.profilePicture);
         RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
+        LinearLayoutManager layoutManager  = (LinearLayoutManager) mainContentRecyclerView.getLayoutManager();
+        RelativeLayout noMainPostsRelativeLayout = MainActivity.this.findViewById(R.id.no_main_posts_relative_layout);
         if (mainContentRecyclerView != null) {
             MainContentFragment.dateOrderedPrismPostKeys.add(0, prismPost.getPostId());
             MainContentFragment.prismPostHashMap.put(prismPost.getPostId(), prismPost);
             mainContentRecyclerView.getAdapter().notifyItemInserted(0);
-            mainContentRecyclerView.smoothScrollToPosition(0);
+            noMainPostsRelativeLayout.setVisibility(View.GONE);
+            if (layoutManager.findFirstVisibleItemPosition() < 10) {
+                mainContentRecyclerView.smoothScrollToPosition(0);
+            } else {
+                mainContentRecyclerView.scrollToPosition(0);
+            }
         }
         uploadingImageTextView.setText("Finishing up...");
         new Handler().postDelayed(new Runnable() {

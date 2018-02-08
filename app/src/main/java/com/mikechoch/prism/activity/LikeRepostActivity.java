@@ -17,6 +17,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
+import com.mikechoch.prism.ProfilePicture;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.PrismUser;
@@ -155,11 +156,12 @@ public class LikeRepostActivity extends AppCompatActivity {
                         prismUser.setUid(userId);
                         if (dataSnapshot.hasChild(userId)) {
                             DataSnapshot user = dataSnapshot.child(userId);
+                            // TODO FIX AND REFACTOR THIS SHIT
                             if (user.hasChild("fullname")) {
                                 prismUser.setFullName((String) user.child("fullname").getValue());
                             }
                             if (user.hasChild("profilepic")) {
-                                prismUser.setProfilePicture((String) user.child("profilepic").getValue());
+                                prismUser.setProfilePicture(new ProfilePicture((String) user.child("profilepic").getValue()));
                             }
                         }
                         prismUserArrayList.add(prismUser);

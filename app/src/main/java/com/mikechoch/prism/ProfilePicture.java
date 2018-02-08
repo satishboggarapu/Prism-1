@@ -12,7 +12,7 @@ public class ProfilePicture {
     public String profilePicUriString;
     public Uri hiResUri;
     public Uri lowResUri;
-    public boolean isDefault;
+    public boolean isDefault = true;
 
     public ProfilePicture(String profilePicUriString) {
         this.profilePicUriString = profilePicUriString;

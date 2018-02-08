@@ -9,7 +9,7 @@ public class PrismUser {
     private String uid;
     private String username;
     private String fullName;
-    private String profilePicture;
+    private ProfilePicture profilePicture;
 
     public PrismUser() {
 
@@ -27,7 +27,7 @@ public class PrismUser {
         return fullName;
     }
 
-    public String getProfilePicture() {
+    public ProfilePicture getProfilePicture() {
         return profilePicture;
     }
 
@@ -43,7 +43,7 @@ public class PrismUser {
         this.fullName = fullName;
     }
 
-    public void setProfilePicture(String profilePicture) {
+    public void setProfilePicture(ProfilePicture profilePicture) {
         this.profilePicture = profilePicture;
     }
 

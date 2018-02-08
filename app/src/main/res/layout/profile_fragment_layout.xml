@@ -1,54 +1,179 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <ImageView
-        android:id="@+id/profile_frag_profile_picture_image_view"
-        android:layout_width="130dp"
-        android:layout_height="130dp"
-        android:layout_centerHorizontal="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginTop="20dp"
-        android:cropToPadding="false"
-        android:elevation="5dp"
-        android:foreground="@drawable/profile_pic_upload_selector"/>
-
-    <TextView
-        android:id="@+id/profile_frag_username_text_view"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@id/profile_frag_profile_picture_image_view"
-        android:layout_marginTop="16dp"
-        android:textSize="24sp"
-        android:textColor="@android:color/white"/>
-
-    <TextView
-        android:id="@+id/profile_frag_full_name_text_view"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@id/profile_frag_username_text_view"
-        android:layout_marginTop="8dp"
-        android:textSize="18sp"
-        android:textColor="@android:color/white"/>
-
-
-    <Button
-        android:id="@+id/logout_button"
-        android:transitionName="submit_button"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    
+    <ScrollView
+        android:id="@+id/profile_scroll_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="24dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="24dp"
-        android:padding="10dp"
-        android:text="LOGOUT"
-        android:textSize="18sp"
-        android:textColor="@android:color/white" />
+        android:layout_height="wrap_content">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusableInTouchMode="true">
+
+            <ImageView
+                android:id="@+id/profile_frag_profile_picture_image_view"
+                android:layout_width="130dp"
+                android:layout_height="130dp"
+                android:layout_centerHorizontal="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="20dp"
+                android:cropToPadding="false"
+                android:elevation="5dp"
+                android:foreground="@drawable/profile_pic_upload_selector"/>
+
+            <RelativeLayout
+                android:id="@+id/posts_relative_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@id/profile_frag_profile_picture_image_view"
+                android:layout_gravity="center"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp">
+
+                <TextView
+                    android:id="@+id/posts_count_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentTop="true"
+                    android:layout_centerHorizontal="true"
+                    android:text="99"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white"
+                    android:textAlignment="center"/>
+
+                <TextView
+                    android:id="@+id/posts_label_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_below="@id/posts_count_text_view"
+                    android:text="posts"
+                    android:textColor="@android:color/white"
+                    android:textAlignment="center"/>
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/followers_relative_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toStartOf="@id/posts_relative_layout"
+                android:layout_below="@id/profile_frag_profile_picture_image_view"
+                android:layout_gravity="center"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp">
+
+                <TextView
+                    android:id="@+id/followers_count_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentTop="true"
+                    android:layout_centerHorizontal="true"
+                    android:text="697"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white"
+                    android:textAlignment="center"/>
+
+                <TextView
+                    android:id="@+id/followers_label_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_below="@id/followers_count_text_view"
+                    android:text="followers"
+                    android:textColor="@android:color/white"
+                    android:textAlignment="center"/>
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/following_relative_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/posts_relative_layout"
+                android:layout_below="@id/profile_frag_profile_picture_image_view"
+                android:layout_gravity="center"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp">
+
+                <TextView
+                    android:id="@+id/following_count_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentTop="true"
+                    android:layout_centerHorizontal="true"
+                    android:text="110"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white"
+                    android:textAlignment="center"/>
+
+                <TextView
+                    android:id="@+id/following_label_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_below="@id/following_count_text_view"
+                    android:text="following"
+                    android:textColor="@android:color/white"
+                    android:textAlignment="center"/>
+
+            </RelativeLayout>
+
+            <TextView
+                android:id="@+id/profile_frag_username_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@id/followers_relative_layout"
+                android:layout_marginTop="16dp"
+                android:textSize="24sp"
+                android:textColor="@android:color/white"/>
+
+            <TextView
+                android:id="@+id/profile_frag_full_name_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@id/profile_frag_username_text_view"
+                android:layout_marginTop="8dp"
+                android:textSize="18sp"
+                android:textColor="@android:color/white"/>
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/user_posts_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/profile_frag_full_name_text_view"
+                android:layout_marginTop="24dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:nestedScrollingEnabled="false"/>
+
+            <Button
+                android:id="@+id/logout_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/user_posts_recycler_view"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="24dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="24dp"
+                android:padding="10dp"
+                android:text="LOGOUT"
+                android:textSize="18sp"
+                android:textColor="@android:color/white" />
+
+        </RelativeLayout>
+
+    </ScrollView>
 
 </RelativeLayout>

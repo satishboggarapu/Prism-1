@@ -26,6 +26,7 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.CurrentUser;
 import com.mikechoch.prism.ProfilePicture;
+import com.mikechoch.prism.activity.MainActivity;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.PrismPost;
@@ -205,7 +206,12 @@ public class MainContentFragment extends Fragment {
                  */
                 dateOrderedPrismPostKeys.clear();
                 prismPostHashMap.clear();
-                mainContentRecyclerViewAdapter.notifyDataSetChanged();
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mainContentRecyclerViewAdapter.notifyDataSetChanged();
+                    }
+                });
 
                 if (dataSnapshot.exists()) {
                     for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {

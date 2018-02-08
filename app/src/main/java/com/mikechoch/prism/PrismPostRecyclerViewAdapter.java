@@ -25,6 +25,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -46,6 +47,7 @@ import com.google.firebase.database.Transaction;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.mikechoch.prism.activity.LikeRepostActivity;
+import com.mikechoch.prism.activity.MainActivity;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.helper.MyTimeUnit;
@@ -202,26 +204,30 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             /*
              * Username
              */
-            Uri userProfilePicUri = prismPost.getUserProfilePicture() != null ? prismPost.getUserProfilePicture().lowResUri : null;
-            Glide.with(context)
-                    .asBitmap()
-                    .thumbnail(0.05f)
-                    .load(userProfilePicUri)
-                    .apply(new RequestOptions().fitCenter())
-                    .into(new BitmapImageViewTarget(userProfilePicImageView) {
-                        @Override
-                        protected void setResource(Bitmap resource) {
-                            if (prismPost.getUserProfilePicture() != null && !prismPost.getUserProfilePicture().isDefault) {
-                                int whiteOutlinePadding = (int) (1 * scale);
-                                userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
-                                userProfilePicImageView.setBackground(context.getResources().getDrawable(R.drawable.circle_profile_frame));
-                            }
+            if (prismPost.getUserProfilePicture() != null) {
+                Glide.with(context)
+                        .asBitmap()
+                        .thumbnail(0.05f)
+                        .load(prismPost.getUserProfilePicture().lowResUri)
+                        .apply(new RequestOptions().fitCenter())
+                        .into(new BitmapImageViewTarget(userProfilePicImageView) {
+                            @Override
+                            protected void setResource(Bitmap resource) {
+                                if (!prismPost.getUserProfilePicture().isDefault) {
+                                    int whiteOutlinePadding = (int) (1 * scale);
+                                    userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
+                                    userProfilePicImageView.setBackground(context.getResources().getDrawable(R.drawable.circle_profile_frame));
+                                } else {
+                                    userProfilePicImageView.setPadding(0, 0, 0, 0);
+                                    userProfilePicImageView.setBackground(null);
+                                }
 
-                            RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(context.getResources(), resource);
-                            drawable.setCircular(true);
-                            userProfilePicImageView.setImageDrawable(drawable);
-                        }
-                    });
+                                RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(context.getResources(), resource);
+                                drawable.setCircular(true);
+                                userProfilePicImageView.setImageDrawable(drawable);
+                            }
+                        });
+            }
             prismUserTextView.setText(prismPost.getUsername());
             prismUserTextView.setTypeface(sourceSansProBold);
             prismPostDateTextView.setText(postDate);
@@ -611,6 +617,10 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                                             prismPostKeys.remove(postId);
                                             prismPostHashMap.remove(postId);
                                             notifyDataSetChanged();
+                                            if (getItemCount() == 0) {
+                                                RelativeLayout noMainPostsRelativeLayout = ((Activity) context).findViewById(R.id.no_main_posts_relative_layout);
+                                                noMainPostsRelativeLayout.setVisibility(View.VISIBLE);
+                                            }
                                         } else {
                                             Toast.makeText(context, "Unable to delete", Toast.LENGTH_SHORT).show();
                                         }
