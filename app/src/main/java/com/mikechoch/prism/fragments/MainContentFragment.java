@@ -25,6 +25,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.CurrentUser;
+import com.mikechoch.prism.ProfilePicture;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.PrismPost;
@@ -308,8 +309,8 @@ public class MainContentFragment extends Fragment {
                         DataSnapshot userSnapshot = dataSnapshot.child(post.getUid());
                         post.setUsername((String) userSnapshot
                                 .child(Key.USER_PROFILE_USERNAME).getValue());
-                        post.setUserProfilePicUri((String) userSnapshot
-                                .child(Key.USER_PROFILE_PIC).getValue());
+                        post.setUserProfilePicture(new ProfilePicture((String) userSnapshot
+                                .child(Key.USER_PROFILE_PIC).getValue()));
                         prismPostHashMap.put(postId, post);
                     }
                     mainContentSwipeRefreshLayout.setRefreshing(false);
