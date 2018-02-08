@@ -12,22 +12,22 @@ public class PrismPost {
     private String caption;
     private String uid;
     private long timestamp;
-    private String postid;
+    private String postId;
 
     // Attributes not saved in cloud
     private int likes;
     private int reposts;
     private String username;
-    private String userProfilePicUri;
+    private ProfilePicture userProfilePicture;
 
     public PrismPost() { }
 
-    public PrismPost(String image, String caption, String uid, long timestamp, String  postid) {
+    public PrismPost(String image, String caption, String uid, long timestamp, String postId) {
         this.image = image;
         this.caption = caption;
         this.uid = uid;
         this.timestamp = timestamp;
-        this.postid = postid;
+        this.postId = postId;
     }
 
 
@@ -48,8 +48,8 @@ public class PrismPost {
         return timestamp;
     }
 
-    public String getPostid() {
-        return postid;
+    public String getPostId() {
+        return postId;
     }
 
 
@@ -66,8 +66,8 @@ public class PrismPost {
         this.username = username;
     }
 
-    public void setUserProfilePicUri(String userProfilePicUri) {
-        this.userProfilePicUri = userProfilePicUri;
+    public void setUserProfilePicture(ProfilePicture profilePicture) {
+        this.userProfilePicture = profilePicture;
     }
 
     public int getLikes() {
@@ -82,8 +82,8 @@ public class PrismPost {
         return username;
     }
 
-    public String getUserProfilePicUri() {
-        return userProfilePicUri;
+    public ProfilePicture getUserProfilePicture() {
+        return userProfilePicture;
     }
 
 

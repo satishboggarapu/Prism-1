@@ -409,7 +409,7 @@ public class MainActivity extends FragmentActivity {
                     PrismPost prismPost = createPrismPostObject(downloadUrl, postReference);
 
                     // Add postId to USER_UPLOADS table
-                    DatabaseReference userPostRef = userReference.child(Key.DB_REF_USER_UPLOADS).child(prismPost.getPostid());
+                    DatabaseReference userPostRef = userReference.child(Key.DB_REF_USER_UPLOADS).child(prismPost.getPostId());
                     userPostRef.setValue(prismPost.getTimestamp());
 
                     // Create the post in cloud and on success, add the image to local recycler view adapter
@@ -462,11 +462,11 @@ public class MainActivity extends FragmentActivity {
      */
     private void updateLocalRecyclerViewWithNewPost(PrismPost prismPost) {
         prismPost.setUsername(CurrentUser.username);
-        prismPost.setUserProfilePicUri(CurrentUser.profile_pic_uri);
+        prismPost.setUserProfilePicture(CurrentUser.profilePicture);
         RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
         if (mainContentRecyclerView != null) {
-            MainContentFragment.dateOrderedPrismPostKeys.add(0, prismPost.getPostid());
-            MainContentFragment.prismPostHashMap.put(prismPost.getPostid(), prismPost);
+            MainContentFragment.dateOrderedPrismPostKeys.add(0, prismPost.getPostId());
+            MainContentFragment.prismPostHashMap.put(prismPost.getPostId(), prismPost);
             mainContentRecyclerView.getAdapter().notifyItemInserted(0);
             mainContentRecyclerView.smoothScrollToPosition(0);
         }

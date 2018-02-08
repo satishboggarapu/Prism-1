@@ -14,7 +14,7 @@ public class ProfilePicture {
     public Uri lowResUri;
     public boolean isDefault;
 
-    ProfilePicture(String profilePicUriString) {
+    public ProfilePicture(String profilePicUriString) {
         this.profilePicUriString = profilePicUriString;
         // TODO: @Parth null check for users with no profile picture
         isDefault = Character.isDigit(profilePicUriString.charAt(0));

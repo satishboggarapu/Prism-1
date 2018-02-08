@@ -54,7 +54,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Locale;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -193,7 +192,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             /*
              * Post ID
              */
-            String postId = this.prismPost.getPostid();
+            String postId = this.prismPost.getPostId();
             String postDate = getFancyDateDifferenceString(prismPost.getTimestamp() * -1);
             final int[] likeCount = {this.prismPost.getLikes()};
             final int[] repostCount = {this.prismPost.getReposts()};
@@ -203,15 +202,16 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             /*
              * Username
              */
+            Uri userProfilePicUri = prismPost.getUserProfilePicture() != null ? prismPost.getUserProfilePicture().lowResUri : null;
             Glide.with(context)
                     .asBitmap()
                     .thumbnail(0.05f)
-                    .load(CurrentUser.profilePicture.lowResUri)
+                    .load(userProfilePicUri)
                     .apply(new RequestOptions().fitCenter())
                     .into(new BitmapImageViewTarget(userProfilePicImageView) {
                         @Override
                         protected void setResource(Bitmap resource) {
-                            if (!CurrentUser.profilePicture.isDefault) {
+                            if (prismPost.getUserProfilePicture() != null && !prismPost.getUserProfilePicture().isDefault) {
                                 int whiteOutlinePadding = (int) (1 * scale);
                                 userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
                                 userProfilePicImageView.setBackground(context.getResources().getDrawable(R.drawable.circle_profile_frame));
@@ -266,7 +266,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                 public boolean onDoubleTap(MotionEvent e) {
                     System.out.println("Image Double Tapped");
 
-                    String postId = prismPost.getPostid();
+                    String postId = prismPost.getPostId();
                     boolean postLiked = !CurrentUser.user_liked_posts.containsKey(postId);
                     Drawable heartButtonDrawable = createLikeDrawable(postLiked);
                     likeButton.setImageDrawable(heartButtonDrawable);
@@ -391,7 +391,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             likeButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    String postId = prismPost.getPostid();
+                    String postId = prismPost.getPostId();
                     boolean postLiked = !CurrentUser.user_liked_posts.containsKey(postId);
                     Drawable heartButtonDrawable = createLikeDrawable(postLiked);
                     likeButton.setImageDrawable(heartButtonDrawable);
@@ -432,7 +432,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             repostButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    String postId = prismPost.getPostid();
+                    String postId = prismPost.getPostId();
                     boolean postReposted = CurrentUser.user_reposted_posts.containsKey(postId);
                     if (postReposted) {
                         ColorStateList repostColor = getRepostColor(!postReposted);
@@ -606,7 +606,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                                 public void onComplete(@NonNull Task<Void> task) {
                                     if (task.isSuccessful()) {
                                         if (task.isSuccessful()) {
-                                            String postId = prismPost.getPostid();
+                                            String postId = prismPost.getPostId();
                                             allPostsReference.child(postId).removeValue();
                                             prismPostKeys.remove(postId);
                                             prismPostHashMap.remove(postId);
@@ -639,7 +639,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
          * Operation UNLIKE (performLike = false): undoes above 3 things
          */
         private void handleLikeButtonClick(PrismPost prismPost) {
-            String postId = prismPost.getPostid();
+            String postId = prismPost.getPostId();
             long timestamp = Calendar.getInstance().getTimeInMillis();
             boolean performLike = !CurrentUser.user_liked_posts.containsKey(postId);
 
@@ -699,7 +699,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
          * Operation UNREPOST (performRepost = false): undoes above 3 things
          */
         private void handleRepostButtonClick(PrismPost prismPost) {
-            String postId = prismPost.getPostid();
+            String postId = prismPost.getPostId();
             long timestamp = Calendar.getInstance().getTimeInMillis();
             boolean performRepost = !CurrentUser.user_reposted_posts.containsKey(postId);
 
