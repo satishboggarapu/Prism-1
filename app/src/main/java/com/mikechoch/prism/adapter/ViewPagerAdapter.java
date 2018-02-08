@@ -1,4 +1,4 @@
-package com.mikechoch.prism;
+package com.mikechoch.prism.adapter;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;

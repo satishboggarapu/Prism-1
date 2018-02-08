@@ -1,4 +1,4 @@
-package com.mikechoch.prism;
+package com.mikechoch.prism.adapter;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -45,14 +45,17 @@ import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.mikechoch.prism.helper.AnimationBounceInterpolator;
+import com.mikechoch.prism.attribute.CurrentUser;
+import com.mikechoch.prism.attribute.PrismPost;
+import com.mikechoch.prism.R;
 import com.mikechoch.prism.activity.LikeRepostActivity;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
-import com.mikechoch.prism.helper.MyTimeUnit;
+import com.mikechoch.prism.constants.MyTimeUnit;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 

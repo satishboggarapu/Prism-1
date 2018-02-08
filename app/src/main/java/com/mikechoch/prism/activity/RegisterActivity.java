@@ -35,7 +35,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.constants.Default;
-import com.mikechoch.prism.DefaultProfilePicture;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.constants.Message;

@@ -1,4 +1,4 @@
-package com.mikechoch.prism;
+package com.mikechoch.prism.attribute;
 
 import android.net.Uri;
 

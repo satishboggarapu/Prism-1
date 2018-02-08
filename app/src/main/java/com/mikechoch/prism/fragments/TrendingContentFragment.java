@@ -11,11 +11,10 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.PrismPostRecyclerViewAdapter;
-import com.mikechoch.prism.PrismPost;
+import com.mikechoch.prism.adapter.PrismPostRecyclerViewAdapter;
+import com.mikechoch.prism.attribute.PrismPost;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * Created by mikechoch on 1/22/18.

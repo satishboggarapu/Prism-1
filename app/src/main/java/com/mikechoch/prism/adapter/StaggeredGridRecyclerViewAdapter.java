@@ -1,4 +1,4 @@
-package com.mikechoch.prism;
+package com.mikechoch.prism.adapter;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.mikechoch.prism.R;
 
 import java.util.ArrayList;
 import java.util.List;
