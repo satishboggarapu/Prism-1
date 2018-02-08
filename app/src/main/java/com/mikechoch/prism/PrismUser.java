@@ -11,8 +11,13 @@ public class PrismUser {
     private String fullName;
     private ProfilePicture profilePicture;
 
-    public PrismUser() {
+    public PrismUser() { }
 
+    public PrismUser(String uid, String username, String fullName, ProfilePicture profilePicture) {
+        this.uid = uid;
+        this.username = username;
+        this.fullName = fullName;
+        this.profilePicture = profilePicture;
     }
 
     public String getUid() {

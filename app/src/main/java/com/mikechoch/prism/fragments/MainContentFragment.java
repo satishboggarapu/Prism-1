@@ -3,6 +3,7 @@ package com.mikechoch.prism.fragments;
 import android.annotation.SuppressLint;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -25,6 +26,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.CurrentUser;
+import com.mikechoch.prism.PrismUser;
 import com.mikechoch.prism.ProfilePicture;
 import com.mikechoch.prism.activity.MainActivity;
 import com.mikechoch.prism.constants.Default;
@@ -313,10 +315,9 @@ public class MainContentFragment extends Fragment {
                     for (String postId: dateOrderedPrismPostKeys) {
                         PrismPost post = prismPostHashMap.get(postId);
                         DataSnapshot userSnapshot = dataSnapshot.child(post.getUid());
-                        post.setUsername((String) userSnapshot
-                                .child(Key.USER_PROFILE_USERNAME).getValue());
-                        post.setUserProfilePicture(new ProfilePicture((String) userSnapshot
-                                .child(Key.USER_PROFILE_PIC).getValue()));
+                        PrismUser prismUser = constructPrismUser(userSnapshot);
+                        post.setPrismUser(prismUser);
+
                         prismPostHashMap.put(postId, post);
                     }
                     mainContentSwipeRefreshLayout.setRefreshing(false);
@@ -336,6 +337,22 @@ public class MainContentFragment extends Fragment {
                 Log.e(Default.TAG_DB, databaseError.getMessage(), databaseError.toException());
             }
         });
+    }
+
+    /**
+     * Takes in userSnapshot object and parses the user details
+     * and creates a prismUser object
+     * @return PrismUser object
+     */
+    private PrismUser constructPrismUser(DataSnapshot userSnapshot) {
+        PrismUser prismUser = new PrismUser();
+        prismUser.setUsername((String) userSnapshot
+                .child(Key.USER_PROFILE_USERNAME).getValue());
+        prismUser.setFullName((String) userSnapshot
+                .child(Key.USER_PROFILE_FULL_NAME).getValue());
+        prismUser.setProfilePicture(new ProfilePicture((String) userSnapshot.child(Key.USER_PROFILE_PIC).getValue()));
+        prismUser.setUid(userSnapshot.getKey());
+        return prismUser;
     }
 
     /**

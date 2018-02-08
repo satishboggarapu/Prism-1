@@ -16,6 +16,7 @@ public class Message {
       public static final String POST_UPLOAD_FAIL = "Failed to upload post to cloud";
       public static final String USER_EXIST_CHECK_FAIL = "Failed tp check if username exists in database";
       public static final String USER_ACCOUNT_CREATION_FAIL = "Failed to create the user account";
-
+      public static final String FETCH_USERS_FAIL = "Failed to pull list of users";
+      public static final String FETCH_USER_DETAILS_FAIL = "Failed to details for users";
 
 }

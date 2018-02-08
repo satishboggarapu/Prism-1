@@ -8,6 +8,8 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.DragAndDropPermissions;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,6 +25,7 @@ import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.PrismUser;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.LikeRepostUsersRecyclerViewAdapter;
+import com.mikechoch.prism.constants.Message;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -121,6 +124,12 @@ public class LikeRepostActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Goes to the post in database and pulls list of users who have "liked" or "reposted"
+     * the post and then calls getUserDetails to get further details for all those users
+     * @param DB_REF_POST_GET_USERS_KEY: will be either LIKED_USERS or REPOSTED_USERS
+     * @param postId: postId for which information needs to be pulled
+     */
     private void getListOfUsers(String DB_REF_POST_GET_USERS_KEY, String postId) {
         databaseReference.child(postId).child(DB_REF_POST_GET_USERS_KEY)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -131,6 +140,7 @@ public class LikeRepostActivity extends AppCompatActivity {
                             mapOfUsers.putAll((Map) dataSnapshot.getValue());
                             fetchUserDetails(mapOfUsers);
                         } else {
+                            Log.e(Default.TAG_DB, Message.NO_DATA);
                             usersRecyclerView.setVisibility(View.VISIBLE);
                             likeRepostProgressBar.setVisibility(View.GONE);
                         }
@@ -138,11 +148,17 @@ public class LikeRepostActivity extends AppCompatActivity {
 
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
+                        Log.wtf(Default.TAG_DB, Message.FETCH_USERS_FAIL, databaseError.toException());
                     }
                 });
 
     }
 
+    /**
+     * Goes over the list of users provided as parameter and pulls details for each
+     * user in the hashMap and creates a PrismUser object for each user
+     * @param mapOfUsers
+     */
     private void fetchUserDetails(HashMap<String, String> mapOfUsers) {
         DatabaseReference usersRef = Default.USERS_REFERENCE;
         usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -156,16 +172,14 @@ public class LikeRepostActivity extends AppCompatActivity {
                         prismUser.setUid(userId);
                         if (dataSnapshot.hasChild(userId)) {
                             DataSnapshot user = dataSnapshot.child(userId);
-                            // TODO FIX AND REFACTOR THIS SHIT
-                            if (user.hasChild("fullname")) {
-                                prismUser.setFullName((String) user.child("fullname").getValue());
-                            }
-                            if (user.hasChild("profilepic")) {
-                                prismUser.setProfilePicture(new ProfilePicture((String) user.child("profilepic").getValue()));
-                            }
+                            prismUser.setFullName((String) user.child(Key.USER_PROFILE_FULL_NAME).getValue());
+                            prismUser.setProfilePicture(new ProfilePicture((String)
+                                    user.child(Key.USER_PROFILE_PIC).getValue()));
                         }
                         prismUserArrayList.add(prismUser);
                     }
+                } else {
+                    Log.wtf(Default.TAG_DB, Message.NO_DATA);
                 }
                 usersRecyclerViewAdapter.notifyDataSetChanged();
                 usersRecyclerView.setVisibility(View.VISIBLE);
@@ -174,6 +188,7 @@ public class LikeRepostActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
+                Log.e(Default.TAG_DB, Message.FETCH_USER_DETAILS_FAIL, databaseError.toException());
             }
         });
 

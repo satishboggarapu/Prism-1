@@ -50,6 +50,7 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.mikechoch.prism.CurrentUser;
 import com.mikechoch.prism.PrismPost;
+import com.mikechoch.prism.PrismUser;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.ViewPagerAdapter;
 import com.mikechoch.prism.constants.Default;
@@ -482,8 +483,9 @@ public class MainActivity extends FragmentActivity {
      * @param prismPost
      */
     private void updateLocalRecyclerViewWithNewPost(PrismPost prismPost) {
-        prismPost.setUsername(CurrentUser.username);
-        prismPost.setUserProfilePicture(CurrentUser.profilePicture);
+        PrismUser prismUser = new PrismUser(CurrentUser.user.getUid(),
+                CurrentUser.username, CurrentUser.full_name, CurrentUser.profilePicture);
+        prismPost.setPrismUser(prismUser);
         RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
         LinearLayoutManager layoutManager  = (LinearLayoutManager) mainContentRecyclerView.getLayoutManager();
         RelativeLayout noMainPostsRelativeLayout = MainActivity.this.findViewById(R.id.no_main_posts_relative_layout);
@@ -515,17 +517,17 @@ public class MainActivity extends FragmentActivity {
         String imageUri = downloadUrl.toString();
         String description = uploadedImageDescription;
         String userId = auth.getCurrentUser().getUid();
-        Long timestamp = -1 * Calendar.getInstance().getTimeInMillis();
         String postId = reference.getKey();
-        return new PrismPost(imageUri, description, userId, timestamp, postId);
+        Long timestamp = -1 * Calendar.getInstance().getTimeInMillis();
+        return new PrismPost(imageUri, description, userId, postId, timestamp);
     }
 
 
     /**
      * Shortcut for displaying a Toast message
      */
-    private void toast(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    private void toast(String bread) {
+        Toast.makeText(this, bread, Toast.LENGTH_SHORT).show();
     }
 
     /**
