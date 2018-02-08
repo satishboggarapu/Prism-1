@@ -9,7 +9,6 @@ import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
@@ -47,7 +46,6 @@ import com.google.firebase.database.Transaction;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.mikechoch.prism.activity.LikeRepostActivity;
-import com.mikechoch.prism.activity.MainActivity;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.helper.MyTimeUnit;
@@ -69,8 +67,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
     private Context context;
     private PrismPost prismPost;
-    private ArrayList<String> prismPostKeys;
-    private HashMap<String, PrismPost> prismPostHashMap;
+    private ArrayList<PrismPost> prismPostArrayList;
 
     private String[] morePostOptionsCurrentUser = {"Report post", "Share", "Delete"};
     private String[] morePostOptions = {"Report post", "Share"};
@@ -83,10 +80,9 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
     private float scale;
 
-    public PrismPostRecyclerViewAdapter(Context context, ArrayList<String> prismPostKeys, HashMap<String, PrismPost> prismPostHashMap, int[] screenDimens) {
+    public PrismPostRecyclerViewAdapter(Context context, ArrayList<PrismPost> prismPostArrayList, int[] screenDimens) {
         this.context = context;
-        this.prismPostKeys = prismPostKeys;
-        this.prismPostHashMap = prismPostHashMap;
+        this.prismPostArrayList = prismPostArrayList;
         this.screenWidth = screenDimens[0];
         this.screenHeight = screenDimens[1];
 
@@ -115,12 +111,12 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.setData(prismPostHashMap.get(prismPostKeys.get(position)));
+        holder.setData(prismPostArrayList.get(position));
     }
 
     @Override
     public int getItemCount() {
-        return prismPostHashMap.size();
+        return prismPostArrayList.size();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -615,8 +611,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                                         if (task.isSuccessful()) {
                                             String postId = prismPost.getPostId();
                                             allPostsReference.child(postId).removeValue();
-                                            prismPostKeys.remove(postId);
-                                            prismPostHashMap.remove(postId);
+                                            prismPostArrayList.remove(postId);
                                             notifyDataSetChanged();
                                             if (getItemCount() == 0) {
                                                 RelativeLayout noMainPostsRelativeLayout = ((Activity) context).findViewById(R.id.no_main_posts_relative_layout);

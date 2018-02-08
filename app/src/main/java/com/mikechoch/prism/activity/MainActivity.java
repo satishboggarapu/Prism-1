@@ -490,8 +490,7 @@ public class MainActivity extends FragmentActivity {
         LinearLayoutManager layoutManager  = (LinearLayoutManager) mainContentRecyclerView.getLayoutManager();
         RelativeLayout noMainPostsRelativeLayout = MainActivity.this.findViewById(R.id.no_main_posts_relative_layout);
         if (mainContentRecyclerView != null) {
-            MainContentFragment.dateOrderedPrismPostKeys.add(0, prismPost.getPostId());
-            MainContentFragment.prismPostHashMap.put(prismPost.getPostId(), prismPost);
+            MainContentFragment.prismPostArrayList.add(prismPost);
             mainContentRecyclerView.getAdapter().notifyItemInserted(0);
             noMainPostsRelativeLayout.setVisibility(View.GONE);
             if (layoutManager.findFirstVisibleItemPosition() < 10) {

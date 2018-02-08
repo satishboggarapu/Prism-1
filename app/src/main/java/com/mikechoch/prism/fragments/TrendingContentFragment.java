@@ -1,6 +1,5 @@
 package com.mikechoch.prism.fragments;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -11,7 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.google.firebase.database.DataSnapshot;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.PrismPostRecyclerViewAdapter;
 import com.mikechoch.prism.PrismPost;
@@ -32,8 +30,9 @@ public class TrendingContentFragment extends Fragment {
     private PrismPostRecyclerViewAdapter trendingContentRecyclerViewAdapter;
     private SwipeRefreshLayout trendingContentSwipeRefreshLayout;
 
-    private ArrayList<String> popularityOrderedPrismPostKeys;
-    private HashMap<String, PrismPost> prismPostHashMap;
+    private ArrayList<PrismPost> prismPostArrayList;
+//    private ArrayList<String> popularityOrderedPrismPostKeys;
+//    private HashMap<String, PrismPost> prismPostHashMap;
 
     private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
 
@@ -56,8 +55,7 @@ public class TrendingContentFragment extends Fragment {
         screenWidth = getActivity().getWindowManager().getDefaultDisplay().getWidth();
         screenHeight = getActivity().getWindowManager().getDefaultDisplay().getHeight();
 
-        popularityOrderedPrismPostKeys = new ArrayList<>();
-        prismPostHashMap = new HashMap<>();
+        prismPostArrayList = new ArrayList<>();
     }
 
     @Override
@@ -68,7 +66,7 @@ public class TrendingContentFragment extends Fragment {
         trendingContentRecyclerView = view.findViewById(R.id.trending_content_recycler_view);
         trendingContentRecyclerView.setItemAnimator(new DefaultItemAnimator());
         trendingContentRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        trendingContentRecyclerViewAdapter = new PrismPostRecyclerViewAdapter(getContext(), popularityOrderedPrismPostKeys, prismPostHashMap, new int[]{screenWidth, screenHeight});
+        trendingContentRecyclerViewAdapter = new PrismPostRecyclerViewAdapter(getContext(), prismPostArrayList, new int[]{screenWidth, screenHeight});
         trendingContentRecyclerView.setAdapter(trendingContentRecyclerViewAdapter);
 
         trendingContentSwipeRefreshLayout = view.findViewById(R.id.trending_content_swipe_refresh_layout);
@@ -76,7 +74,7 @@ public class TrendingContentFragment extends Fragment {
         trendingContentSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                
+
             }
         });
 

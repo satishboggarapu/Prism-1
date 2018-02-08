@@ -134,11 +134,6 @@ public class ImageUploadActivity extends AppCompatActivity {
                 finish();
                 overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
 
-                /*
-                 * Old method of getting image in cloud, not connected to MainActivity
-                 * Bad experience for user since they would have to hold on ImageUploadActivity
-                 */
-//                new ImageUploadTask().execute();
             }
         });
 
