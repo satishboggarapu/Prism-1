@@ -137,7 +137,7 @@ public class ImageUploadActivity extends AppCompatActivity {
             }
         });
 
-        // Ask user to select an image to upload from phone gallery
+        // Ask firebaseUser to select an image to upload from phone gallery
         selectImageFromGallery();
     }
 
@@ -148,7 +148,7 @@ public class ImageUploadActivity extends AppCompatActivity {
     }
 
     /**
-     * Create an Intent to ask user to select a image they would like to upload
+     * Create an Intent to ask firebaseUser to select a image they would like to upload
      */
     private void selectImageFromGallery() {
         Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT);

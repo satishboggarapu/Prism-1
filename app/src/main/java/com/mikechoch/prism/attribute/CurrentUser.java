@@ -21,7 +21,10 @@ import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
+import com.mikechoch.prism.constants.Message;
+import com.mikechoch.prism.fragments.MainContentFragment;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,25 +36,27 @@ public class CurrentUser {
 
     private static Context context;
     private static FirebaseAuth auth;
-    public static FirebaseUser user;
+    public static FirebaseUser firebaseUser;
     private static DatabaseReference userReference;
+    private static DatabaseReference allPostReference;
 
     // Key: String postId
     // Value: long timestamp
     public static HashMap user_liked_posts;
     public static HashMap user_reposted_posts;
-    public static HashMap user_uploaded_posts;
+    public static ArrayList<PrismPost> user_uploaded_posts;
+    private static HashMap user_uploaded_posts_map;
 
-    public static String username;
-    public static String full_name;
-    public static String profile_pic_uri;
-    public static ProfilePicture profilePicture;
+    public static PrismUser prismUser;
+
 
     public CurrentUser(Context context) {
 
         auth = FirebaseAuth.getInstance();
-        user = auth.getCurrentUser();
-        userReference = Default.USERS_REFERENCE.child(user.getUid());
+        firebaseUser = auth.getCurrentUser();
+        userReference = Default.USERS_REFERENCE.child(firebaseUser.getUid());
+        allPostReference = Default.ALL_POSTS_REFERENCE;
+
         CurrentUser.context = context;
 
         refreshUserLinkedPosts();
@@ -59,7 +64,7 @@ public class CurrentUser {
     }
 
     /**
-     * Refreshes list of liked, reposted and uploaded posts by current user
+     * Refreshes list of liked, reposted and uploaded posts by current firebaseUser
      */
     public static void refreshUserLinkedPosts() {
         refreshUserLikedPosts();
@@ -68,7 +73,7 @@ public class CurrentUser {
     }
 
     /**
-     * Pulls current user's list of liked posts and puts them in a HashMap
+     * Pulls current firebaseUser's list of liked posts and puts them in a HashMap
      */
     public static void refreshUserLikedPosts() {
         user_liked_posts = new HashMap<String, Long>();
@@ -87,7 +92,7 @@ public class CurrentUser {
     }
 
     /**
-     * Pulls current user's list of reposted posts and puts them in a HashMap
+     * Pulls current firebaseUser's list of reposted posts and puts them in a HashMap
      */
     public static void refreshUserRepostedPosts() {
         user_reposted_posts = new HashMap<String, Long>();
@@ -110,12 +115,39 @@ public class CurrentUser {
      * TODO: convert items to PrismPost or something for User Profile Page
      */
     public static void refreshUserUploadedPosts() {
-        user_uploaded_posts = new HashMap<String, Long>();
+        user_uploaded_posts = new ArrayList<>();
+        user_uploaded_posts_map = new HashMap<String, Long>();
         userReference.child(Key.DB_REF_USER_UPLOADS).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    user_uploaded_posts.putAll((Map) dataSnapshot.getValue());
+                    user_uploaded_posts_map.putAll((Map) dataSnapshot.getValue());
+
+                    allPostReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.exists()) {
+                                for (Object key : user_uploaded_posts_map.keySet()) {
+                                    String postId = (String) key;
+                                    DataSnapshot postSnapshot = dataSnapshot.child(postId);
+                                    if (postSnapshot.exists()) {
+                                        PrismPost prismPost = MainContentFragment.constructPrismPostObject(postSnapshot);
+                                        prismPost.setPrismUser(CurrentUser.prismUser);
+                                        user_uploaded_posts.add(prismPost);
+                                    }
+                                }
+                            } else {
+                                Log.wtf(Default.TAG_DB, Message.NO_DATA);
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            Log.e(Default.TAG_DB, Message.FETCH_POST_INFO_FAIL, databaseError.toException());
+                        }
+                    });
+
+
                 }
             }
 
@@ -128,7 +160,7 @@ public class CurrentUser {
 
 
     /**
-     * Gets user's profile details such as full name, username,
+     * Gets firebaseUser's profile details such as full name, username,
      * and link to profile pic uri
      */
     public void getUserProfileDetails() {
@@ -136,9 +168,13 @@ public class CurrentUser {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    profile_pic_uri = (String) dataSnapshot.child(Key.USER_PROFILE_PIC).getValue();
-                    username = (String) dataSnapshot.child(Key.USER_PROFILE_USERNAME).getValue();
-                    full_name = (String) dataSnapshot.child(Key.USER_PROFILE_FULL_NAME).getValue();
+                    prismUser = new PrismUser();
+                    prismUser.setUid(firebaseUser.getUid());
+                    prismUser.setFullName((String) dataSnapshot.child(Key.USER_PROFILE_FULL_NAME).getValue());
+                    prismUser.setUsername((String) dataSnapshot.child(Key.USER_PROFILE_USERNAME).getValue());
+                    prismUser.setProfilePicture(new ProfilePicture((String)
+                            dataSnapshot.child(Key.USER_PROFILE_PIC).getValue()));
+
                     updateUserProfilePageUI();
                 }
             }
@@ -159,19 +195,18 @@ public class CurrentUser {
         TextView userUsernameTextView = ((Activity) context).findViewById(R.id.profile_frag_username_text_view);
         TextView userFullNameTextView = ((Activity) context).findViewById(R.id.profile_frag_full_name_text_view);
 
-        userUsernameTextView.setText(username);
-        userFullNameTextView.setText(full_name);
-        profilePicture = new ProfilePicture(profile_pic_uri);
+        userUsernameTextView.setText(prismUser.getUsername());
+        userFullNameTextView.setText(prismUser.getFullName());
 
         Glide.with(context)
                 .asBitmap()
                 .thumbnail(0.05f)
-                .load(profilePicture.hiResUri)
+                .load(prismUser.getProfilePicture().hiResUri)
                 .apply(new RequestOptions().fitCenter())
                 .into(new BitmapImageViewTarget(userProfilePicImageView) {
                     @Override
                     protected void setResource(Bitmap resource) {
-                        if (!profilePicture.isDefault) {
+                        if (!prismUser.getProfilePicture().isDefault) {
                             float scale = context.getResources().getDisplayMetrics().density;
                             int whiteOutlinePadding = (int) (2 * scale);
                             userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);

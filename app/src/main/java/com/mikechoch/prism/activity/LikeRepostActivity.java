@@ -155,7 +155,7 @@ public class LikeRepostActivity extends AppCompatActivity {
 
     /**
      * Goes over the list of users provided as parameter and pulls details for each
-     * user in the hashMap and creates a PrismUser object for each user
+     * firebaseUser in the hashMap and creates a PrismUser object for each firebaseUser
      * @param mapOfUsers
      */
     private void fetchUserDetails(HashMap<String, String> mapOfUsers) {

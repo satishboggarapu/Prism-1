@@ -22,7 +22,7 @@ public class PrismPost {
     // Empty Constructor required by Firebase to convert DataSnapshot to PrismPost.class
     public PrismPost() { }
 
-    // Constructor used when creating prismPost when user uploads the image
+    // Constructor used when creating prismPost when firebaseUser uploads the image
     public PrismPost(String image, String caption, String uid, String postId, long timestamp) {
         this.image = image;
         this.caption = caption;

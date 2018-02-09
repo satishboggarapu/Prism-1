@@ -477,7 +477,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                     moreButton.startAnimation(moreButtonBounceAnimation);
                     // TODO: Show more menu
                     // TODO: Decide what goes in more
-                    boolean isCurrentUserThePostCreator =  CurrentUser.user.getUid().equals(prismPost.getPrismUser().getUid());
+                    boolean isCurrentUserThePostCreator =  CurrentUser.firebaseUser.getUid().equals(prismPost.getPrismUser().getUid());
                     AlertDialog morePrismPostAlertDialog = createMorePrismPostAlertDialog(isCurrentUserThePostCreator);
                     morePrismPostAlertDialog.show();
                 }
@@ -639,11 +639,11 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
         /**
          * Check user_liked_posts HashMap if it contains the postId or not. If it contains
-         * the postId, then user has already liked the post and perform UNLIKE operation
-         * If it doesn't exist, user has not liked it yet, and perform LIKE operation
-         * Operation LIKE (performLIKE = true): does 3 things. First it adds the the user's
+         * the postId, then firebaseUser has already liked the post and perform UNLIKE operation
+         * If it doesn't exist, firebaseUser has not liked it yet, and perform LIKE operation
+         * Operation LIKE (performLIKE = true): does 3 things. First it adds the the firebaseUser's
          * uid to the LIKED_USERS table under the post. Then it adds the postId to the
-         * USER_LIKES table under the user. Then it adds the postId and timestamp to the
+         * USER_LIKES table under the firebaseUser. Then it adds the postId and timestamp to the
          * local user_liked_posts HashMap so that recycler view can update
          * Operation UNLIKE (performLike = false): undoes above 3 things
          */
@@ -660,12 +660,12 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                     if (post != null) {
                         if (performLike) {
 
-                            // Add the user to LIKED_USERS list for this post
+                            // Add the firebaseUser to LIKED_USERS list for this post
                             postReference.child(Key.DB_REF_POST_LIKED_USERS)
-                                    .child(CurrentUser.user.getDisplayName())
-                                    .setValue(CurrentUser.user.getUid());
+                                    .child(CurrentUser.firebaseUser.getDisplayName())
+                                    .setValue(CurrentUser.firebaseUser.getUid());
 
-                            // Add postId to user's liked section
+                            // Add postId to firebaseUser's liked section
                             userReference.child(Key.DB_REF_USER_LIKES)
                                     .child(postId).setValue(timestamp);
 
@@ -674,12 +674,12 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
                         } else {
 
-                            // Remove the user from LIKED_USERS list for this post
+                            // Remove the firebaseUser from LIKED_USERS list for this post
                             postReference.child(Key.DB_REF_POST_LIKED_USERS)
-                                    .child(CurrentUser.user.getDisplayName())
+                                    .child(CurrentUser.firebaseUser.getDisplayName())
                                     .removeValue();
 
-                            // Remove postId from user's liked section
+                            // Remove postId from firebaseUser's liked section
                             userReference.child(Key.DB_REF_USER_LIKES)
                                     .child(postId).removeValue();
 
@@ -699,11 +699,11 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
         /**
          * Check user_reposted_posts HashMap if it contains the postId or not. If it contains
-         * the postId, then user has already reposted the post and perform UNREPOST operation
-         * If it doesn't exist, user has not reposted it yet, and perform REPOST operation
-         * Operation REPOST (performRepost = true): does 3 things. First it adds the the user's
+         * the postId, then firebaseUser has already reposted the post and perform UNREPOST operation
+         * If it doesn't exist, firebaseUser has not reposted it yet, and perform REPOST operation
+         * Operation REPOST (performRepost = true): does 3 things. First it adds the the firebaseUser's
          * uid to the REPOSTED_USERS table under the post. Then it adds the postId to the
-         * USER_REPOSTS table under the user. Then it adds the postId and timestamp to the
+         * USER_REPOSTS table under the firebaseUser. Then it adds the postId and timestamp to the
          * local user_reposted_posts HashMap so that recycler view can update
          * Operation UNREPOST (performRepost = false): undoes above 3 things
          */
@@ -720,30 +720,30 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                     if (post != null) {
                         if (performRepost) {
 
-                            // Add postId to user's reposts section
+                            // Add postId to firebaseUser's reposts section
                             userReference.child(Key.DB_REF_USER_REPOSTS)
                                     .child(postId).setValue(timestamp);
 
                             // Add postId and timestamp to user_reposted_posts hashMap
                             CurrentUser.user_reposted_posts.put(postId, timestamp);
 
-                            // Add the user to REPOSTED_USERS list for this post
+                            // Add the firebaseUser to REPOSTED_USERS list for this post
                             postReference.child(Key.DB_REF_POST_REPOSTED_USERS)
-                                    .child(CurrentUser.user.getDisplayName())
-                                    .setValue(CurrentUser.user.getUid());
+                                    .child(CurrentUser.firebaseUser.getDisplayName())
+                                    .setValue(CurrentUser.firebaseUser.getUid());
 
                         } else {
 
-                            // Remove postId from user's reposts section
+                            // Remove postId from firebaseUser's reposts section
                             userReference.child(Key.DB_REF_USER_LIKES)
                                     .child(postId).removeValue();
 
                             // Remove the postId and timestamp from user_reposted_posts hashMap
                             CurrentUser.user_reposted_posts.remove(postId);
 
-                            // Remove the user from REPOSTED_USERS list for this post
+                            // Remove the firebaseUser from REPOSTED_USERS list for this post
                             postReference.child(Key.DB_REF_POST_REPOSTED_USERS)
-                                    .child(CurrentUser.user.getDisplayName())
+                                    .child(CurrentUser.firebaseUser.getDisplayName())
                                     .removeValue();
                         }
                     }

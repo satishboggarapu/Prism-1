@@ -108,7 +108,7 @@ public class MainContentFragment extends Fragment {
         /*
          * The main purpose of this MainContentFragment is to be a Home page of the application
          * The RecyclerView being created below will show all of the most recent posts
-         * The posts shown will be of people the user follows
+         * The posts shown will be of people the firebaseUser follows
          */
         mainContentRecyclerView = view.findViewById(R.id.main_content_recycler_view);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
@@ -209,7 +209,7 @@ public class MainContentFragment extends Fragment {
 
                 if (dataSnapshot.exists()) {
                     for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                        PrismPost prismPost = getPrismPostObject(postSnapshot);
+                        PrismPost prismPost = constructPrismPostObject(postSnapshot);
                         prismPostArrayList.add(prismPost);
                     }
                     noMainPostsRelativeLayout.setVisibility(View.GONE);
@@ -231,7 +231,7 @@ public class MainContentFragment extends Fragment {
 
 
     /**
-     *  Pulls more data (for ALL_POSTS) from cloud, typically when user is about to
+     *  Pulls more data (for ALL_POSTS) from cloud, typically when firebaseUser is about to
      *  reach the end of the list. It first gets the timestamp of the last post in
      *  the list and then queries more images starting from that last timestamp and
      *  appends them back to the end of the arrayList and the HashMap
@@ -248,7 +248,7 @@ public class MainContentFragment extends Fragment {
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if (dataSnapshot.exists()) {
                             for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                                PrismPost prismPost = getPrismPostObject(postSnapshot);
+                                PrismPost prismPost = constructPrismPostObject(postSnapshot);
                                 prismPostArrayList.add(prismPost);
                                 getActivity().runOnUiThread(new Runnable() {
                                     @Override
@@ -278,7 +278,7 @@ public class MainContentFragment extends Fragment {
      * Takes in a dataSnapshot object and parses its contents
      * and returns a prismPost object
      */
-    private PrismPost getPrismPostObject(DataSnapshot postSnapshot) {
+    public static PrismPost constructPrismPostObject(DataSnapshot postSnapshot) {
         PrismPost prismPost = postSnapshot.getValue(PrismPost.class);
         prismPost.setLikes((int) postSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount());
         prismPost.setReposts((int) postSnapshot.child(Key.DB_REF_POST_REPOSTED_USERS).getChildrenCount());
@@ -287,7 +287,7 @@ public class MainContentFragment extends Fragment {
 
     /**
      * Once all posts are loaded into the prismPostHashMap,
-     * this method iterates over each post, grabs user's details
+     * this method iterates over each post, grabs firebaseUser's details
      * for the post like "profilePicUriString" and "username" and
      * updates the prismPost objects in that hashMap and then
      * updates the RecyclerViewAdapter so the UI gets updated
@@ -322,7 +322,7 @@ public class MainContentFragment extends Fragment {
     }
 
     /**
-     * Takes in userSnapshot object and parses the user details
+     * Takes in userSnapshot object and parses the firebaseUser details
      * and creates a prismUser object
      * @return PrismUser object
      */

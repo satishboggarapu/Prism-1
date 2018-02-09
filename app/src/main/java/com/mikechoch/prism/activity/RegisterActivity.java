@@ -272,7 +272,7 @@ public class RegisterActivity extends AppCompatActivity {
                             toggleProgressBar(false);
                             return;
                         }
-                        // else -> attempt creation of new user
+                        // else -> attempt creation of new firebaseUser
                         auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                             @Override
                             public void onComplete(@NonNull Task<AuthResult> task) {

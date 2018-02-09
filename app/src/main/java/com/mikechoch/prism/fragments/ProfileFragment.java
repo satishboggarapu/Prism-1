@@ -27,6 +27,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.mikechoch.prism.attribute.CurrentUser;
 import com.mikechoch.prism.adapter.StaggeredGridRecyclerViewAdapter;
+import com.mikechoch.prism.attribute.PrismPost;
+import com.mikechoch.prism.attribute.ProfilePicture;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.activity.LoginActivity;
@@ -89,16 +91,17 @@ public class ProfileFragment extends Fragment {
         View view = inflater.inflate(R.layout.profile_fragment_layout, container, false);
 
         userProfilePicImageView = view.findViewById(R.id.profile_frag_profile_picture_image_view);
-        if (CurrentUser.profilePicture != null) {
+        if (CurrentUser.prismUser != null && CurrentUser.prismUser.getProfilePicture() != null) {
+        ProfilePicture currentUserProfilePic = CurrentUser.prismUser.getProfilePicture();
             Glide.with(this)
                     .asBitmap()
                     .thumbnail(0.05f)
-                    .load(CurrentUser.profilePicture.hiResUri)
+                    .load(currentUserProfilePic.hiResUri)
                     .apply(new RequestOptions().fitCenter())
                     .into(new BitmapImageViewTarget(userProfilePicImageView) {
                         @Override
                         protected void setResource(Bitmap resource) {
-                            if (!CurrentUser.profilePicture.isDefault) {
+                            if (!currentUserProfilePic.isDefault) {
                                 int whiteOutlinePadding = (int) (2 * scale);
                                 userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
                                 userProfilePicImageView.setBackground(getActivity().getResources().getDrawable(R.drawable.circle_profile_frame));
@@ -112,7 +115,14 @@ public class ProfileFragment extends Fragment {
                             userProfilePicImageView.setImageDrawable(drawable);
                         }
                     });
+            userUsernameTextView = view.findViewById(R.id.profile_frag_username_text_view);
+            userUsernameTextView.setText(CurrentUser.prismUser.getUsername());
+            userUsernameTextView.setTypeface(sourceSansProBold);
+            userFullNameTextView = view.findViewById(R.id.profile_frag_full_name_text_view);
+            userFullNameTextView.setText(CurrentUser.prismUser.getFullName());
+            userFullNameTextView.setTypeface(sourceSansProLight);
         }
+
         userProfilePicImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -121,12 +131,6 @@ public class ProfileFragment extends Fragment {
             }
         });
 
-        userUsernameTextView = view.findViewById(R.id.profile_frag_username_text_view);
-        userUsernameTextView.setText(CurrentUser.username);
-        userUsernameTextView.setTypeface(sourceSansProBold);
-        userFullNameTextView = view.findViewById(R.id.profile_frag_full_name_text_view);
-        userFullNameTextView.setText(CurrentUser.full_name);
-        userFullNameTextView.setTypeface(sourceSansProLight);
 
         ArrayList<Drawable> drawableArrayList = new ArrayList<>();
         drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
