@@ -1,9 +1,8 @@
-package com.mikechoch.prism;
+package com.mikechoch.prism.adapter;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
-import android.net.Uri;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.widget.RecyclerView;
@@ -17,10 +16,11 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
+import com.mikechoch.prism.PrismUser;
+import com.mikechoch.prism.R;
 import com.mikechoch.prism.constants.Default;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 /**
  * Created by mikechoch on 1/21/18.
@@ -28,22 +28,27 @@ import java.util.Random;
 
 public class LikeRepostUsersRecyclerViewAdapter extends RecyclerView.Adapter<LikeRepostUsersRecyclerViewAdapter.ViewHolder> {
 
+    /*
+     * Global variables
+     */
     private Context context;
     private ArrayList<PrismUser> prismUserArrayList;
 
+    private float scale;
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
 
-    private float scale;
 
     public LikeRepostUsersRecyclerViewAdapter(Context context, ArrayList<PrismUser> prismUserArrayList) {
         this.context = context;
         this.prismUserArrayList = prismUserArrayList;
 
+        // Get the density scale of the current device
+        this.scale = context.getResources().getDisplayMetrics().density;
+
+        // Create two typefaces
         this.sourceSansProLight = Typeface.createFromAsset(context.getAssets(), "fonts/SourceSansPro-Light.ttf");
         this.sourceSansProBold = Typeface.createFromAsset(context.getAssets(), "fonts/SourceSansPro-Black.ttf");
-
-        scale = context.getResources().getDisplayMetrics().density;
     }
 
     @Override
@@ -64,13 +69,13 @@ public class LikeRepostUsersRecyclerViewAdapter extends RecyclerView.Adapter<Lik
 
     public class ViewHolder extends RecyclerView.ViewHolder {
 
+        private FirebaseAuth auth;
+        private DatabaseReference userReference;
+
         private PrismUser prismUser;
         private ImageView userProfilePicture;
         private TextView usernameTextView;
         private TextView userFullNameText;
-
-        private FirebaseAuth auth;
-        private DatabaseReference userReference;
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -79,13 +84,24 @@ public class LikeRepostUsersRecyclerViewAdapter extends RecyclerView.Adapter<Lik
             auth = FirebaseAuth.getInstance();
             userReference = Default.USERS_REFERENCE.child(auth.getCurrentUser().getUid());
 
+            // Initialize all UI elements
             userProfilePicture = itemView.findViewById(R.id.user_profile_picture_image_view);
             usernameTextView = itemView.findViewById(R.id.username_text_view);
             userFullNameText = itemView.findViewById(R.id.full_name_text_view);
         }
 
+        /**
+         * Set data for the ViewHolder UI elements
+         */
         public void setData(PrismUser prismUser) {
             this.prismUser = prismUser;
+            setupUIElements();
+        }
+
+        /**
+         * Setup the userProfilePicImageView so it is populated with a Default or custom picture
+         */
+        private void setupUserProfilePicImageView() {
             if (prismUser.getProfilePicture() != null) {
                 Glide.with(context)
                         .asBitmap()
@@ -109,13 +125,26 @@ public class LikeRepostUsersRecyclerViewAdapter extends RecyclerView.Adapter<Lik
                             }
                         });
             }
+        }
 
+        /**
+         * Setup the TextViews for LikeRepost item
+         */
+        private void setupUsernameAndFullNameTextView() {
             usernameTextView.setText(prismUser.getUsername());
-            usernameTextView.setTypeface(sourceSansProBold);
-
             userFullNameText.setText(prismUser.getFullName());
+        }
+
+        /**
+         * Setup all UI elements
+         */
+        private void setupUIElements() {
+            // Setup Typefaces for all text based UI elements
+            usernameTextView.setTypeface(sourceSansProBold);
             userFullNameText.setTypeface(sourceSansProLight);
 
+            setupUserProfilePicImageView();
+            setupUsernameAndFullNameTextView();
         }
     }
 }

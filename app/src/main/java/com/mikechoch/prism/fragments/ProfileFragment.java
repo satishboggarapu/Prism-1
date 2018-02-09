@@ -1,16 +1,13 @@
 package com.mikechoch.prism.fragments;
 
-import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.widget.RecyclerView;
@@ -20,7 +17,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -29,15 +25,13 @@ import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.mikechoch.prism.CurrentUser;
-import com.mikechoch.prism.PrismPost;
-import com.mikechoch.prism.StaggeredGridRecyclerViewAdapter;
+import com.mikechoch.prism.adapter.StaggeredGridRecyclerViewAdapter;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.activity.LoginActivity;
 import com.mikechoch.prism.activity.ProfilePictureUploadActivity;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 /**
  * Created by mikechoch on 1/22/18.
@@ -45,20 +39,28 @@ import java.util.Random;
 
 public class ProfileFragment extends Fragment {
 
+    /*
+     * Global variables
+     */
     private FirebaseAuth auth;
     private DatabaseReference userReference;
 
+    private float scale;
+    private Typeface sourceSansProLight;
+    private Typeface sourceSansProBold;
+    private String[] setProfilePicStrings = {"Choose from gallery", "Take a selfie"};
+
     private ImageView userProfilePicImageView;
+    private TextView followersCountTextView;
+    private TextView followersLabelTextView;
+    private TextView postsCountTextView;
+    private TextView postsLabelTextView;
+    private TextView followingCountTextView;
+    private TextView followingLabelTextView;
     private TextView userUsernameTextView;
     private TextView userFullNameTextView;
     private RecyclerView staggeredGridRecyclerView;
     private Button logoutButton;
-
-    private Typeface sourceSansProLight;
-    private Typeface sourceSansProBold;
-
-    private float scale;
-    private String[] setProfilePicStrings = {"Choose from gallery", "Take a selfie"};
 
 
     public static final ProfileFragment newInstance(int title, String message) {
@@ -77,23 +79,56 @@ public class ProfileFragment extends Fragment {
         int title = getArguments().getInt("Title");
         String message = getArguments().getString("Extra_Message");
 
-        scale = this.getResources().getDisplayMetrics().density;
-
         auth = FirebaseAuth.getInstance();
         userReference = Default.USERS_REFERENCE.child(auth.getCurrentUser().getUid());
 
+        scale = this.getResources().getDisplayMetrics().density;
+
         sourceSansProLight = Typeface.createFromAsset(getContext().getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getContext().getAssets(), "fonts/SourceSansPro-Black.ttf");
-
     }
 
-    @SuppressLint("NewApi")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.profile_fragment_layout, container, false);
 
+        // Initialize all UI elements
         userProfilePicImageView = view.findViewById(R.id.profile_frag_profile_picture_image_view);
+        followersCountTextView = view.findViewById(R.id.followers_count_text_view);
+        followersLabelTextView = view.findViewById(R.id.followers_label_text_view);
+        postsCountTextView = view.findViewById(R.id.posts_count_text_view);
+        postsLabelTextView = view.findViewById(R.id.posts_label_text_view);
+        followingCountTextView = view.findViewById(R.id.following_count_text_view);
+        followingLabelTextView = view.findViewById(R.id.following_label_text_view);
+        userUsernameTextView = view.findViewById(R.id.profile_frag_username_text_view);
+        userFullNameTextView = view.findViewById(R.id.profile_frag_full_name_text_view);
+        staggeredGridRecyclerView = view.findViewById(R.id.user_posts_recycler_view);
+        logoutButton = view.findViewById(R.id.logout_button);
+
+        logoutButton.setBackgroundTintList(getResources().getColorStateList(R.color.colorAccent));
+        logoutButton.setTypeface(sourceSansProLight);
+        logoutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                auth.signOut();
+                Intent intent = new Intent(getActivity(), LoginActivity.class);
+                startActivity(intent);
+                getActivity().finish();
+                getActivity().overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+            }
+        });
+
+        setupUIElements();
+
+        return view;
+    }
+
+    /**
+     * Setup the userProfilePicImageView so it is populated with a Default or custom picture
+     * When clicked it will show an AlertDialog of options for changing the picture
+     */
+    private void setupUserProfilePicImageView() {
         if (CurrentUser.profilePicture != null) {
             Glide.with(this)
                     .asBitmap()
@@ -118,6 +153,7 @@ public class ProfileFragment extends Fragment {
                         }
                     });
         }
+
         userProfilePicImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -125,62 +161,11 @@ public class ProfileFragment extends Fragment {
                 setProfilePictureAlertDialog.show();
             }
         });
-
-        userUsernameTextView = view.findViewById(R.id.profile_frag_username_text_view);
-        userUsernameTextView.setText(CurrentUser.username);
-        userUsernameTextView.setTypeface(sourceSansProBold);
-        userFullNameTextView = view.findViewById(R.id.profile_frag_full_name_text_view);
-        userFullNameTextView.setText(CurrentUser.full_name);
-        userFullNameTextView.setTypeface(sourceSansProLight);
-
-        ArrayList<Drawable> drawableArrayList = new ArrayList<>();
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-
-        staggeredGridRecyclerView = view.findViewById(R.id.user_posts_recycler_view);
-        staggeredGridRecyclerView.setHasFixedSize(true);
-        StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, 1);
-        staggeredGridRecyclerView.setLayoutManager(staggeredGridLayoutManager);
-        StaggeredGridRecyclerViewAdapter staggeredGridRecyclerViewAdapter = new StaggeredGridRecyclerViewAdapter(getActivity(), drawableArrayList);
-        staggeredGridRecyclerView.setAdapter(staggeredGridRecyclerViewAdapter);
-
-        logoutButton = view.findViewById(R.id.logout_button);
-        logoutButton.setBackgroundTintList(getResources().getColorStateList(R.color.colorAccent));
-        logoutButton.setTypeface(sourceSansProLight);
-        logoutButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                auth.signOut();
-                Intent intent = new Intent(getActivity(), LoginActivity.class);
-                startActivity(intent);
-                getActivity().finish();
-                getActivity().overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
-            }
-        });
-
-        return view;
     }
 
     /**
-     *
+     * Create an AlertDialog for when the userProfilePicImageView is clicked
+     * Gives the option to take a picture or select one from gallery
      */
     private AlertDialog createSetProfilePictureAlertDialog() {
         AlertDialog.Builder profilePictureAlertDialog = new AlertDialog.Builder(getActivity());
@@ -204,6 +189,68 @@ public class ProfileFragment extends Fragment {
         });
 
         return profilePictureAlertDialog.create();
+    }
+
+    /**
+     * Setup the TextViews on the ProfileFragment
+     */
+    private void setupUsernameAndFullNameTextView() {
+        userUsernameTextView.setText(CurrentUser.username);
+        userFullNameTextView.setText(CurrentUser.full_name);
+    }
+
+    /**
+     * Create a StaggeredGridLayoutManager and give it a spanCount of 2
+     * Create a StaggeredGridRecyclerViewAdapter
+     * Set the layout manager and adapter of the RecyclerView
+     */
+    private void setupUserPostsRecyclerView() {
+        ArrayList<Drawable> drawableArrayList = new ArrayList<>();
+        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
+        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
+        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
+        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
+        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
+        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
+        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
+        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
+        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
+        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
+        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
+        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
+        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
+        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
+        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
+        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
+        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
+        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
+        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
+        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
+
+        staggeredGridRecyclerView.setHasFixedSize(true);
+        StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, 1);
+        staggeredGridRecyclerView.setLayoutManager(staggeredGridLayoutManager);
+        StaggeredGridRecyclerViewAdapter staggeredGridRecyclerViewAdapter = new StaggeredGridRecyclerViewAdapter(getActivity(), drawableArrayList);
+        staggeredGridRecyclerView.setAdapter(staggeredGridRecyclerViewAdapter);
+    }
+
+    /**
+     * Setup all UI elements
+     */
+    private void setupUIElements() {
+        // Setup Typefaces for all text based UI elements
+        followersCountTextView.setTypeface(sourceSansProBold);
+        followersLabelTextView.setTypeface(sourceSansProLight);
+        postsCountTextView.setTypeface(sourceSansProBold);
+        postsLabelTextView.setTypeface(sourceSansProLight);
+        followingCountTextView.setTypeface(sourceSansProBold);
+        followingLabelTextView.setTypeface(sourceSansProLight);
+        userUsernameTextView.setTypeface(sourceSansProBold);
+        userFullNameTextView.setTypeface(sourceSansProLight);
+
+        setupUserProfilePicImageView();
+        setupUsernameAndFullNameTextView();
+        setupUserPostsRecyclerView();
     }
 
 }

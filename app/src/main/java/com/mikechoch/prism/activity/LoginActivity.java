@@ -42,6 +42,11 @@ public class LoginActivity extends AppCompatActivity {
      */
     private FirebaseAuth auth;
 
+    private Typeface sourceSansProLight;
+    private Typeface sourceSansProBold;
+    private int screenWidth;
+    private int screenHeight;
+
     private ImageView iconImageView;
     private TextInputLayout emailTextInputLayout;
     private EditText emailOrUsernameEditText;
@@ -50,9 +55,6 @@ public class LoginActivity extends AppCompatActivity {
     private Button loginButton;
     private TextView goToRegisterButton;
     private ProgressBar loginProgressBar;
-
-    private Typeface sourceSansProLight;
-    private Typeface sourceSansProBold;
 
 
     @Override
@@ -68,10 +70,10 @@ public class LoginActivity extends AppCompatActivity {
         sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
 
         // Get the screen width and height of the current phone
-        int screenHeight = getWindowManager().getDefaultDisplay().getHeight();
-        int screenWidth = getWindowManager().getDefaultDisplay().getWidth();
+        screenHeight = getWindowManager().getDefaultDisplay().getHeight();
+        screenWidth = getWindowManager().getDefaultDisplay().getWidth();
 
-        // Initialize all UI elements for Login Activity
+        // Initialize all UI elements
         iconImageView = findViewById(R.id.icon_image_view);
         emailTextInputLayout = findViewById(R.id.email_text_input_layout);
         emailOrUsernameEditText = findViewById(R.id.email_edit_text);
@@ -81,18 +83,7 @@ public class LoginActivity extends AppCompatActivity {
         goToRegisterButton = findViewById(R.id.register_text_view);
         loginProgressBar = findViewById(R.id.login_progress_bar);
 
-        // Setup the image view at the top of the Login screen
-        // 50% of the screen will be the width and margin the image top by 1/16th of the height
-        iconImageView.getLayoutParams().width = (int) (screenWidth * 0.5);
-        RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) iconImageView.getLayoutParams();
-        lp.setMargins(0, (screenHeight/16), 0, 0);
-        iconImageView.setLayoutParams(lp);
-
-        // Setup all UI elements
-        setupEmailEditText();
-        setupPasswordEditText();
-        setupLoginButton();
-        setupGoToRegisterButton();
+        setupUIElements();
     }
 
     @Override
@@ -102,11 +93,20 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     /**
+     * Setup the image view at the top of the Login screen
+     * 50% of the screen will be the width and margin the image top by 1/16th of the height
+     */
+    private void setupIconImageView() {
+        iconImageView.getLayoutParams().width = (int) (screenWidth * 0.5);
+        RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) iconImageView.getLayoutParams();
+        lp.setMargins(0, (screenHeight/16), 0, 0);
+        iconImageView.setLayoutParams(lp);
+    }
+
+    /**
      * Email EditTextLayout Typefaces are set and TextWatcher is setup for error handling
      */
     private void setupEmailEditText() {
-        emailTextInputLayout.setTypeface(sourceSansProLight);
-        emailOrUsernameEditText.setTypeface(sourceSansProLight);
         emailOrUsernameEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int i, int i1, int i2) { }
@@ -133,10 +133,8 @@ public class LoginActivity extends AppCompatActivity {
      * Password EditTextLayout Typefaces are set and TextWatcher is setup for error handling
      */
     private void setupPasswordEditText() {
-        passwordTextInputLayout.setTypeface(sourceSansProLight);
         passwordTextInputLayout.setPasswordVisibilityToggleEnabled(true);
         passwordTextInputLayout.getPasswordVisibilityToggleDrawable().setTint(Color.WHITE);
-        passwordEditText.setTypeface(sourceSansProLight);
         passwordEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int i, int i1, int i2) { }
@@ -165,7 +163,6 @@ public class LoginActivity extends AppCompatActivity {
      * Error handle for invalid credentials and otherwise go to MainActivity
      */
     private void setupLoginButton() {
-        loginButton.setTypeface(sourceSansProLight);
         loginButton.setBackgroundTintList(getResources().getColorStateList(R.color.colorAccent));
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -204,31 +201,39 @@ public class LoginActivity extends AppCompatActivity {
                 } else {
                     attemptLogin(emailOrUsername, password);
                 }
-
-
             }
         });
-    }
-
-    private String getFormattedPassword() {
-        return passwordEditText.getText().toString().trim();
-    }
-
-    private String getFormattedEmailOrUsername() {
-        return emailOrUsernameEditText.getText().toString().trim();
     }
 
     /**
      * Setup the register button TextView to go to RegisterActivity when clicked
      */
     private void setupGoToRegisterButton() {
-        goToRegisterButton.setTypeface(sourceSansProLight);
         goToRegisterButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 intentToRegisterActivity();
             }
         });
+    }
+
+    /**
+     * Setup all UI elements
+     */
+    private void setupUIElements() {
+        // Setup Typefaces for all text based UI elements
+        emailTextInputLayout.setTypeface(sourceSansProLight);
+        emailOrUsernameEditText.setTypeface(sourceSansProLight);
+        passwordTextInputLayout.setTypeface(sourceSansProLight);
+        passwordEditText.setTypeface(sourceSansProLight);
+        loginButton.setTypeface(sourceSansProLight);
+        goToRegisterButton.setTypeface(sourceSansProLight);
+
+        setupIconImageView();
+        setupEmailEditText();
+        setupPasswordEditText();
+        setupLoginButton();
+        setupGoToRegisterButton();
     }
 
     /**
@@ -314,6 +319,19 @@ public class LoginActivity extends AppCompatActivity {
         return Patterns.EMAIL_ADDRESS.matcher(emailOrUsername).matches();
     }
 
+    /**
+     * Cleans the email or username entered and returns the clean version
+     */
+    private String getFormattedEmailOrUsername() {
+        return emailOrUsernameEditText.getText().toString().trim();
+    }
+
+    /**
+     * Cleans the password entered and returns the clean version
+     */
+    private String getFormattedPassword() {
+        return passwordEditText.getText().toString().trim();
+    }
 
     /**
      * Shortcut for toasting a message

@@ -1,9 +1,7 @@
 package com.mikechoch.prism.fragments;
 
-import android.annotation.SuppressLint;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -28,12 +26,11 @@ import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.CurrentUser;
 import com.mikechoch.prism.PrismUser;
 import com.mikechoch.prism.ProfilePicture;
-import com.mikechoch.prism.activity.MainActivity;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.PrismPost;
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.PrismPostRecyclerViewAdapter;
+import com.mikechoch.prism.adapter.PrismPostRecyclerViewAdapter;
 import com.mikechoch.prism.constants.Message;
 
 import java.util.ArrayList;
@@ -70,6 +67,7 @@ public class MainContentFragment extends Fragment {
     private int screenHeight;
     private boolean isLoading = false;
 
+
     public static final MainContentFragment newInstance(int title, String message) {
         MainContentFragment mainContentFragment = new MainContentFragment();
         Bundle bundle = new Bundle(2);
@@ -101,8 +99,6 @@ public class MainContentFragment extends Fragment {
         refreshData();
     }
 
-
-    @SuppressLint("NewApi")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {

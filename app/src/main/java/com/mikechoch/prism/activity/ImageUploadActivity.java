@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.design.widget.TextInputLayout;
@@ -15,11 +16,13 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.helper.ExifUtil;
@@ -38,21 +41,20 @@ public class ImageUploadActivity extends AppCompatActivity {
     /*
      * Global variables
      */
+    private Typeface sourceSansProLight;
+    private Typeface sourceSansProBold;
     private int screenWidth;
     private int screenHeight;
 
-    private Typeface sourceSansProLight;
-    private Typeface sourceSansProBold;
-
-    private Uri imageUri;
-    private ImageView uploadedImageImageView;
-    private TextInputLayout imageDescriptionTextInputLayout;
-    private EditText imageDescriptionEditText;
-    private TextView uploadImageTitle;
-    private TextView uploadButtonTextView;
-    private CardView uploadButton;
     private Toolbar toolbar;
     private TextView toolbarTextView;
+    private TextInputLayout imageDescriptionTextInputLayout;
+    private EditText imageDescriptionEditText;
+    private ImageView uploadedImageImageView;
+    private Button uploadButton;
+
+    private Uri imageUri;
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -74,7 +76,6 @@ public class ImageUploadActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressLint("NewApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,63 +85,19 @@ public class ImageUploadActivity extends AppCompatActivity {
         sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
 
-        // Setup the toolbar and back button to return to MainActivity
-        toolbar = findViewById(R.id.toolbar);
-        toolbarTextView = findViewById(R.id.toolbar_text_view);
-        toolbarTextView.setTypeface(sourceSansProLight);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
-        // Get screen height for future use
+        // Get screen height and width for future use
         screenWidth = getWindowManager().getDefaultDisplay().getWidth();
         screenHeight = getWindowManager().getDefaultDisplay().getHeight();
 
-        // Initialize text related UI elements and assign typefaces
-        uploadImageTitle = findViewById(R.id.uploaded_image_text_view_title);
-        uploadImageTitle.setTypeface(sourceSansProLight);
+        // Initialize all UI elements
+        toolbar = findViewById(R.id.toolbar);
+        toolbarTextView = findViewById(R.id.toolbar_text_view);
         imageDescriptionTextInputLayout = findViewById(R.id.image_description_title_text_input_layout);
-        imageDescriptionTextInputLayout.setTypeface(sourceSansProLight);
-        uploadButtonTextView = findViewById(R.id.upload_button_text_view);
-        uploadButtonTextView.setTypeface(sourceSansProLight);
         imageDescriptionEditText = findViewById(R.id.image_description_edit_text);
-        imageDescriptionEditText.setTypeface(sourceSansProLight);
-
-        // Initialize the uploadedImageImageView and give it 60% of screen height
         uploadedImageImageView = findViewById(R.id.uploaded_image_image_view);
-        uploadedImageImageView.getLayoutParams().height = (int) (screenHeight * 0.6);
-        uploadedImageImageView.setForeground(getResources().getDrawable(R.drawable.image_upload_selector));
-        uploadedImageImageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                selectImageFromGallery();
-            }
-        });
+        uploadButton = findViewById(R.id.upload_button);
 
-        // Initialize the uploadButton and setup onClickListener
-        uploadButton = findViewById(R.id.upload_button_card_view);
-        uploadButton.setForeground(getResources().getDrawable(R.drawable.profile_pic_upload_selector));
-        uploadButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                /*
-                 * When the uploadButton   is clicked, a new Intent is created
-                 * This passes the uploaded image data (image and description) back to MainActivity
-                 * Then ImageUploadActivity is finished
-                 */
-                Intent data = new Intent();
-                data.putExtra("ImageUri", imageUri.toString());
-                data.putExtra("ImageDescription", imageDescriptionEditText.getText().toString().trim());
-                setResult(RESULT_OK, data);
-                finish();
-                overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
-
-                /*
-                 * Old method of getting image in cloud, not connected to MainActivity
-                 * Bad experience for user since they would have to hold on ImageUploadActivity
-                 */
-//                new ImageUploadTask().execute();
-            }
-        });
+        setupUIElements();
 
         // Ask user to select an image to upload from phone gallery
         selectImageFromGallery();
@@ -150,6 +107,72 @@ public class ImageUploadActivity extends AppCompatActivity {
     public void onBackPressed() {
         finish();
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+    }
+
+    /**
+     * Setup the toolbar and back button to return to MainActivity
+     */
+    private void setupToolbar() {
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
+
+    /**
+     * Setup the uploadedImageImageView,
+     */
+    private void setupUploadedImageImageView() {
+        uploadedImageImageView.getLayoutParams().width = (int) (screenWidth * 0.9);
+        uploadedImageImageView.setMaxHeight((int) (screenHeight * 0.6));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            uploadedImageImageView.setForeground(getResources().getDrawable(R.drawable.image_upload_selector));
+        }
+        uploadedImageImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                selectImageFromGallery();
+            }
+        });
+    }
+
+    /**
+     * Setup onClickListener for uploadButton
+     */
+    private void setupUploadButton() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            uploadButton.setForeground(getResources().getDrawable(R.drawable.profile_pic_upload_selector));
+        }
+        uploadButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                /*
+                 * When the uploadButton is clicked, a new Intent is created
+                 * This passes the uploaded image data (image and description) back to MainActivity
+                 * Then ImageUploadActivity is finished
+                 */
+                Intent data = new Intent();
+                data.putExtra("ImageUri", imageUri.toString());
+                data.putExtra("ImageDescription", imageDescriptionEditText.getText().toString().trim());
+                setResult(RESULT_OK, data);
+                finish();
+                overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+            }
+        });
+    }
+
+    /**
+     * Setup all UI elements
+     */
+    private void setupUIElements() {
+        setupToolbar();
+
+        // Setup Typefaces for all text based UI elements
+        toolbarTextView.setTypeface(sourceSansProLight);
+        imageDescriptionTextInputLayout.setTypeface(sourceSansProLight);
+        uploadButton.setTypeface(sourceSansProLight);
+        imageDescriptionEditText.setTypeface(sourceSansProLight);
+
+        setupUploadedImageImageView();
+        setupUploadButton();
     }
 
     /**
@@ -163,7 +186,8 @@ public class ImageUploadActivity extends AppCompatActivity {
     }
 
     /**
-     *
+     * When an Activity is going to send back a result onActivityResult will tale responsibility
+     * GALLERY_INTENT_REQUEST: intents back a Gallery imageUri to be rotated and ready for upload
      */
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch(requestCode) {
@@ -181,7 +205,10 @@ public class ImageUploadActivity extends AppCompatActivity {
                     String imagePath = FileChooser.getPath(this, imageUri);
                     bitmap = ExifUtil.rotateBitmap(imagePath, bitmap);
                     imageUri = getImageUri(bitmap);
-                    uploadedImageImageView.setImageBitmap(bitmap);
+                    Glide.with(this)
+                            .asBitmap()
+                            .load(bitmap)
+                            .into(uploadedImageImageView);
                 } else {
                     if (uploadedImageImageView.getDrawable() == null) {
                         finish();
@@ -195,12 +222,12 @@ public class ImageUploadActivity extends AppCompatActivity {
     }
 
     /**
-     *
+     * Pass in a local Bitmap from Gallery and get the URI of the Bitmap
      */
-    private Uri getImageUri(Bitmap inImage) {
+    private Uri getImageUri(Bitmap inBitmap) {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-        String path = MediaStore.Images.Media.insertImage(getContentResolver(), inImage, "Title", null);
+        inBitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+        String path = MediaStore.Images.Media.insertImage(getContentResolver(), inBitmap, "Title", null);
         return Uri.parse(path);
     }
 

@@ -19,6 +19,9 @@ import com.mikechoch.prism.R;
 
 public class SplashActivity extends AppCompatActivity {
 
+    /*
+     * Global variables
+     */
     private ImageView iconImageView;
     private Animation rotateAnimation;
 
@@ -27,7 +30,10 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.splash_activity_layout);
 
+        // Initialize all UI elements
         iconImageView = findViewById(R.id.icon_image_view);
+
+        // Setup animation and start animation for iconImageView
         rotateAnimation = AnimationUtils.loadAnimation(this, R.anim.icon_rotate);
         iconImageView.startAnimation(rotateAnimation);
 
@@ -35,7 +41,9 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     /**
-     *
+     * AsyncTask for handling 1000ms delay on animation and then deciding if user is logged in
+     * If logged in already go to MainActivity
+     * Otherwise, go to LoginActivity
      */
     private class IntentLoaderTask extends AsyncTask<Void, Void, Void> {
 
