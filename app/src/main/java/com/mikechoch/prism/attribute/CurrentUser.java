@@ -5,9 +5,11 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
@@ -19,10 +21,12 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.R;
+import com.mikechoch.prism.activity.MainActivity;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.constants.Message;
 import com.mikechoch.prism.fragments.MainContentFragment;
+import com.mikechoch.prism.fragments.ProfileFragment;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,7 +64,7 @@ public class CurrentUser {
 
         CurrentUser.context = context;
 
-        refreshUserLinkedPosts();
+//        refreshUserLinkedPosts();
         getUserProfileDetails();
     }
 
@@ -123,7 +127,6 @@ public class CurrentUser {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     user_uploaded_posts_map.putAll((Map) dataSnapshot.getValue());
-
                     allPostReference.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
@@ -137,6 +140,9 @@ public class CurrentUser {
                                         user_uploaded_posts.add(prismPost);
                                     }
                                 }
+                                if (ProfileFragment.staggeredGridRecyclerView != null) {
+                                    ProfileFragment.staggeredGridRecyclerView.getAdapter().notifyDataSetChanged();
+                                }
                             } else {
                                 Log.wtf(Default.TAG_DB, Message.NO_DATA);
                             }
@@ -147,8 +153,6 @@ public class CurrentUser {
                             Log.e(Default.TAG_DB, Message.FETCH_POST_INFO_FAIL, databaseError.toException());
                         }
                     });
-
-
                 }
             }
 

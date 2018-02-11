@@ -24,7 +24,7 @@ import com.mikechoch.prism.R;
 public class SearchActivity  extends AppCompatActivity {
 
     /*
-     * Globals
+     * Global variables
      */
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
@@ -56,21 +56,44 @@ public class SearchActivity  extends AppCompatActivity {
         sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
 
-        // Setup the toolbar
+        // Initialize all UI elements
         toolbar = findViewById(R.id.toolbar);
-        toolbar.setTitle("");
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
         searchBarEditText = findViewById(R.id.search_bar_edit_text);
-        searchBarEditText.setTypeface(sourceSansProLight);
-        searchBarEditText.requestFocus();
 
+        setupUIElements();
     }
 
     @Override
     public void onBackPressed() {
         finish();
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+    }
+
+    /**
+     * Setup the toolbar and back button to return to MainActivity
+     */
+    private void setupToolbar() {
+        toolbar.setTitle("");
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
+
+    /**
+     *
+     */
+    private void setupSearchBarEditText() {
+        searchBarEditText.requestFocus();
+    }
+
+    /**
+     * Setup all UI elements
+     */
+    private void setupUIElements() {
+        setupToolbar();
+
+        // Setup Typefaces for all text based UI elements
+        searchBarEditText.setTypeface(sourceSansProLight);
+
+        setupSearchBarEditText();
     }
 }

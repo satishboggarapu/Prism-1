@@ -70,29 +70,26 @@ public class MainActivity extends FragmentActivity {
     private StorageReference storageReference;
     private DatabaseReference userReference;
 
-    private CoordinatorLayout mainCoordinateLayout;
-    private TabLayout prismTabLayout;
-    private ViewPager prismViewPager;
-    private FloatingActionButton uploadImageFab;
-    private ImageView imageUploadPreview;
-    private TextView uploadingImageTextView;
-    private ProgressBar imageUploadProgressBar;
-    private RelativeLayout uploadingImageRelativeLayout;
-
+    private float scale;
     private Animation hideFabAnimation;
     private Animation showFabAnimation;
-
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
 
-    private float scale;
+    private CoordinatorLayout mainCoordinateLayout;
+    private TabLayout prismTabLayout;
+    private ViewPager prismViewPager;
+    private ImageView imageUploadPreview;
+    private TextView uploadingImageTextView;
+    private RelativeLayout uploadingImageRelativeLayout;
+    private FloatingActionButton uploadImageFab;
+    private ProgressBar imageUploadProgressBar;
 
     private Uri profilePictureUri;
     private Uri uploadedImageUri;
     private String uploadedImageDescription;
 
 
-    @SuppressLint("NewApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -129,21 +126,17 @@ public class MainActivity extends FragmentActivity {
         sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
 
-        // Initialize all UI elements for Main Activity
+        // Initialize all UI elements
         mainCoordinateLayout = findViewById(R.id.main_coordinate_layout);
         prismTabLayout = findViewById(R.id.prism_tab_layout);
         prismViewPager = findViewById(R.id.prism_view_pager);
         imageUploadPreview = findViewById(R.id.image_upload_preview);
         uploadingImageTextView = findViewById(R.id.uploading_image_text_view);
         uploadingImageRelativeLayout = findViewById(R.id.uploading_image_relative_layout);
-        imageUploadProgressBar = findViewById(R.id.image_upload_progress_bar);
         uploadImageFab = findViewById(R.id.upload_image_fab);
+        imageUploadProgressBar = findViewById(R.id.image_upload_progress_bar);
 
-        // Setup all UI elements
-        setupPrismViewPager();
-        setupPrismTabLayout();
-        setupUploadImageFab();
-
+        setupUIElements();
     }
 
     /**
@@ -173,7 +166,6 @@ public class MainActivity extends FragmentActivity {
             case Default.IMAGE_UPLOAD_INTENT_REQUEST_CODE:
                 if (resultCode == RESULT_OK) {
                     uploadingImageTextView.setText("Uploading image...");
-                    uploadingImageTextView.setTypeface(sourceSansProLight);
                     imageUploadProgressBar.setProgress(0);
                     imageUploadProgressBar.setIndeterminate(false);
                     uploadingImageRelativeLayout.setVisibility(View.VISIBLE);
@@ -184,7 +176,7 @@ public class MainActivity extends FragmentActivity {
                             .asBitmap()
                             .thumbnail(0.05f)
                             .load(uploadedImageUri)
-                            .apply(new RequestOptions().centerCrop())
+                            .apply(new RequestOptions().fitCenter())
                             .into(new BitmapImageViewTarget(imageUploadPreview) {
                                 @Override
                                 protected void setResource(Bitmap resource) {
@@ -206,7 +198,7 @@ public class MainActivity extends FragmentActivity {
                             .asBitmap()
                             .thumbnail(0.05f)
                             .load(profilePictureUri)
-                            .apply(new RequestOptions().centerCrop())
+                            .apply(new RequestOptions().fitCenter())
                             .into(new BitmapImageViewTarget(profilePictureImageView) {
                                 @Override
                                 protected void setResource(Bitmap resource) {
@@ -246,14 +238,17 @@ public class MainActivity extends FragmentActivity {
      * Selected tabs will be a ColorAccent and unselected tabs White
      */
     private void setupPrismTabLayout() {
+        // Setup all TabLayout tab icons
         prismTabLayout.getTabAt(Default.VIEW_PAGER_HOME).setIcon(R.drawable.ic_image_filter_hdr_white_36dp);
 //        prismTabLayout.getTabAt(Default.VIEW_PAGER_TRENDING).setIcon(R.drawable.ic_flash_white_36dp);
         prismTabLayout.getTabAt(Default.VIEW_PAGER_SEARCH - 1).setIcon(R.drawable.ic_magnify_white_36dp);
         prismTabLayout.getTabAt(Default.VIEW_PAGER_NOTIFICATIONS - 1).setIcon(R.drawable.ic_bell_white_36dp);
         prismTabLayout.getTabAt(Default.VIEW_PAGER_PROFILE - 1).setIcon(R.drawable.ic_account_white_36dp);
+
+        // Create the selected and unselected tab icon colors
         int tabUnselectedColor = Color.WHITE;
         int tabSelectedColor = getResources().getColor(R.color.colorAccent);
-
+        // Make first tab selected color and all others unselected
         prismTabLayout.getTabAt(Default.VIEW_PAGER_HOME).getIcon().setColorFilter(
                 tabSelectedColor, PorterDuff.Mode.SRC_IN);
         prismTabLayout.getTabAt(Default.VIEW_PAGER_SEARCH - 1).getIcon().setColorFilter(
@@ -263,9 +258,13 @@ public class MainActivity extends FragmentActivity {
         prismTabLayout.getTabAt(Default.VIEW_PAGER_PROFILE - 1).getIcon().setColorFilter(
                 tabUnselectedColor, PorterDuff.Mode.SRC_IN);
 
+        // Setup the tab selected, unselected, and reselected listener
         prismTabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
+                // Sets the selected tab to the selected color and
+                // If at the HOME tab the uploadImageFab will be shown
+                // Otherwise, the uploadImageFab will be hidden
                 tab.getIcon().setColorFilter(tabSelectedColor, PorterDuff.Mode.SRC_IN);
                 prismViewPager.setCurrentItem(tab.getPosition(), true);
                 if (tab.getPosition() <= Default.VIEW_PAGER_TRENDING - 1 && !uploadImageFab.isShown()) {
@@ -277,13 +276,16 @@ public class MainActivity extends FragmentActivity {
 
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
+                // Set the tab unselected to the unselected color
                 tab.getIcon().setColorFilter(tabUnselectedColor, PorterDuff.Mode.SRC_IN);
             }
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
+                // Switch statement handing reselected tabs
                 int tabPosition = tab.getPosition();
                 switch (tabPosition) {
+                    // HOME tab will bring the user back to the top of the mainContentRecyclerView
                     case 0:
                         RecyclerView mainContentRecyclerView = MainActivity.this
                                 .findViewById(R.id.main_content_recycler_view);
@@ -297,10 +299,16 @@ public class MainActivity extends FragmentActivity {
                             }
                         }
                         break;
+
+                    // SEARCH tab will...
                     case 1:
                         break;
+
+                    // NOTIFICATIONS tab will...
                     case 2:
                         break;
+
+                    // PROFILE tab will bring the user back to the top of the profileScrollView
                     case 3:
                         ScrollView profileScrollView = MainActivity.this.findViewById(R.id.profile_scroll_view);
                         RecyclerView profilePostsRecyclerView = MainActivity.this.findViewById(R.id.user_posts_recycler_view);
@@ -315,8 +323,10 @@ public class MainActivity extends FragmentActivity {
                             }
                         }
                         break;
+
                     case 4:
                         break;
+
                     default:
                         break;
                 }
@@ -334,6 +344,18 @@ public class MainActivity extends FragmentActivity {
                 intentToUploadImageActivity();
             }
         });
+    }
+
+    /**
+     * Setup all UI elements
+     */
+    private void setupUIElements() {
+        // Setup Typefaces for all text based UI elements
+        uploadingImageTextView.setTypeface(sourceSansProLight);
+
+        setupPrismViewPager();
+        setupPrismTabLayout();
+        setupUploadImageFab();
     }
 
     /**
@@ -435,7 +457,6 @@ public class MainActivity extends FragmentActivity {
 
                     // Create the post in cloud and on success, add the image to local recycler view adapter
                     postReference.setValue(prismPost).addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @SuppressLint("NewApi")
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
@@ -444,14 +465,11 @@ public class MainActivity extends FragmentActivity {
                                 uploadingImageTextView.setText("Failed to make the post");
                                 Log.wtf(Default.TAG_DB, Message.POST_UPLOAD_FAIL, task.getException());
                             }
-                            imageUploadProgressBar.setProgress(100, Build.VERSION.SDK_INT >= Build.VERSION_CODES.N);
-                            // TODO: @Mike can we get rid of the runnable below?
-                            new  Handler().postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    uploadingImageRelativeLayout.setVisibility(View.GONE);
-                                }
-                            }, 2000);
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                imageUploadProgressBar.setProgress(100, true);
+                            } else {
+                                imageUploadProgressBar.setProgress(100);
+                            }
                         }
                     });
                 } else {
@@ -462,14 +480,17 @@ public class MainActivity extends FragmentActivity {
 
             }
         }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-            @SuppressLint("NewApi")
             @Override
             public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
                 MainActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         int progress = (int) ((taskSnapshot.getBytesTransferred() * 100) / taskSnapshot.getTotalByteCount());
-                        imageUploadProgressBar.setProgress(progress, Build.VERSION.SDK_INT >= Build.VERSION_CODES.N);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            imageUploadProgressBar.setProgress(progress, true);
+                        } else {
+                            imageUploadProgressBar.setProgress(progress);
+                        }
                     }
                 });
             }
@@ -482,6 +503,7 @@ public class MainActivity extends FragmentActivity {
      * @param prismPost
      */
     private void updateLocalRecyclerViewWithNewPost(PrismPost prismPost) {
+        uploadingImageTextView.setText("Finishing up...");
         prismPost.setPrismUser(CurrentUser.prismUser);
         RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
         LinearLayoutManager layoutManager  = (LinearLayoutManager) mainContentRecyclerView.getLayoutManager();
@@ -496,7 +518,6 @@ public class MainActivity extends FragmentActivity {
                 mainContentRecyclerView.scrollToPosition(0);
             }
         }
-        uploadingImageTextView.setText("Finishing up...");
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {

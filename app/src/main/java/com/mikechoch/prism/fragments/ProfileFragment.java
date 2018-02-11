@@ -1,6 +1,5 @@
 package com.mikechoch.prism.fragments;
 
-import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -42,20 +41,28 @@ import java.util.ArrayList;
 
 public class ProfileFragment extends Fragment {
 
+    /*
+     * Global variables
+     */
     private FirebaseAuth auth;
     private DatabaseReference userReference;
 
-    private ImageView userProfilePicImageView;
-    private TextView userUsernameTextView;
-    private TextView userFullNameTextView;
-    private RecyclerView staggeredGridRecyclerView;
-    private Button logoutButton;
-
+    private float scale;
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
-
-    private float scale;
     private String[] setProfilePicStrings = {"Choose from gallery", "Take a selfie"};
+
+    private ImageView userProfilePicImageView;
+    private TextView followersCountTextView;
+    private TextView followersLabelTextView;
+    private TextView postsCountTextView;
+    private TextView postsLabelTextView;
+    private TextView followingCountTextView;
+    private TextView followingLabelTextView;
+    private TextView userUsernameTextView;
+    private TextView userFullNameTextView;
+    public static RecyclerView staggeredGridRecyclerView;
+    private Button logoutButton;
 
 
     public static final ProfileFragment newInstance(int title, String message) {
@@ -74,25 +81,58 @@ public class ProfileFragment extends Fragment {
         int title = getArguments().getInt("Title");
         String message = getArguments().getString("Extra_Message");
 
-        scale = this.getResources().getDisplayMetrics().density;
-
         auth = FirebaseAuth.getInstance();
         userReference = Default.USERS_REFERENCE.child(auth.getCurrentUser().getUid());
 
+        scale = this.getResources().getDisplayMetrics().density;
+
         sourceSansProLight = Typeface.createFromAsset(getContext().getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getContext().getAssets(), "fonts/SourceSansPro-Black.ttf");
-
     }
 
-    @SuppressLint("NewApi")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.profile_fragment_layout, container, false);
 
+        // Initialize all UI elements
         userProfilePicImageView = view.findViewById(R.id.profile_frag_profile_picture_image_view);
+        followersCountTextView = view.findViewById(R.id.followers_count_text_view);
+        followersLabelTextView = view.findViewById(R.id.followers_label_text_view);
+        postsCountTextView = view.findViewById(R.id.posts_count_text_view);
+        postsLabelTextView = view.findViewById(R.id.posts_label_text_view);
+        followingCountTextView = view.findViewById(R.id.following_count_text_view);
+        followingLabelTextView = view.findViewById(R.id.following_label_text_view);
+        userUsernameTextView = view.findViewById(R.id.profile_frag_username_text_view);
+        userFullNameTextView = view.findViewById(R.id.profile_frag_full_name_text_view);
+        staggeredGridRecyclerView = view.findViewById(R.id.user_posts_recycler_view);
+        logoutButton = view.findViewById(R.id.logout_button);
+
+        logoutButton.setBackgroundTintList(getResources().getColorStateList(R.color.colorAccent));
+        logoutButton.setTypeface(sourceSansProLight);
+        logoutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                auth.signOut();
+                Intent intent = new Intent(getActivity(), LoginActivity.class);
+                startActivity(intent);
+                getActivity().finish();
+                getActivity().overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+            }
+        });
+
+        setupUIElements();
+
+        return view;
+    }
+
+    /**
+     * Setup the userProfilePicImageView so it is populated with a Default or custom picture
+     * When clicked it will show an AlertDialog of options for changing the picture
+     */
+    private void setupUserProfileUIElements() {
         if (CurrentUser.prismUser != null && CurrentUser.prismUser.getProfilePicture() != null) {
-        ProfilePicture currentUserProfilePic = CurrentUser.prismUser.getProfilePicture();
+            ProfilePicture currentUserProfilePic = CurrentUser.prismUser.getProfilePicture();
             Glide.with(this)
                     .asBitmap()
                     .thumbnail(0.05f)
@@ -115,12 +155,8 @@ public class ProfileFragment extends Fragment {
                             userProfilePicImageView.setImageDrawable(drawable);
                         }
                     });
-            userUsernameTextView = view.findViewById(R.id.profile_frag_username_text_view);
             userUsernameTextView.setText(CurrentUser.prismUser.getUsername());
-            userUsernameTextView.setTypeface(sourceSansProBold);
-            userFullNameTextView = view.findViewById(R.id.profile_frag_full_name_text_view);
             userFullNameTextView.setText(CurrentUser.prismUser.getFullName());
-            userFullNameTextView.setTypeface(sourceSansProLight);
         }
 
         userProfilePicImageView.setOnClickListener(new View.OnClickListener() {
@@ -130,56 +166,11 @@ public class ProfileFragment extends Fragment {
                 setProfilePictureAlertDialog.show();
             }
         });
-
-
-        ArrayList<Drawable> drawableArrayList = new ArrayList<>();
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-
-        staggeredGridRecyclerView = view.findViewById(R.id.user_posts_recycler_view);
-        staggeredGridRecyclerView.setHasFixedSize(true);
-        StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, 1);
-        staggeredGridRecyclerView.setLayoutManager(staggeredGridLayoutManager);
-        StaggeredGridRecyclerViewAdapter staggeredGridRecyclerViewAdapter = new StaggeredGridRecyclerViewAdapter(getActivity(), drawableArrayList);
-        staggeredGridRecyclerView.setAdapter(staggeredGridRecyclerViewAdapter);
-
-        logoutButton = view.findViewById(R.id.logout_button);
-        logoutButton.setBackgroundTintList(getResources().getColorStateList(R.color.colorAccent));
-        logoutButton.setTypeface(sourceSansProLight);
-        logoutButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                auth.signOut();
-                Intent intent = new Intent(getActivity(), LoginActivity.class);
-                startActivity(intent);
-                getActivity().finish();
-                getActivity().overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
-            }
-        });
-
-        return view;
     }
 
     /**
-     *
+     * Create an AlertDialog for when the userProfilePicImageView is clicked
+     * Gives the option to take a picture or select one from gallery
      */
     private AlertDialog createSetProfilePictureAlertDialog() {
         AlertDialog.Builder profilePictureAlertDialog = new AlertDialog.Builder(getActivity());
@@ -203,6 +194,36 @@ public class ProfileFragment extends Fragment {
         });
 
         return profilePictureAlertDialog.create();
+    }
+
+    /**
+     * Create a StaggeredGridLayoutManager and give it a spanCount of 2
+     * Create a StaggeredGridRecyclerViewAdapter
+     * Set the layout manager and adapter of the RecyclerView
+     */
+    private void setupUserPostsRecyclerView() {
+        StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+        staggeredGridRecyclerView.setLayoutManager(staggeredGridLayoutManager);
+        StaggeredGridRecyclerViewAdapter staggeredGridRecyclerViewAdapter = new StaggeredGridRecyclerViewAdapter(getActivity(), CurrentUser.user_uploaded_posts);
+        staggeredGridRecyclerView.setAdapter(staggeredGridRecyclerViewAdapter);
+    }
+
+    /**
+     * Setup all UI elements
+     */
+    private void setupUIElements() {
+        // Setup Typefaces for all text based UI elements
+        followersCountTextView.setTypeface(sourceSansProBold);
+        followersLabelTextView.setTypeface(sourceSansProLight);
+        postsCountTextView.setTypeface(sourceSansProBold);
+        postsLabelTextView.setTypeface(sourceSansProLight);
+        followingCountTextView.setTypeface(sourceSansProBold);
+        followingLabelTextView.setTypeface(sourceSansProLight);
+        userUsernameTextView.setTypeface(sourceSansProBold);
+        userFullNameTextView.setTypeface(sourceSansProLight);
+
+        setupUserProfileUIElements();
+        setupUserPostsRecyclerView();
     }
 
 }

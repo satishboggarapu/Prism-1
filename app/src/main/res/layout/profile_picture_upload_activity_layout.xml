@@ -57,34 +57,20 @@
         android:layout_height="match_parent"
         android:layout_marginTop="80dp">
 
-        <android.support.v7.widget.CardView
+        <Button
             android:id="@+id/save_profile_button_card_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
             android:layout_marginBottom="16dp"
             android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp"
-            app:cardBackgroundColor="@color/colorAccent">
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:id="@+id/save_profile_button_text_view"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="8dp"
-                    android:text="SAVE"
-                    android:textSize="18dp"
-                    android:textColor="@android:color/white"
-                    android:textAlignment="center" />
-
-            </RelativeLayout>
-
-        </android.support.v7.widget.CardView>
+            android:padding="10dp"
+            android:text="SAVE"
+            android:textSize="18sp"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/colorAccent"/>
 
         <ProgressBar
             android:id="@+id/upload_profile_picture_progress_bar"
@@ -92,7 +78,7 @@
             android:layout_height="60dp"
             android:layout_centerHorizontal="true"
             android:layout_alignParentBottom="true"
-            android:layout_marginBottom="8dp"
+            android:layout_marginBottom="16dp"
             android:visibility="invisible"
             android:indeterminate="true"
             android:indeterminateDrawable="@drawable/circle_progress_foreground" />

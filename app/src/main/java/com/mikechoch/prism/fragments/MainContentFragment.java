@@ -1,6 +1,5 @@
 package com.mikechoch.prism.fragments;
 
-import android.annotation.SuppressLint;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -63,6 +62,7 @@ public class MainContentFragment extends Fragment {
     private int screenHeight;
     private boolean isLoading = false;
 
+
     public static final MainContentFragment newInstance(int title, String message) {
         MainContentFragment mainContentFragment = new MainContentFragment();
         Bundle bundle = new Bundle(2);
@@ -93,8 +93,6 @@ public class MainContentFragment extends Fragment {
         refreshData();
     }
 
-
-    @SuppressLint("NewApi")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -238,7 +236,7 @@ public class MainContentFragment extends Fragment {
      */
     private void fetchOldData() {
         long lastPostTimestamp = prismPostArrayList.get(prismPostArrayList.size() - 1).getTimestamp();
-        toast("Fetching more pics");
+        //toast("Fetching more pics");
         databaseReferenceAllPosts
                 .orderByChild(Key.POST_TIMESTAMP)
                 .startAt(lastPostTimestamp + 1)

@@ -15,7 +15,12 @@ import com.mikechoch.prism.fragments.SearchFragment;
  */
 
 public class ViewPagerAdapter extends FragmentStatePagerAdapter {
+
+    /*
+     * Global variables
+     */
     private int NUM_ITEMS = Default.VIEW_PAGER_SIZE;
+
 
     public ViewPagerAdapter(FragmentManager fragmentManager) {
         super(fragmentManager);

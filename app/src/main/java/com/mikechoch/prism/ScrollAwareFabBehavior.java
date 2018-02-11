@@ -7,8 +7,11 @@ import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 import android.view.View;
 
-// DO NOT, I REPEAT, DO NOT DELETE THIS FILE    //
-// THIS IS NOT USELESS, IT GOES INTO SOME XML   //
+/*
+DO NOT, I REPEAT, DO NOT DELETE THIS FILE
+THIS IS NOT USELESS, ITS USED IN main_activity_layout.xml FOR uploadImageFab
+HIDES THE uploadImageFab WHEN SCROLLING
+*/
 
 public class ScrollAwareFabBehavior extends FloatingActionButton.Behavior {
 

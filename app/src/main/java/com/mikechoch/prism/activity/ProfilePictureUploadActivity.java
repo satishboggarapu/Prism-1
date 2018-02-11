@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -17,6 +18,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -47,15 +49,13 @@ public class ProfilePictureUploadActivity extends AppCompatActivity {
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
 
-    private Uri imageUri;
-    private CropImageView uploadedProfileImageView;
-    private TextView uploadProfileTitle;
-    private TextView saveButtonTextView;
-    private CardView saveButton;
     private Toolbar toolbar;
     private TextView toolbarTextView;
+    private CropImageView uploadedProfileImageView;
+    private Button saveButton;
     private ProgressBar uploadProfilePictureProgressBar;
 
+    private Uri imageUri;
     private String imagePath;
 
 
@@ -79,7 +79,6 @@ public class ProfilePictureUploadActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressLint("NewApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,43 +88,14 @@ public class ProfilePictureUploadActivity extends AppCompatActivity {
         sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
 
-        // Setup the toolbar and back button to return to MainActivity
+        // Initialize all UI elements
         toolbar = findViewById(R.id.toolbar);
         toolbarTextView = findViewById(R.id.toolbar_text_view);
-        toolbarTextView.setTypeface(sourceSansProLight);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
+        uploadedProfileImageView = findViewById(R.id.uploaded_profile_crop_image_view);
+        saveButton = findViewById(R.id.save_profile_button_card_view);
         uploadProfilePictureProgressBar = findViewById(R.id.upload_profile_picture_progress_bar);
 
-        // Initialize text related UI elements and assign typefaces
-        saveButtonTextView = findViewById(R.id.save_profile_button_text_view);
-        saveButtonTextView.setTypeface(sourceSansProLight);
-
-        uploadedProfileImageView = findViewById(R.id.uploaded_profile_crop_image_view);
-        uploadedProfileImageView.setForeground(getResources().getDrawable(R.drawable.image_upload_selector));
-        uploadedProfileImageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                selectImageFromGallery();
-            }
-        });
-
-        // Initialize the saveButton and setup onClickListener
-        saveButton = findViewById(R.id.save_profile_button_card_view);
-        saveButton.setForeground(getResources().getDrawable(R.drawable.image_upload_selector));
-        saveButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                /*
-                 * When the saveButton is clicked, a new Intent is created
-                 * This passes the uploaded image data (image and description) back to ProfileFragment
-                 * Then ProfilePictureUploadActivity is finished
-                 */
-
-                new ImageUploadTask().execute();
-            }
-        });
+        setupUIElements();
 
         selectImageFromGallery();
     }
@@ -134,6 +104,63 @@ public class ProfilePictureUploadActivity extends AppCompatActivity {
     public void onBackPressed() {
         finish();
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+    }
+
+    /**
+     * Setup the toolbar and back button to return to MainActivity
+     */
+    private void setupToolbar() {
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
+
+    /**
+     * When the ImageView holding the cropped image is clicked, Gallery is opened
+     * Select a new image to crop for profile picture
+     */
+    private void setupUploadedProfileImageView() {
+        uploadedProfileImageView.setForeground(getResources().getDrawable(R.drawable.image_upload_selector));
+        uploadedProfileImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                selectImageFromGallery();
+            }
+        });
+    }
+
+    /**
+     * Setup saveButton, so once an image is selected and cropped it will return the Profile
+     * The cropped image will be stored in the cloud under the user and replaced in the app UIs
+     */
+    private void setupSaveButton() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            saveButton.setForeground(getResources().getDrawable(R.drawable.image_upload_selector));
+        }
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                /*
+                 * When the saveButton is clicked, a new Intent is created
+                 * This passes the uploaded image data (image and description) back to ProfileFragment
+                 * Then ProfilePictureUploadActivity is finished
+                 */
+                new ImageUploadTask().execute();
+            }
+        });
+    }
+
+    /**
+     * Setup all UI elements
+     */
+    private void setupUIElements() {
+        setupToolbar();
+
+        // Setup Typefaces for all text based UI elements
+        toolbarTextView.setTypeface(sourceSansProLight);
+        saveButton.setTypeface(sourceSansProLight);
+
+        setupUploadedProfileImageView();
+        setupSaveButton();
     }
 
     /**

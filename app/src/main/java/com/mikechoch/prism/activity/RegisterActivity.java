@@ -51,6 +51,11 @@ public class RegisterActivity extends AppCompatActivity {
     private FirebaseAuth.AuthStateListener authStateListener;
     private DatabaseReference usersDatabaseRef;
 
+    private Typeface sourceSansProLight;
+    private Typeface sourceSansProBold;
+    private int screenWidth;
+    private int screenHeight;
+
     private ImageView iconImageView;
     private TextInputLayout fullNameTextInputLayout;
     private EditText fullNameEditText;
@@ -63,11 +68,6 @@ public class RegisterActivity extends AppCompatActivity {
     private Button registerButton;
     private TextView goToLoginButton;
     private ProgressBar registerProgressBar;
-
-    private Typeface sourceSansProLight;
-    private Typeface sourceSansProBold;
-
-    private Uri defaultProfilePic;
 
 
     @Override
@@ -84,10 +84,10 @@ public class RegisterActivity extends AppCompatActivity {
         sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
 
         // Get the screen width and height of the current phone
-        int screenHeight = getWindowManager().getDefaultDisplay().getHeight();
-        int screenWidth = getWindowManager().getDefaultDisplay().getWidth();
+        screenHeight = getWindowManager().getDefaultDisplay().getHeight();
+        screenWidth = getWindowManager().getDefaultDisplay().getWidth();
 
-        // Initialize all UI elements for Register Activity
+        // Initialize all UI elements
         iconImageView = findViewById(R.id.icon_image_view);
         fullNameTextInputLayout = findViewById(R.id.register_name_text_input_layout);
         fullNameEditText = findViewById(R.id.register_name_edit_text);
@@ -101,18 +101,7 @@ public class RegisterActivity extends AppCompatActivity {
         goToLoginButton = findViewById(R.id.login_text_view);
         registerProgressBar = findViewById(R.id.register_progress_bar);
 
-        // Setup the image view at the top of the Register screen
-        // 30% of the screen will be the width and margin the image top by 1/16th of the height
-        iconImageView.getLayoutParams().width = (int) (screenWidth * 0.3);
-
-        // Setup all UI elements
-        setupFullNameEditText();
-        setupUsernameEditText();
-        setupEmailEditText();
-        setupPasswordEditText();
-        setupRegisterButton();
-        setupLoginButton();
-
+        setupUIElements();
     }
 
     @Override
@@ -121,11 +110,17 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     /**
+     * Setup the image view at the top of the Register screen
+     * 30% of the screen will be the width and margin the image top by 1/16th of the height
+     */
+    private void setupIconImageView() {
+        iconImageView.getLayoutParams().width = (int) (screenWidth * 0.3);
+    }
+
+    /**
      * FullName EditTextLayout Typefaces are set and TextWatcher is setup for error handling
      */
     private void setupFullNameEditText() {
-        fullNameTextInputLayout.setTypeface(sourceSansProLight);
-        fullNameEditText.setTypeface(sourceSansProLight);
         fullNameEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
@@ -151,9 +146,6 @@ public class RegisterActivity extends AppCompatActivity {
      * Username EditTextLayout Typefaces are set and TextWatcher is setup for error handling
      */
     private void setupUsernameEditText() {
-        usernameTextInputLayout.setTypeface(sourceSansProLight);
-
-        usernameEditText.setTypeface(sourceSansProLight);
         usernameEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
@@ -181,8 +173,6 @@ public class RegisterActivity extends AppCompatActivity {
      * Email EditTextLayout Typefaces are set and TextWatcher is setup for error handling
      */
     private void setupEmailEditText() {
-        emailTextInputLayout.setTypeface(sourceSansProLight);
-        emailEditText.setTypeface(sourceSansProLight);
         emailEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
@@ -208,10 +198,8 @@ public class RegisterActivity extends AppCompatActivity {
      * Password EditTextLayout Typefaces are set and TextWatcher is setup for error handling
      */
     private void setupPasswordEditText() {
-        passwordTextInputLayout.setTypeface(sourceSansProLight);
         passwordTextInputLayout.setPasswordVisibilityToggleEnabled(true);
         passwordTextInputLayout.getPasswordVisibilityToggleDrawable().setTint(Color.WHITE);
-        passwordEditText.setTypeface(sourceSansProLight);
         passwordEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
@@ -247,7 +235,6 @@ public class RegisterActivity extends AppCompatActivity {
      * When clicked, an attempt to create the account with the entered credentials
      */
     private void setupRegisterButton() {
-        registerButton.setTypeface(sourceSansProLight);
         registerButton.setBackgroundTintList(getResources().getColorStateList(R.color.colorAccent));
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -325,6 +312,32 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     /**
+     * Setup all UI elements
+     */
+    private void setupUIElements() {
+        // Setup Typefaces for all text based UI elements
+        fullNameTextInputLayout.setTypeface(sourceSansProLight);
+        fullNameEditText.setTypeface(sourceSansProLight);
+        usernameTextInputLayout.setTypeface(sourceSansProLight);
+        usernameEditText.setTypeface(sourceSansProLight);
+        emailTextInputLayout.setTypeface(sourceSansProLight);
+        emailEditText.setTypeface(sourceSansProLight);
+        passwordTextInputLayout.setTypeface(sourceSansProLight);
+        passwordEditText.setTypeface(sourceSansProLight);
+        registerButton.setTypeface(sourceSansProLight);
+        goToLoginButton.setTypeface(sourceSansProLight);
+
+        setupIconImageView();
+        setupFullNameEditText();
+        setupUsernameEditText();
+        setupEmailEditText();
+        setupPasswordEditText();
+        setupRegisterButton();
+        setupLoginButton();
+
+    }
+
+    /**
      * Intent to Main Activity from Register Activity
      */
     private void intentToMainActivity() {
@@ -337,7 +350,6 @@ public class RegisterActivity extends AppCompatActivity {
      * Setup the button to take you back to Login Activity
      */
     private void setupLoginButton() {
-        goToLoginButton.setTypeface(sourceSansProLight);
         goToLoginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

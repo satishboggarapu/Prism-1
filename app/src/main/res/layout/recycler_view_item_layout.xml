@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="14dp"
@@ -67,8 +66,7 @@
             android:id="@+id/recycler_view_image_image_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_alignParentBottom="true"
+            android:layout_centerInParent="true"
             android:adjustViewBounds="true" />
 
         <ImageView
@@ -104,67 +102,76 @@
 
     </RelativeLayout>
 
-    <TableRow
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
         android:layout_below="@id/image_relative_layout"
-        android:layout_marginTop="14dp"
-        android:gravity="center"
-        android:clipChildren="false"
-        android:clipToPadding="false">
+        android:layout_marginTop="14dp">
+
+        <TableRow
+            android:id="@+id/action_button_table_row"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:gravity="center"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <ImageView
+                android:id="@+id/image_like_button"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:clipChildren="false"
+                android:clipToPadding="false"/>
+
+            <ImageView
+                android:id="@+id/image_repost_button"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/ic_camera_iris_black_36dp"
+                android:clipChildren="false"
+                android:clipToPadding="false"/>
+
+            <ImageView
+                android:id="@+id/image_more_button"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/ic_dots_vertical_black_36dp"
+                android:tint="@android:color/white"
+                android:clipChildren="false"
+                android:clipToPadding="false"/>
+
+        </TableRow>
 
         <TextView
             android:id="@+id/likes_count_text_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="12dp"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@id/action_button_table_row"
+            android:layout_marginEnd="14dp"
             android:textSize="16sp"
             android:textColor="@android:color/white"
             android:textAlignment="textStart"/>
-
-        <ImageView
-            android:id="@+id/image_like_button"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:clipChildren="false"
-            android:clipToPadding="false"/>
-
-        <ImageView
-            android:id="@+id/image_repost_button"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:src="@drawable/ic_camera_iris_black_36dp"
-            android:clipChildren="false"
-            android:clipToPadding="false"/>
-
-        <ImageView
-            android:id="@+id/image_more_button"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:src="@drawable/ic_dots_vertical_black_36dp"
-            android:tint="@android:color/white"
-            android:clipChildren="false"
-            android:clipToPadding="false"/>
 
         <TextView
             android:id="@+id/shares_count_text_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="8dp"
+            android:layout_centerVertical="true"
+            android:layout_toEndOf="@id/action_button_table_row"
+            android:layout_marginStart="6dp"
             android:textSize="16sp"
             android:textColor="@android:color/white"
             android:textAlignment="textStart"/>
 
-    </TableRow>
+    </RelativeLayout>
 
 </RelativeLayout>
