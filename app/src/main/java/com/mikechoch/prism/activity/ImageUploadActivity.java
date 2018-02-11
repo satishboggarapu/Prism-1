@@ -155,8 +155,12 @@ public class ImageUploadActivity extends AppCompatActivity {
                 setResult(RESULT_OK, data);
                 finish();
                 overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+
             }
         });
+
+        // Ask firebaseUser to select an image to upload from phone gallery
+        selectImageFromGallery();
     }
 
     /**
@@ -176,7 +180,7 @@ public class ImageUploadActivity extends AppCompatActivity {
     }
 
     /**
-     * Create an Intent to ask user to select a image they would like to upload
+     * Create an Intent to ask firebaseUser to select a image they would like to upload
      */
     private void selectImageFromGallery() {
         Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT);

@@ -23,22 +23,18 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-import com.mikechoch.prism.CurrentUser;
-import com.mikechoch.prism.PrismUser;
-import com.mikechoch.prism.ProfilePicture;
+import com.mikechoch.prism.attribute.CurrentUser;
+import com.mikechoch.prism.attribute.PrismUser;
+import com.mikechoch.prism.attribute.ProfilePicture;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
-import com.mikechoch.prism.PrismPost;
+import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.adapter.PrismPostRecyclerViewAdapter;
 import com.mikechoch.prism.constants.Message;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
-/**
- * Created by mikechoch on 1/22/18.
- */
 
 public class MainContentFragment extends Fragment {
 
@@ -48,8 +44,7 @@ public class MainContentFragment extends Fragment {
     private DatabaseReference databaseReferenceAllPosts;
     private DatabaseReference usersReference;
 
-    public static ArrayList<String> dateOrderedPrismPostKeys;
-    public static HashMap<String, PrismPost> prismPostHashMap;
+    public static ArrayList<PrismPost> prismPostArrayList;
 
     private RelativeLayout noMainPostsRelativeLayout;
     private TextView noMainPostsTextView;
@@ -91,8 +86,7 @@ public class MainContentFragment extends Fragment {
         sourceSansProLight = Typeface.createFromAsset(getActivity().getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getActivity().getAssets(), "fonts/SourceSansPro-Black.ttf");
 
-        dateOrderedPrismPostKeys = new ArrayList<>();
-        prismPostHashMap = new HashMap<>();
+        prismPostArrayList = new ArrayList<>();
 
         databaseReferenceAllPosts = Default.ALL_POSTS_REFERENCE;
         usersReference = Default.USERS_REFERENCE;
@@ -112,7 +106,7 @@ public class MainContentFragment extends Fragment {
         /*
          * The main purpose of this MainContentFragment is to be a Home page of the application
          * The RecyclerView being created below will show all of the most recent posts
-         * The posts shown will be of people the user follows
+         * The posts shown will be of people the firebaseUser follows
          */
         mainContentRecyclerView = view.findViewById(R.id.main_content_recycler_view);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
@@ -159,7 +153,7 @@ public class MainContentFragment extends Fragment {
             }
         });
 
-        mainContentRecyclerViewAdapter = new PrismPostRecyclerViewAdapter(getContext(), dateOrderedPrismPostKeys, prismPostHashMap, new int[]{screenWidth, screenHeight});
+        mainContentRecyclerViewAdapter = new PrismPostRecyclerViewAdapter(getContext(), prismPostArrayList, new int[]{screenWidth, screenHeight});
         mainContentRecyclerView.setAdapter(mainContentRecyclerViewAdapter);
 
         /*
@@ -202,8 +196,8 @@ public class MainContentFragment extends Fragment {
                  * Iterate through the DataSnapshot and add all new data to the data structures
                  * Notify RecyclerView after items are added to data structures
                  */
-                dateOrderedPrismPostKeys.clear();
-                prismPostHashMap.clear();
+
+                prismPostArrayList.clear();
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -213,12 +207,8 @@ public class MainContentFragment extends Fragment {
 
                 if (dataSnapshot.exists()) {
                     for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                        String postKey = postSnapshot.getKey();
-                        if (!dateOrderedPrismPostKeys.contains(postKey)) {
-                            PrismPost prismPost = getPrismPostObject(postSnapshot);
-                            dateOrderedPrismPostKeys.add(postKey);
-                            prismPostHashMap.put(postKey, prismPost);
-                        }
+                        PrismPost prismPost = constructPrismPostObject(postSnapshot);
+                        prismPostArrayList.add(prismPost);
                     }
                     noMainPostsRelativeLayout.setVisibility(View.GONE);
                     populateUserDetailsForAllPosts(true);
@@ -239,38 +229,35 @@ public class MainContentFragment extends Fragment {
 
 
     /**
-     *  Pulls more data (for ALL_POSTS) from cloud, typically when user is about to
+     *  Pulls more data (for ALL_POSTS) from cloud, typically when firebaseUser is about to
      *  reach the end of the list. It first gets the timestamp of the last post in
      *  the list and then queries more images starting from that last timestamp and
      *  appends them back to the end of the arrayList and the HashMap
      */
     private void fetchOldData() {
-        String lastPostId = dateOrderedPrismPostKeys.get(dateOrderedPrismPostKeys.size() - 1);
-        long lastPostTimestamp = prismPostHashMap.get(lastPostId).getTimestamp();
+        long lastPostTimestamp = prismPostArrayList.get(prismPostArrayList.size() - 1).getTimestamp();
+        //toast("Fetching more pics");
         databaseReferenceAllPosts
                 .orderByChild(Key.POST_TIMESTAMP)
-                .startAt(lastPostTimestamp)
+                .startAt(lastPostTimestamp + 1)
                 .limitToFirst(Default.IMAGE_LOAD_COUNT)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if (dataSnapshot.exists()) {
                             for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                                String postKey = postSnapshot.getKey();
-                                if (!dateOrderedPrismPostKeys.contains(postKey)) {
-                                    PrismPost prismPost = getPrismPostObject(postSnapshot);
-                                    dateOrderedPrismPostKeys.add(postKey);
-                                    prismPostHashMap.put(postKey, prismPost);
-                                    getActivity().runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            if (dateOrderedPrismPostKeys.size() > 0) {
-                                                mainContentRecyclerViewAdapter
-                                                        .notifyItemInserted(dateOrderedPrismPostKeys.size());
-                                            }
+                                PrismPost prismPost = constructPrismPostObject(postSnapshot);
+                                prismPostArrayList.add(prismPost);
+                                getActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (prismPostArrayList.size() > 0) {
+                                            mainContentRecyclerViewAdapter
+                                                    .notifyItemInserted(prismPostArrayList.size());
                                         }
-                                    });
-                                }
+                                    }
+                                });
+
                             }
                             populateUserDetailsForAllPosts(false);
                         } else {
@@ -289,7 +276,7 @@ public class MainContentFragment extends Fragment {
      * Takes in a dataSnapshot object and parses its contents
      * and returns a prismPost object
      */
-    private PrismPost getPrismPostObject(DataSnapshot postSnapshot) {
+    public static PrismPost constructPrismPostObject(DataSnapshot postSnapshot) {
         PrismPost prismPost = postSnapshot.getValue(PrismPost.class);
         prismPost.setLikes((int) postSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount());
         prismPost.setReposts((int) postSnapshot.child(Key.DB_REF_POST_REPOSTED_USERS).getChildrenCount());
@@ -298,7 +285,7 @@ public class MainContentFragment extends Fragment {
 
     /**
      * Once all posts are loaded into the prismPostHashMap,
-     * this method iterates over each post, grabs user's details
+     * this method iterates over each post, grabs firebaseUser's details
      * for the post like "profilePicUriString" and "username" and
      * updates the prismPost objects in that hashMap and then
      * updates the RecyclerViewAdapter so the UI gets updated
@@ -308,13 +295,10 @@ public class MainContentFragment extends Fragment {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    for (String postId: dateOrderedPrismPostKeys) {
-                        PrismPost post = prismPostHashMap.get(postId);
+                    for (PrismPost post : prismPostArrayList) {
                         DataSnapshot userSnapshot = dataSnapshot.child(post.getUid());
                         PrismUser prismUser = constructPrismUser(userSnapshot);
                         post.setPrismUser(prismUser);
-
-                        prismPostHashMap.put(postId, post);
                     }
                     mainContentSwipeRefreshLayout.setRefreshing(false);
 
@@ -330,13 +314,13 @@ public class MainContentFragment extends Fragment {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Log.e(Default.TAG_DB, databaseError.getMessage(), databaseError.toException());
+                Log.e(Default.TAG_DB, Message.FETCH_USER_DETAILS_FAIL, databaseError.toException());
             }
         });
     }
 
     /**
-     * Takes in userSnapshot object and parses the user details
+     * Takes in userSnapshot object and parses the firebaseUser details
      * and creates a prismUser object
      * @return PrismUser object
      */

@@ -1,4 +1,4 @@
-package com.mikechoch.prism;
+package com.mikechoch.prism.attribute;
 
 import android.net.Uri;
 
@@ -16,7 +16,6 @@ public class ProfilePicture {
 
     public ProfilePicture(String profilePicUriString) {
         this.profilePicUriString = profilePicUriString;
-        // TODO: @Parth null check for users with no profile picture
         isDefault = Character.isDigit(profilePicUriString.charAt(0));
         hiResUri = getHiResProfilePicUri();
         lowResUri = getLowResProfilePicUri();

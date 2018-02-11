@@ -9,7 +9,9 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.mikechoch.prism.R;
+import com.mikechoch.prism.attribute.PrismPost;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,13 +26,13 @@ public class StaggeredGridRecyclerViewAdapter extends RecyclerView.Adapter<Stagg
     /*
      * Global variables
      */
-    private int[] heights = {150, 200, 250, 300, 350, 400};
-    private List<Drawable> prismPostsArrayList;
     private Context context;
+    private List<PrismPost> prismPostsArrayList;
 
-    public StaggeredGridRecyclerViewAdapter(Context context, ArrayList<Drawable> prismPostsArrayList) {
-        this.prismPostsArrayList = prismPostsArrayList;
+
+    public StaggeredGridRecyclerViewAdapter(Context context, ArrayList<PrismPost> prismPostsArrayList) {
         this.context = context;
+        this.prismPostsArrayList = prismPostsArrayList;
     }
 
     @Override
@@ -52,23 +54,39 @@ public class StaggeredGridRecyclerViewAdapter extends RecyclerView.Adapter<Stagg
 
         private ImageView userPostImageView;
 
+        private PrismPost prismPost;
+
+
         public ViewHolder(View itemView) {
             super(itemView);
-
             userPostImageView = itemView.findViewById(R.id.user_post_image_view);
-
         }
 
-        public void setData(Drawable drawable) {
+        /**
+         * Set data for the ViewHolder UI elements
+         */
+        public void setData(PrismPost prismPost) {
+            this.prismPost = prismPost;
+            populateUIElements();
+        }
+
+        /**
+         * Setup userPostImageView
+         * Populate userPostImageView using Glide with the specific post image
+         */
+        private void setupPostImageView() {
             Glide.with(context)
                     .asBitmap()
-                    .load(drawable)
+                    .load(prismPost.getImage())
+                    .apply(new RequestOptions().fitCenter())
                     .into(userPostImageView);
+        }
 
-            int rand = new Random().nextInt(4);
-            System.out.println(rand);
-            userPostImageView.getLayoutParams().height = (int) (heights[rand] * context.getResources().getDisplayMetrics().density);
-
+        /**
+         * Populate all UI elements with data
+         */
+        private void populateUIElements() {
+            setupPostImageView();
         }
     }
 }

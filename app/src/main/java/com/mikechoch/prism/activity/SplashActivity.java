@@ -10,7 +10,6 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.mikechoch.prism.CurrentUser;
 import com.mikechoch.prism.R;
 
 /**

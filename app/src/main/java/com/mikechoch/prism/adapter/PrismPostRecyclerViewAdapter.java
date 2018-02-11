@@ -45,18 +45,17 @@ import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.mikechoch.prism.AnimationBounceInterpolator;
-import com.mikechoch.prism.CurrentUser;
-import com.mikechoch.prism.PrismPost;
+import com.mikechoch.prism.helper.AnimationBounceInterpolator;
+import com.mikechoch.prism.attribute.CurrentUser;
+import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.activity.LikeRepostActivity;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
-import com.mikechoch.prism.helper.MyTimeUnit;
+import com.mikechoch.prism.constants.MyTimeUnit;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
@@ -74,8 +73,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
     private Context context;
     private PrismPost prismPost;
-    private ArrayList<String> prismPostKeys;
-    private HashMap<String, PrismPost> prismPostHashMap;
+    private ArrayList<PrismPost> prismPostArrayList;
 
     private float scale;
     private Typeface sourceSansProLight;
@@ -86,10 +84,11 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
     private String[] morePostOptions = {"Report post", "Share"};
 
 
-    public PrismPostRecyclerViewAdapter(Context context, ArrayList<String> prismPostKeys, HashMap<String, PrismPost> prismPostHashMap, int[] screenDimens) {
+    public PrismPostRecyclerViewAdapter(Context context, ArrayList<PrismPost> prismPostArrayList, int[] screenDimens) {
         this.context = context;
-        this.prismPostKeys = prismPostKeys;
-        this.prismPostHashMap = prismPostHashMap;
+        this.prismPostArrayList = prismPostArrayList;
+        this.screenWidth = screenDimens[0];
+        this.screenHeight = screenDimens[1];
 
         this.scale = context.getResources().getDisplayMetrics().density;
         this.sourceSansProLight = Typeface.createFromAsset(context.getAssets(), "fonts/SourceSansPro-Light.ttf");
@@ -117,12 +116,12 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.setData(prismPostHashMap.get(prismPostKeys.get(position)));
+        holder.setData(prismPostArrayList.get(position));
     }
 
     @Override
     public int getItemCount() {
-        return prismPostHashMap.size();
+        return prismPostArrayList.size();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -140,7 +139,6 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         private Animation moreButtonBounceAnimation;
         private AnimationBounceInterpolator interpolator;
 
-        private PrismPost prismPost;
         private ImageView userProfilePicImageView;
         private TextView prismUserTextView;
         private TextView prismPostDateTextView;
@@ -154,6 +152,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         private ImageView moreButton;
         private ProgressBar progressBar;
 
+        private PrismPost prismPost;
         private String postId;
         private String postDate;
         private int likeCount;
@@ -316,9 +315,9 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                 @Override
                 public boolean onDoubleTap(MotionEvent e) {
                     System.out.println("Image Double Tapped");
-
                     String postId = prismPost.getPostId();
                     boolean postLiked = !CurrentUser.user_liked_posts.containsKey(postId);
+
                     Drawable heartButtonDrawable = createLikeDrawable(postLiked);
                     likeButton.setImageDrawable(heartButtonDrawable);
                     Drawable heartDrawable = context.getResources().getDrawable(
@@ -414,20 +413,21 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             /*
              * Like action button
              */
-            String likeStringTail = likeCount == 1 ? " like" : " likes";
-            likesCountTextView.setText(likeCount + likeStringTail);
-
             Drawable heartButtonDrawable = createLikeDrawable(postLiked);
             likeButton.setImageDrawable(heartButtonDrawable);
             Drawable heartDrawable = context.getResources().getDrawable(
                     postLiked ?  R.drawable.unlike_heart : R.drawable.like_heart);
             likeHeartAnimationImageView.setImageDrawable(heartDrawable);
 
+            String likeStringTail = likeCount == 1 ? " like" : " likes";
+            likesCountTextView.setText(likeCount + likeStringTail);
+
             likeButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     String postId = prismPost.getPostId();
                     boolean postLiked = !CurrentUser.user_liked_posts.containsKey(postId);
+
                     Drawable heartButtonDrawable = createLikeDrawable(postLiked);
                     likeButton.setImageDrawable(heartButtonDrawable);
                     Drawable heartDrawable = context.getResources().getDrawable(
@@ -458,11 +458,12 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             /*
              * Repost action button
              */
+            ColorStateList repostColor = getRepostColor(postReposted);
+            repostButton.setImageTintList(repostColor);
+
             String repostStringTail = repostCount == 1 ? " repost" : " reposts";
             repostsCountTextView.setText(repostCount + repostStringTail);
 
-            ColorStateList repostColor = getRepostColor(postReposted);
-            repostButton.setImageTintList(repostColor);
             repostButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -506,7 +507,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                     moreButton.startAnimation(moreButtonBounceAnimation);
                     // TODO: Show more menu
                     // TODO: Decide what goes in more
-                    boolean isCurrentUserThePostCreator =  CurrentUser.user.getUid().equals(prismPost.getPrismUser().getUid());
+                    boolean isCurrentUserThePostCreator =  CurrentUser.firebaseUser.getUid().equals(prismPost.getPrismUser().getUid());
                     AlertDialog morePrismPostAlertDialog = createMorePrismPostAlertDialog(isCurrentUserThePostCreator);
                     morePrismPostAlertDialog.show();
                 }
@@ -679,8 +680,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                                 if (task.isSuccessful()) {
                                     String postId = prismPost.getPostId();
                                     allPostsReference.child(postId).removeValue();
-                                    prismPostKeys.remove(postId);
-                                    prismPostHashMap.remove(postId);
+                                    prismPostArrayList.remove(postId);
                                     notifyDataSetChanged();
                                     if (getItemCount() == 0) {
                                         RelativeLayout noMainPostsRelativeLayout = ((Activity) context).findViewById(R.id.no_main_posts_relative_layout);
@@ -704,11 +704,11 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
         /**
          * Check user_liked_posts HashMap if it contains the postId or not. If it contains
-         * the postId, then user has already liked the post and perform UNLIKE operation
-         * If it doesn't exist, user has not liked it yet, and perform LIKE operation
-         * Operation LIKE (performLIKE = true): does 3 things. First it adds the the user's
+         * the postId, then firebaseUser has already liked the post and perform UNLIKE operation
+         * If it doesn't exist, firebaseUser has not liked it yet, and perform LIKE operation
+         * Operation LIKE (performLIKE = true): does 3 things. First it adds the the firebaseUser's
          * uid to the LIKED_USERS table under the post. Then it adds the postId to the
-         * USER_LIKES table under the user. Then it adds the postId and timestamp to the
+         * USER_LIKES table under the firebaseUser. Then it adds the postId and timestamp to the
          * local user_liked_posts HashMap so that recycler view can update
          * Operation UNLIKE (performLike = false): undoes above 3 things
          */
@@ -725,12 +725,12 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                     if (post != null) {
                         if (performLike) {
 
-                            // Add the user to LIKED_USERS list for this post
+                            // Add the firebaseUser to LIKED_USERS list for this post
                             postReference.child(Key.DB_REF_POST_LIKED_USERS)
-                                    .child(CurrentUser.user.getDisplayName())
-                                    .setValue(CurrentUser.user.getUid());
+                                    .child(CurrentUser.firebaseUser.getDisplayName())
+                                    .setValue(CurrentUser.firebaseUser.getUid());
 
-                            // Add postId to user's liked section
+                            // Add postId to firebaseUser's liked section
                             userReference.child(Key.DB_REF_USER_LIKES)
                                     .child(postId).setValue(timestamp);
 
@@ -739,12 +739,12 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
                         } else {
 
-                            // Remove the user from LIKED_USERS list for this post
+                            // Remove the firebaseUser from LIKED_USERS list for this post
                             postReference.child(Key.DB_REF_POST_LIKED_USERS)
-                                    .child(CurrentUser.user.getDisplayName())
+                                    .child(CurrentUser.firebaseUser.getDisplayName())
                                     .removeValue();
 
-                            // Remove postId from user's liked section
+                            // Remove postId from firebaseUser's liked section
                             userReference.child(Key.DB_REF_USER_LIKES)
                                     .child(postId).removeValue();
 
@@ -764,11 +764,11 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
         /**
          * Check user_reposted_posts HashMap if it contains the postId or not. If it contains
-         * the postId, then user has already reposted the post and perform UNREPOST operation
-         * If it doesn't exist, user has not reposted it yet, and perform REPOST operation
-         * Operation REPOST (performRepost = true): does 3 things. First it adds the the user's
+         * the postId, then firebaseUser has already reposted the post and perform UNREPOST operation
+         * If it doesn't exist, firebaseUser has not reposted it yet, and perform REPOST operation
+         * Operation REPOST (performRepost = true): does 3 things. First it adds the the firebaseUser's
          * uid to the REPOSTED_USERS table under the post. Then it adds the postId to the
-         * USER_REPOSTS table under the user. Then it adds the postId and timestamp to the
+         * USER_REPOSTS table under the firebaseUser. Then it adds the postId and timestamp to the
          * local user_reposted_posts HashMap so that recycler view can update
          * Operation UNREPOST (performRepost = false): undoes above 3 things
          */
@@ -785,30 +785,30 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                     if (post != null) {
                         if (performRepost) {
 
-                            // Add postId to user's reposts section
+                            // Add postId to firebaseUser's reposts section
                             userReference.child(Key.DB_REF_USER_REPOSTS)
                                     .child(postId).setValue(timestamp);
 
                             // Add postId and timestamp to user_reposted_posts hashMap
                             CurrentUser.user_reposted_posts.put(postId, timestamp);
 
-                            // Add the user to REPOSTED_USERS list for this post
+                            // Add the firebaseUser to REPOSTED_USERS list for this post
                             postReference.child(Key.DB_REF_POST_REPOSTED_USERS)
-                                    .child(CurrentUser.user.getDisplayName())
-                                    .setValue(CurrentUser.user.getUid());
+                                    .child(CurrentUser.firebaseUser.getDisplayName())
+                                    .setValue(CurrentUser.firebaseUser.getUid());
 
                         } else {
 
-                            // Remove postId from user's reposts section
+                            // Remove postId from firebaseUser's reposts section
                             userReference.child(Key.DB_REF_USER_LIKES)
                                     .child(postId).removeValue();
 
                             // Remove the postId and timestamp from user_reposted_posts hashMap
                             CurrentUser.user_reposted_posts.remove(postId);
 
-                            // Remove the user from REPOSTED_USERS list for this post
+                            // Remove the firebaseUser from REPOSTED_USERS list for this post
                             postReference.child(Key.DB_REF_POST_REPOSTED_USERS)
-                                    .child(CurrentUser.user.getDisplayName())
+                                    .child(CurrentUser.firebaseUser.getDisplayName())
                                     .removeValue();
                         }
                     }

@@ -47,9 +47,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.mikechoch.prism.CurrentUser;
-import com.mikechoch.prism.PrismPost;
-import com.mikechoch.prism.PrismUser;
+import com.mikechoch.prism.attribute.CurrentUser;
+import com.mikechoch.prism.attribute.PrismPost;
+import com.mikechoch.prism.attribute.PrismUser;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.adapter.ViewPagerAdapter;
 import com.mikechoch.prism.constants.Default;
@@ -95,21 +95,21 @@ public class MainActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity_layout);
 
-        // Generates current user's details
+        // Generates current firebaseUser's details
         new CurrentUser(this);
         auth = FirebaseAuth.getInstance();
         storageReference = Default.STORAGE_REFERENCE;
         databaseReference = Default.ALL_POSTS_REFERENCE;
         userReference = Default.USERS_REFERENCE.child(auth.getCurrentUser().getUid());
 
-        // Check if user is logged in
+        // Check if firebaseUser is logged in
         // Otherwise intent to LoginActivity
         auth = FirebaseAuth.getInstance();
         if (auth.getCurrentUser() == null) {
             intentToLoginActivity();
         }
 
-        // Ask user for write permissions to external storage
+        // Ask firebaseUser for write permissions to external storage
         int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, Default.MY_PERMISSIONS_REQUEST_READ_MEDIA);
@@ -176,7 +176,7 @@ public class MainActivity extends FragmentActivity {
                             .asBitmap()
                             .thumbnail(0.05f)
                             .load(uploadedImageUri)
-                            .apply(new RequestOptions().centerCrop())
+                            .apply(new RequestOptions().fitCenter())
                             .into(new BitmapImageViewTarget(imageUploadPreview) {
                                 @Override
                                 protected void setResource(Bitmap resource) {
@@ -198,7 +198,7 @@ public class MainActivity extends FragmentActivity {
                             .asBitmap()
                             .thumbnail(0.05f)
                             .load(profilePictureUri)
-                            .apply(new RequestOptions().centerCrop())
+                            .apply(new RequestOptions().fitCenter())
                             .into(new BitmapImageViewTarget(profilePictureImageView) {
                                 @Override
                                 protected void setResource(Bitmap resource) {
@@ -380,7 +380,7 @@ public class MainActivity extends FragmentActivity {
     /**
      * Takes the profilePicUriString and stores the image to cloud. Once the image file is
      * successfully uploaded to cloud successfully, it adds the profilePicUriString to
-     * the user's profile details section
+     * the firebaseUser's profile details section
      */
     private void uploadProfilePictureToCloud() {
         StorageReference profilePicRef = storageReference.child(Key.STORAGE_USER_PROFILE_IMAGE_REF).child(profilePictureUri.getLastPathSegment());
@@ -435,10 +435,10 @@ public class MainActivity extends FragmentActivity {
     }
 
     /**
-     *  Takes the uploadedImageUri (which is the image that user chooses from local storage)
+     *  Takes the uploadedImageUri (which is the image that firebaseUser chooses from local storage)
      *  and uploads the file to cloud. Once that is successful, the a new post is created in
      *  ALL_POSTS section and the post details are pushed. Then the postId is added to the
-     *  USER_UPLOADS section for the current user
+     *  USER_UPLOADS section for the current firebaseUser
      */
     @SuppressLint("SimpleDateFormat")
     private void uploadImageToCloud() {
@@ -470,13 +470,6 @@ public class MainActivity extends FragmentActivity {
                             } else {
                                 imageUploadProgressBar.setProgress(100);
                             }
-                            // TODO: @Mike can we get rid of the runnable below?
-                            new  Handler().postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    uploadingImageRelativeLayout.setVisibility(View.GONE);
-                                }
-                            }, 2000);
                         }
                     });
                 } else {
@@ -510,15 +503,13 @@ public class MainActivity extends FragmentActivity {
      * @param prismPost
      */
     private void updateLocalRecyclerViewWithNewPost(PrismPost prismPost) {
-        PrismUser prismUser = new PrismUser(CurrentUser.user.getUid(),
-                CurrentUser.username, CurrentUser.full_name, CurrentUser.profilePicture);
-        prismPost.setPrismUser(prismUser);
+        uploadingImageTextView.setText("Finishing up...");
+        prismPost.setPrismUser(CurrentUser.prismUser);
         RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
         LinearLayoutManager layoutManager  = (LinearLayoutManager) mainContentRecyclerView.getLayoutManager();
         RelativeLayout noMainPostsRelativeLayout = MainActivity.this.findViewById(R.id.no_main_posts_relative_layout);
         if (mainContentRecyclerView != null) {
-            MainContentFragment.dateOrderedPrismPostKeys.add(0, prismPost.getPostId());
-            MainContentFragment.prismPostHashMap.put(prismPost.getPostId(), prismPost);
+            MainContentFragment.prismPostArrayList.add(prismPost);
             mainContentRecyclerView.getAdapter().notifyItemInserted(0);
             noMainPostsRelativeLayout.setVisibility(View.GONE);
             if (layoutManager.findFirstVisibleItemPosition() < 10) {
@@ -527,7 +518,6 @@ public class MainActivity extends FragmentActivity {
                 mainContentRecyclerView.scrollToPosition(0);
             }
         }
-        uploadingImageTextView.setText("Finishing up...");
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {

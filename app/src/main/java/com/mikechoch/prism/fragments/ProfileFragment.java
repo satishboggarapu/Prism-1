@@ -24,8 +24,10 @@ import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
-import com.mikechoch.prism.CurrentUser;
+import com.mikechoch.prism.attribute.CurrentUser;
 import com.mikechoch.prism.adapter.StaggeredGridRecyclerViewAdapter;
+import com.mikechoch.prism.attribute.PrismPost;
+import com.mikechoch.prism.attribute.ProfilePicture;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.activity.LoginActivity;
@@ -59,7 +61,7 @@ public class ProfileFragment extends Fragment {
     private TextView followingLabelTextView;
     private TextView userUsernameTextView;
     private TextView userFullNameTextView;
-    private RecyclerView staggeredGridRecyclerView;
+    public static RecyclerView staggeredGridRecyclerView;
     private Button logoutButton;
 
 
@@ -128,17 +130,18 @@ public class ProfileFragment extends Fragment {
      * Setup the userProfilePicImageView so it is populated with a Default or custom picture
      * When clicked it will show an AlertDialog of options for changing the picture
      */
-    private void setupUserProfilePicImageView() {
-        if (CurrentUser.profilePicture != null) {
+    private void setupUserProfileUIElements() {
+        if (CurrentUser.prismUser != null && CurrentUser.prismUser.getProfilePicture() != null) {
+            ProfilePicture currentUserProfilePic = CurrentUser.prismUser.getProfilePicture();
             Glide.with(this)
                     .asBitmap()
                     .thumbnail(0.05f)
-                    .load(CurrentUser.profilePicture.hiResUri)
+                    .load(currentUserProfilePic.hiResUri)
                     .apply(new RequestOptions().fitCenter())
                     .into(new BitmapImageViewTarget(userProfilePicImageView) {
                         @Override
                         protected void setResource(Bitmap resource) {
-                            if (!CurrentUser.profilePicture.isDefault) {
+                            if (!currentUserProfilePic.isDefault) {
                                 int whiteOutlinePadding = (int) (2 * scale);
                                 userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
                                 userProfilePicImageView.setBackground(getActivity().getResources().getDrawable(R.drawable.circle_profile_frame));
@@ -152,6 +155,8 @@ public class ProfileFragment extends Fragment {
                             userProfilePicImageView.setImageDrawable(drawable);
                         }
                     });
+            userUsernameTextView.setText(CurrentUser.prismUser.getUsername());
+            userFullNameTextView.setText(CurrentUser.prismUser.getFullName());
         }
 
         userProfilePicImageView.setOnClickListener(new View.OnClickListener() {
@@ -192,45 +197,14 @@ public class ProfileFragment extends Fragment {
     }
 
     /**
-     * Setup the TextViews on the ProfileFragment
-     */
-    private void setupUsernameAndFullNameTextView() {
-        userUsernameTextView.setText(CurrentUser.username);
-        userFullNameTextView.setText(CurrentUser.full_name);
-    }
-
-    /**
      * Create a StaggeredGridLayoutManager and give it a spanCount of 2
      * Create a StaggeredGridRecyclerViewAdapter
      * Set the layout manager and adapter of the RecyclerView
      */
     private void setupUserPostsRecyclerView() {
-        ArrayList<Drawable> drawableArrayList = new ArrayList<>();
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-        drawableArrayList.add(getResources().getDrawable(R.mipmap.ic_launcher));
-
-        staggeredGridRecyclerView.setHasFixedSize(true);
-        StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, 1);
+        StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         staggeredGridRecyclerView.setLayoutManager(staggeredGridLayoutManager);
-        StaggeredGridRecyclerViewAdapter staggeredGridRecyclerViewAdapter = new StaggeredGridRecyclerViewAdapter(getActivity(), drawableArrayList);
+        StaggeredGridRecyclerViewAdapter staggeredGridRecyclerViewAdapter = new StaggeredGridRecyclerViewAdapter(getActivity(), CurrentUser.user_uploaded_posts);
         staggeredGridRecyclerView.setAdapter(staggeredGridRecyclerViewAdapter);
     }
 
@@ -248,8 +222,7 @@ public class ProfileFragment extends Fragment {
         userUsernameTextView.setTypeface(sourceSansProBold);
         userFullNameTextView.setTypeface(sourceSansProLight);
 
-        setupUserProfilePicImageView();
-        setupUsernameAndFullNameTextView();
+        setupUserProfileUIElements();
         setupUserPostsRecyclerView();
     }
 

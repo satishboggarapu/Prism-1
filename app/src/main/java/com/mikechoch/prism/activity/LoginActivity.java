@@ -307,8 +307,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     /**
-     * Checks to see if what user typed in the username/email editText
-     * is of type email or username. The purpose is that if the user
+     * Checks to see if what firebaseUser typed in the username/email editText
+     * is of type email or username. The purpose is that if the firebaseUser
      * enters an email, we can directly attemptLogin otherwise for username,
      * we have to go to the database and extract the email for the given
      * username

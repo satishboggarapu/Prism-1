@@ -20,10 +20,10 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
-import com.mikechoch.prism.ProfilePicture;
+import com.mikechoch.prism.attribute.ProfilePicture;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
-import com.mikechoch.prism.PrismUser;
+import com.mikechoch.prism.attribute.PrismUser;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.adapter.LikeRepostUsersRecyclerViewAdapter;
 import com.mikechoch.prism.constants.Message;
@@ -202,7 +202,7 @@ public class LikeRepostActivity extends AppCompatActivity {
 
     /**
      * Goes over the list of users provided as parameter and pulls details for each
-     * user in the hashMap and creates a PrismUser object for each user
+     * firebaseUser in the hashMap and creates a PrismUser object for each firebaseUser
      * @param mapOfUsers
      */
     private void fetchUserDetails(HashMap<String, String> mapOfUsers) {
