@@ -9,6 +9,7 @@ import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
@@ -54,6 +55,10 @@ import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.constants.MyTimeUnit;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
@@ -575,9 +580,6 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                     repostCount[0]++;
                     String repostStringTail = repostCount[0] == 1 ? " repost" : " reposts";
                     repostsCountTextView.setText(repostCount[0] + repostStringTail);
-
-                    handleRepostButtonClick(prismPost);
-
                     dialogInterface.dismiss();
                 }
             }).setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
@@ -603,6 +605,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                             break;
                         case 1:
                             // Share
+
                             break;
                         case 2:
                             // Delete

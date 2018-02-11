@@ -170,6 +170,7 @@ public class MainContentFragment extends Fragment {
             @Override
             public void onRefresh() {
                 if (!isLoading || !(mainContentRecyclerViewAdapter.getItemCount() < Default.IMAGE_LOAD_THRESHOLD)) {
+                    CurrentUser.refreshUserLinkedPosts();
                     refreshData();
                 } else {
                     mainContentSwipeRefreshLayout.setRefreshing(false);
@@ -189,7 +190,6 @@ public class MainContentFragment extends Fragment {
      */
     private void refreshData() {
         Query query = databaseReferenceAllPosts.orderByChild(Key.POST_TIMESTAMP).limitToFirst(Default.IMAGE_LOAD_COUNT);
-        CurrentUser.refreshUserLinkedPosts();
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {

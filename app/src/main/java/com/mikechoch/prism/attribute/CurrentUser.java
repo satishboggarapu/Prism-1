@@ -44,6 +44,7 @@ public class CurrentUser {
     // Value: long timestamp
     public static HashMap user_liked_posts;
     public static HashMap user_reposted_posts;
+
     public static ArrayList<PrismPost> user_uploaded_posts;
     private static HashMap user_uploaded_posts_map;
 
