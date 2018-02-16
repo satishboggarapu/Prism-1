@@ -310,18 +310,18 @@ public class MainActivity extends FragmentActivity {
 
                     // PROFILE tab will bring the user back to the top of the profileScrollView
                     case 3:
-                        ScrollView profileScrollView = MainActivity.this.findViewById(R.id.profile_scroll_view);
-                        RecyclerView profilePostsRecyclerView = MainActivity.this.findViewById(R.id.user_posts_recycler_view);
-                        StaggeredGridLayoutManager staggeredGridLayoutManager = (StaggeredGridLayoutManager) profilePostsRecyclerView.getLayoutManager();
-                        if (profileScrollView != null && profilePostsRecyclerView != null) {
-                            int[] positions = new int[staggeredGridLayoutManager.getSpanCount()];
-                            staggeredGridLayoutManager.findFirstVisibleItemPositions(positions);
-                            if (positions[0] < 10) {
-                                profileScrollView.smoothScrollTo(0, 0);
-                            } else {
-                                profileScrollView.scrollTo(0, 0);
-                            }
-                        }
+//                        ScrollView profileScrollView = MainActivity.this.findViewById(R.id.profile_scroll_view);
+//                        RecyclerView profilePostsRecyclerView = MainActivity.this.findViewById(R.id.user_posts_recycler_view);
+//                        StaggeredGridLayoutManager staggeredGridLayoutManager = (StaggeredGridLayoutManager) profilePostsRecyclerView.getLayoutManager();
+//                        if (profileScrollView != null && profilePostsRecyclerView != null) {
+//                            int[] positions = new int[staggeredGridLayoutManager.getSpanCount()];
+//                            staggeredGridLayoutManager.findFirstVisibleItemPositions(positions);
+//                            if (positions[0] < 10) {
+//                                profileScrollView.smoothScrollTo(0, 0);
+//                            } else {
+//                                profileScrollView.scrollTo(0, 0);
+//                            }
+//                        }
                         break;
 
                     case 4:
@@ -508,22 +508,28 @@ public class MainActivity extends FragmentActivity {
         RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
         LinearLayoutManager layoutManager  = (LinearLayoutManager) mainContentRecyclerView.getLayoutManager();
         RelativeLayout noMainPostsRelativeLayout = MainActivity.this.findViewById(R.id.no_main_posts_relative_layout);
-        if (mainContentRecyclerView != null) {
-            MainContentFragment.prismPostArrayList.add(prismPost);
-            mainContentRecyclerView.getAdapter().notifyItemInserted(0);
-            noMainPostsRelativeLayout.setVisibility(View.GONE);
-            if (layoutManager.findFirstVisibleItemPosition() < 10) {
-                mainContentRecyclerView.smoothScrollToPosition(0);
-            } else {
-                mainContentRecyclerView.scrollToPosition(0);
-            }
+        MainContentFragment.prismPostArrayList.add(prismPost);
+        mainContentRecyclerView.getAdapter().notifyItemInserted(0);
+        noMainPostsRelativeLayout.setVisibility(View.GONE);
+
+        if (layoutManager.findFirstVisibleItemPosition() < 10) {
+            mainContentRecyclerView.smoothScrollToPosition(0);
+        } else {
+            mainContentRecyclerView.scrollToPosition(0);
         }
+
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 uploadingImageTextView.setText("Done");
             }
         }, 1000);
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                uploadingImageRelativeLayout.setVisibility(View.GONE);
+            }
+        }, 2000);
     }
 
     /**

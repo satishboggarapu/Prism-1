@@ -5,13 +5,12 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +23,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
+import com.mikechoch.prism.adapter.StaggeredGridRecyclerViewAdapter2;
 import com.mikechoch.prism.attribute.CurrentUser;
 import com.mikechoch.prism.adapter.StaggeredGridRecyclerViewAdapter;
 import com.mikechoch.prism.attribute.PrismPost;
@@ -61,7 +61,8 @@ public class ProfileFragment extends Fragment {
     private TextView followingLabelTextView;
     private TextView userUsernameTextView;
     private TextView userFullNameTextView;
-    public static RecyclerView staggeredGridRecyclerView;
+    private RecyclerView userUploadedPostsLeftRecyclerView;
+    private RecyclerView userUploadedPostsRightRecyclerView;
     private Button logoutButton;
 
 
@@ -105,7 +106,8 @@ public class ProfileFragment extends Fragment {
         followingLabelTextView = view.findViewById(R.id.following_label_text_view);
         userUsernameTextView = view.findViewById(R.id.profile_frag_username_text_view);
         userFullNameTextView = view.findViewById(R.id.profile_frag_full_name_text_view);
-        staggeredGridRecyclerView = view.findViewById(R.id.user_posts_recycler_view);
+        userUploadedPostsLeftRecyclerView = view.findViewById(R.id.user_uploaded_posts_left_recycler_view);
+        userUploadedPostsRightRecyclerView = view.findViewById(R.id.user_uploaded_posts_right_recycler_view);
         logoutButton = view.findViewById(R.id.logout_button);
 
         logoutButton.setBackgroundTintList(getResources().getColorStateList(R.color.colorAccent));
@@ -202,10 +204,11 @@ public class ProfileFragment extends Fragment {
      * Set the layout manager and adapter of the RecyclerView
      */
     private void setupUserPostsRecyclerView() {
-        StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
-        staggeredGridRecyclerView.setLayoutManager(staggeredGridLayoutManager);
-        StaggeredGridRecyclerViewAdapter staggeredGridRecyclerViewAdapter = new StaggeredGridRecyclerViewAdapter(getActivity(), CurrentUser.user_uploaded_posts);
-        staggeredGridRecyclerView.setAdapter(staggeredGridRecyclerViewAdapter);
+        LinearLayoutManager leftRecyclerViewLinearLayoutManager = new LinearLayoutManager(getActivity());
+        userUploadedPostsLeftRecyclerView.setLayoutManager(leftRecyclerViewLinearLayoutManager);
+
+        LinearLayoutManager rightRecyclerViewLinearLayoutManager = new LinearLayoutManager(getActivity());
+        userUploadedPostsRightRecyclerView.setLayoutManager(rightRecyclerViewLinearLayoutManager);
     }
 
     /**

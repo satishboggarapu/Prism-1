@@ -9,7 +9,6 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
@@ -21,7 +20,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.activity.MainActivity;
+import com.mikechoch.prism.adapter.StaggeredGridRecyclerViewAdapter;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.constants.Message;
@@ -139,9 +138,24 @@ public class CurrentUser {
                                         user_uploaded_posts.add(prismPost);
                                     }
                                 }
-                                if (ProfileFragment.staggeredGridRecyclerView != null) {
-                                    ProfileFragment.staggeredGridRecyclerView.getAdapter().notifyDataSetChanged();
+
+                                ArrayList<PrismPost> leftSide = new ArrayList<>();
+                                ArrayList<PrismPost> rightSide = new ArrayList<>();
+                                for (int i = 0; i < user_uploaded_posts.size(); i++) {
+                                    if (i % 2 == 0) {
+                                        leftSide.add(user_uploaded_posts.get(i));
+                                    } else {
+                                        rightSide.add(user_uploaded_posts.get(i));
+                                    }
                                 }
+
+                                RecyclerView userUploadedPostsLeftRecyclerView = ((Activity) context).findViewById(R.id.user_uploaded_posts_left_recycler_view);
+                                StaggeredGridRecyclerViewAdapter leftRecyclerViewAdapter = new StaggeredGridRecyclerViewAdapter(context, leftSide);
+                                userUploadedPostsLeftRecyclerView.setAdapter(leftRecyclerViewAdapter);
+
+                                RecyclerView userUploadedPostsRightRecyclerView = ((Activity) context).findViewById(R.id.user_uploaded_posts_right_recycler_view);
+                                StaggeredGridRecyclerViewAdapter rightRecyclerViewAdapter = new StaggeredGridRecyclerViewAdapter(context, rightSide);
+                                userUploadedPostsRightRecyclerView.setAdapter(rightRecyclerViewAdapter);
                             } else {
                                 Log.wtf(Default.TAG_DB, Message.NO_DATA);
                             }

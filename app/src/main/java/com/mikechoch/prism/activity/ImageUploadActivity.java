@@ -155,12 +155,8 @@ public class ImageUploadActivity extends AppCompatActivity {
                 setResult(RESULT_OK, data);
                 finish();
                 overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
-
             }
         });
-
-        // Ask firebaseUser to select an image to upload from phone gallery
-        selectImageFromGallery();
     }
 
     /**
