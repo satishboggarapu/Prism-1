@@ -19,7 +19,7 @@ import java.util.List;
  * Created by mikechoch on 2/7/18.
  */
 
-public class StaggeredGridRecyclerViewAdapter2 extends RecyclerView.Adapter<StaggeredGridRecyclerViewAdapter2.ViewHolder> {
+public class UserUploadedPostsRecyclerViewAdapter extends RecyclerView.Adapter<UserUploadedPostsRecyclerViewAdapter.ViewHolder> {
 
     /*
      * Global variables
@@ -28,7 +28,7 @@ public class StaggeredGridRecyclerViewAdapter2 extends RecyclerView.Adapter<Stag
     private List<PrismPost> prismPostsArrayList;
 
 
-    public StaggeredGridRecyclerViewAdapter2(Context context, ArrayList<PrismPost> prismPostsArrayList) {
+    public UserUploadedPostsRecyclerViewAdapter(Context context, ArrayList<PrismPost> prismPostsArrayList) {
         this.context = context;
         this.prismPostsArrayList = prismPostsArrayList;
     }

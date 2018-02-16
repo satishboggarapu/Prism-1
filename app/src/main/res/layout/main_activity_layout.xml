@@ -28,8 +28,7 @@
                 android:layout_height="36dp"
                 android:layout_alignParentStart="true"
                 android:layout_centerVertical="true"
-                android:layout_marginStart="8dp"
-                android:src="@drawable/circle_profile_frame"/>
+                android:layout_marginStart="8dp" />
 
             <TextView
                 android:id="@+id/uploading_image_text_view"

@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -23,17 +24,12 @@ import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
-import com.mikechoch.prism.adapter.StaggeredGridRecyclerViewAdapter2;
 import com.mikechoch.prism.attribute.CurrentUser;
-import com.mikechoch.prism.adapter.StaggeredGridRecyclerViewAdapter;
-import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.attribute.ProfilePicture;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.activity.LoginActivity;
 import com.mikechoch.prism.activity.ProfilePictureUploadActivity;
-
-import java.util.ArrayList;
 
 /**
  * Created by mikechoch on 1/22/18.
@@ -50,8 +46,10 @@ public class ProfileFragment extends Fragment {
     private float scale;
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
+    private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
     private String[] setProfilePicStrings = {"Choose from gallery", "Take a selfie"};
 
+    private SwipeRefreshLayout profileSwipeRefreshLayout;
     private ImageView userProfilePicImageView;
     private TextView followersCountTextView;
     private TextView followersLabelTextView;
@@ -61,8 +59,6 @@ public class ProfileFragment extends Fragment {
     private TextView followingLabelTextView;
     private TextView userUsernameTextView;
     private TextView userFullNameTextView;
-    private RecyclerView userUploadedPostsLeftRecyclerView;
-    private RecyclerView userUploadedPostsRightRecyclerView;
     private Button logoutButton;
 
 
@@ -97,6 +93,7 @@ public class ProfileFragment extends Fragment {
         View view = inflater.inflate(R.layout.profile_fragment_layout, container, false);
 
         // Initialize all UI elements
+        profileSwipeRefreshLayout = view.findViewById(R.id.profile_swipe_refresh_layout);
         userProfilePicImageView = view.findViewById(R.id.profile_frag_profile_picture_image_view);
         followersCountTextView = view.findViewById(R.id.followers_count_text_view);
         followersLabelTextView = view.findViewById(R.id.followers_label_text_view);
@@ -106,8 +103,6 @@ public class ProfileFragment extends Fragment {
         followingLabelTextView = view.findViewById(R.id.following_label_text_view);
         userUsernameTextView = view.findViewById(R.id.profile_frag_username_text_view);
         userFullNameTextView = view.findViewById(R.id.profile_frag_full_name_text_view);
-        userUploadedPostsLeftRecyclerView = view.findViewById(R.id.user_uploaded_posts_left_recycler_view);
-        userUploadedPostsRightRecyclerView = view.findViewById(R.id.user_uploaded_posts_right_recycler_view);
         logoutButton = view.findViewById(R.id.logout_button);
 
         logoutButton.setBackgroundTintList(getResources().getColorStateList(R.color.colorAccent));
@@ -133,34 +128,6 @@ public class ProfileFragment extends Fragment {
      * When clicked it will show an AlertDialog of options for changing the picture
      */
     private void setupUserProfileUIElements() {
-        if (CurrentUser.prismUser != null && CurrentUser.prismUser.getProfilePicture() != null) {
-            ProfilePicture currentUserProfilePic = CurrentUser.prismUser.getProfilePicture();
-            Glide.with(this)
-                    .asBitmap()
-                    .thumbnail(0.05f)
-                    .load(currentUserProfilePic.hiResUri)
-                    .apply(new RequestOptions().fitCenter())
-                    .into(new BitmapImageViewTarget(userProfilePicImageView) {
-                        @Override
-                        protected void setResource(Bitmap resource) {
-                            if (!currentUserProfilePic.isDefault) {
-                                int whiteOutlinePadding = (int) (2 * scale);
-                                userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
-                                userProfilePicImageView.setBackground(getActivity().getResources().getDrawable(R.drawable.circle_profile_frame));
-                            } else {
-                                userProfilePicImageView.setPadding(0, 0, 0, 0);
-                                userProfilePicImageView.setBackground(null);
-                            }
-
-                            RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getActivity().getResources(), resource);
-                            drawable.setCircular(true);
-                            userProfilePicImageView.setImageDrawable(drawable);
-                        }
-                    });
-            userUsernameTextView.setText(CurrentUser.prismUser.getUsername());
-            userFullNameTextView.setText(CurrentUser.prismUser.getFullName());
-        }
-
         userProfilePicImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -199,19 +166,6 @@ public class ProfileFragment extends Fragment {
     }
 
     /**
-     * Create a StaggeredGridLayoutManager and give it a spanCount of 2
-     * Create a StaggeredGridRecyclerViewAdapter
-     * Set the layout manager and adapter of the RecyclerView
-     */
-    private void setupUserPostsRecyclerView() {
-        LinearLayoutManager leftRecyclerViewLinearLayoutManager = new LinearLayoutManager(getActivity());
-        userUploadedPostsLeftRecyclerView.setLayoutManager(leftRecyclerViewLinearLayoutManager);
-
-        LinearLayoutManager rightRecyclerViewLinearLayoutManager = new LinearLayoutManager(getActivity());
-        userUploadedPostsRightRecyclerView.setLayoutManager(rightRecyclerViewLinearLayoutManager);
-    }
-
-    /**
      * Setup all UI elements
      */
     private void setupUIElements() {
@@ -226,7 +180,6 @@ public class ProfileFragment extends Fragment {
         userFullNameTextView.setTypeface(sourceSansProLight);
 
         setupUserProfileUIElements();
-        setupUserPostsRecyclerView();
     }
 
 }

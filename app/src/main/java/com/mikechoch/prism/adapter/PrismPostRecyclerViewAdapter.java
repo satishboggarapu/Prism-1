@@ -15,6 +15,7 @@ import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -43,8 +44,10 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.mikechoch.prism.constants.Message;
 import com.mikechoch.prism.helper.AnimationBounceInterpolator;
 import com.mikechoch.prism.attribute.CurrentUser;
 import com.mikechoch.prism.attribute.PrismPost;
@@ -56,7 +59,9 @@ import com.mikechoch.prism.constants.MyTimeUnit;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -127,7 +132,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
     public class ViewHolder extends RecyclerView.ViewHolder {
 
         private FirebaseAuth auth;
-        private DatabaseReference userReference;
+        private DatabaseReference postAuthorUserReference;
         private StorageReference storageReference;
         private DatabaseReference allPostsReference;
 
@@ -166,7 +171,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
             // Cloud database initializations
             auth = FirebaseAuth.getInstance();
-            userReference = Default.USERS_REFERENCE.child(auth.getCurrentUser().getUid());
+            postAuthorUserReference = Default.USERS_REFERENCE.child(auth.getCurrentUser().getUid());
             storageReference = Default.STORAGE_REFERENCE.child(Key.STORAGE_POST_IMAGES_REF);
             allPostsReference = Default.ALL_POSTS_REFERENCE;
 
@@ -620,7 +625,6 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                             String repostStringTail = repostCount == 1 ? " repost" : " reposts";
                             repostsCountTextView.setText(repostCount + repostStringTail);
 
-                            handleRepostButtonClick(prismPost);
                         }
                     }).setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
                 @Override
@@ -648,6 +652,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                             break;
                         case 1:
                             // Share
+
                             break;
                         case 2:
                             // Delete
@@ -672,26 +677,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     dialogInterface.dismiss();
-                    FirebaseStorage.getInstance().getReferenceFromUrl(prismPost.getImage())
-                            .delete().addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                if (task.isSuccessful()) {
-                                    String postId = prismPost.getPostId();
-                                    allPostsReference.child(postId).removeValue();
-                                    prismPostArrayList.remove(postId);
-                                    notifyDataSetChanged();
-                                    if (getItemCount() == 0) {
-                                        RelativeLayout noMainPostsRelativeLayout = ((Activity) context).findViewById(R.id.no_main_posts_relative_layout);
-                                        noMainPostsRelativeLayout.setVisibility(View.VISIBLE);
-                                    }
-                                } else {
-                                    Toast.makeText(context, "Unable to delete", Toast.LENGTH_SHORT).show();
-                                }
-                            }
-                        }
-                    });
+                    handleDeletionOfPost();
+
                 }
             }).setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
                 @Override
@@ -700,6 +687,82 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                 }
             });
             return exitAlertDialogBuilder.create();
+        }
+
+        private void handleDeletionOfPost() {
+            // Remove the post image from storage
+            FirebaseStorage.getInstance().getReferenceFromUrl(prismPost.getImage())
+                    .delete().addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if (task.isSuccessful()) {
+                        String postId = prismPost.getPostId();
+                        String postUserId = prismPost.getPrismUser().getUid();
+                        allPostsReference.child(postId).addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                if (dataSnapshot.exists()) {
+                                    HashMap<String, String> likedUsers = new HashMap<>();
+                                    HashMap<String, String> repostedUsers = new HashMap<>();
+                                    DatabaseReference usersReference = Default.USERS_REFERENCE;
+                                    // Removes postId from all user's USER_LIKES section
+                                    if (dataSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount() > 0) {
+                                        likedUsers.putAll((Map) dataSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getValue());
+                                        for (String userId : likedUsers.values()) {
+                                            usersReference.child(userId)
+                                                    .child(Key.DB_REF_USER_LIKES)
+                                                    .child(postId).removeValue();
+                                        }
+                                        Toast.makeText(context, "Removed Liked Users", Toast.LENGTH_SHORT).show();
+                                    }
+
+                                    // Removes postId from all users's USER_REPOSTS section
+                                    if (dataSnapshot.child(Key.DB_REF_POST_REPOSTED_USERS).getChildrenCount() > 0) {
+                                        repostedUsers.putAll((Map) dataSnapshot.child(Key.DB_REF_POST_REPOSTED_USERS).getValue());
+                                        for (String userId : repostedUsers.values()) {
+                                            usersReference.child(userId)
+                                                    .child(Key.DB_REF_USER_REPOSTS)
+                                                    .child(postId).removeValue();
+                                        }
+                                        Toast.makeText(context, "Removed Reposted Users", Toast.LENGTH_SHORT).show();
+                                    }
+
+                                    // Removes postId from author user's USER_UPLOADS section
+                                    postAuthorUserReference
+                                            .child(Key.DB_REF_USER_UPLOADS)
+                                            .child(postId).removeValue();
+                                    Toast.makeText(context, "Removed author of post", Toast.LENGTH_SHORT).show();
+
+                                    // Removes the entire post from ALL_POSTS section
+                                    allPostsReference.child(postId).removeValue();
+                                    Toast.makeText(context, "Removed Post From ALL_POSTS", Toast.LENGTH_SHORT).show();
+
+                                    // Remove post from local hashMap
+                                    prismPostArrayList.remove(prismPost);
+                                    notifyDataSetChanged();
+
+                                } else {
+                                    Log.wtf(Default.TAG_DB, Message.NO_DATA);
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                                databaseError.toException().printStackTrace();
+                                Log.e(Default.TAG_DB, databaseError.getMessage(), databaseError.toException());
+                            }
+                        });
+
+                        if (getItemCount() == 0) {
+                            RelativeLayout noMainPostsRelativeLayout = ((Activity) context).findViewById(R.id.no_main_posts_relative_layout);
+                            noMainPostsRelativeLayout.setVisibility(View.VISIBLE);
+                        }
+                    } else {
+                        // TODO error log
+                        Toast.makeText(context, "Unable to delete", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
         }
 
         /**
@@ -731,7 +794,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                                     .setValue(CurrentUser.firebaseUser.getUid());
 
                             // Add postId to firebaseUser's liked section
-                            userReference.child(Key.DB_REF_USER_LIKES)
+                            postAuthorUserReference.child(Key.DB_REF_USER_LIKES)
                                     .child(postId).setValue(timestamp);
 
                             // Add postId and timestamp to user_liked_posts hashMap
@@ -745,7 +808,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                                     .removeValue();
 
                             // Remove postId from firebaseUser's liked section
-                            userReference.child(Key.DB_REF_USER_LIKES)
+                            postAuthorUserReference.child(Key.DB_REF_USER_LIKES)
                                     .child(postId).removeValue();
 
                             // Remove the postId and timestamp from user_liked_posts hashMap
@@ -786,7 +849,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                         if (performRepost) {
 
                             // Add postId to firebaseUser's reposts section
-                            userReference.child(Key.DB_REF_USER_REPOSTS)
+                            postAuthorUserReference.child(Key.DB_REF_USER_REPOSTS)
                                     .child(postId).setValue(timestamp);
 
                             // Add postId and timestamp to user_reposted_posts hashMap
@@ -800,7 +863,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                         } else {
 
                             // Remove postId from firebaseUser's reposts section
-                            userReference.child(Key.DB_REF_USER_LIKES)
+                            postAuthorUserReference.child(Key.DB_REF_USER_LIKES)
                                     .child(postId).removeValue();
 
                             // Remove the postId and timestamp from user_reposted_posts hashMap

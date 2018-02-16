@@ -176,7 +176,7 @@ public class MainActivity extends FragmentActivity {
                             .asBitmap()
                             .thumbnail(0.05f)
                             .load(uploadedImageUri)
-                            .apply(new RequestOptions().fitCenter())
+                            .apply(new RequestOptions().centerCrop())
                             .into(new BitmapImageViewTarget(imageUploadPreview) {
                                 @Override
                                 protected void setResource(Bitmap resource) {

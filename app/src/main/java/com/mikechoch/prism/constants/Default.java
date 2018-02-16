@@ -32,5 +32,7 @@ public class Default {
     public static final int VIEW_PAGER_NOTIFICATIONS = 3;
     public static final int VIEW_PAGER_PROFILE = 4;
 
+    public static final int USER_UPLOADED_POSTS_COLUMNS = 3;
+
     public static final String TAG_DB = "Firebase Database";
 }

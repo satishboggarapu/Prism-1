@@ -5,9 +5,14 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -20,14 +25,14 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.adapter.StaggeredGridRecyclerViewAdapter;
+import com.mikechoch.prism.adapter.UserUploadedPostsRecyclerViewAdapter;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.constants.Message;
 import com.mikechoch.prism.fragments.MainContentFragment;
-import com.mikechoch.prism.fragments.ProfileFragment;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,6 +52,7 @@ public class CurrentUser {
     // Value: long timestamp
     public static HashMap user_liked_posts;
     public static HashMap user_reposted_posts;
+
     public static ArrayList<PrismPost> user_uploaded_posts;
     private static HashMap user_uploaded_posts_map;
 
@@ -62,7 +68,7 @@ public class CurrentUser {
 
         CurrentUser.context = context;
 
-//        refreshUserLinkedPosts();
+        refreshUserLinkedPosts();
         getUserProfileDetails();
     }
 
@@ -139,23 +145,33 @@ public class CurrentUser {
                                     }
                                 }
 
-                                ArrayList<PrismPost> leftSide = new ArrayList<>();
-                                ArrayList<PrismPost> rightSide = new ArrayList<>();
+                                LinearLayout userUploadedPostsLinearLayout = ((Activity) context).findViewById(R.id.user_uploaded_posts_linear_layout);
+                                userUploadedPostsLinearLayout.removeAllViews();
+                                userUploadedPostsLinearLayout.setWeightSum((float) Default.USER_UPLOADED_POSTS_COLUMNS);
+
+//                                ArrayList<ArrayList<PrismPost>> userUploadedPostsArrayLists = new ArrayList<>(Collections.nCopies(userUploadedColumns, new ArrayList<>()));
+                                ArrayList<ArrayList<PrismPost>> userUploadedPostsArrayLists = new ArrayList<>();
                                 for (int i = 0; i < user_uploaded_posts.size(); i++) {
-                                    if (i % 2 == 0) {
-                                        leftSide.add(user_uploaded_posts.get(i));
-                                    } else {
-                                        rightSide.add(user_uploaded_posts.get(i));
+                                    while (userUploadedPostsArrayLists.size() != Default.USER_UPLOADED_POSTS_COLUMNS) {
+                                        userUploadedPostsArrayLists.add(new ArrayList<>());
                                     }
+                                    userUploadedPostsArrayLists.get((i % Default.USER_UPLOADED_POSTS_COLUMNS)).add(user_uploaded_posts.get(i));
                                 }
 
-                                RecyclerView userUploadedPostsLeftRecyclerView = ((Activity) context).findViewById(R.id.user_uploaded_posts_left_recycler_view);
-                                StaggeredGridRecyclerViewAdapter leftRecyclerViewAdapter = new StaggeredGridRecyclerViewAdapter(context, leftSide);
-                                userUploadedPostsLeftRecyclerView.setAdapter(leftRecyclerViewAdapter);
+                                for (int i = 0; i < Default.USER_UPLOADED_POSTS_COLUMNS; i++) {
+                                    LinearLayout recyclerViewLinearLayout = new LinearLayout(context);
+                                    LinearLayout.LayoutParams one_params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT,1f);
+                                    recyclerViewLinearLayout.setLayoutParams(one_params);
 
-                                RecyclerView userUploadedPostsRightRecyclerView = ((Activity) context).findViewById(R.id.user_uploaded_posts_right_recycler_view);
-                                StaggeredGridRecyclerViewAdapter rightRecyclerViewAdapter = new StaggeredGridRecyclerViewAdapter(context, rightSide);
-                                userUploadedPostsRightRecyclerView.setAdapter(rightRecyclerViewAdapter);
+                                    RecyclerView userUploadedPostsRecyclerView = (RecyclerView) LayoutInflater.from(context).inflate(R.layout.user_uploaded_posts_recycler_view_layout, null);
+                                    LinearLayoutManager recyclerViewLinearLayoutManager = new LinearLayoutManager(context);
+                                    userUploadedPostsRecyclerView.setLayoutManager(recyclerViewLinearLayoutManager);
+                                    UserUploadedPostsRecyclerViewAdapter recyclerViewAdapter = new UserUploadedPostsRecyclerViewAdapter(context, userUploadedPostsArrayLists.get(i));
+                                    userUploadedPostsRecyclerView.setAdapter(recyclerViewAdapter);
+
+                                    recyclerViewLinearLayout.addView(userUploadedPostsRecyclerView);
+                                    userUploadedPostsLinearLayout.addView(recyclerViewLinearLayout);
+                                }
                             } else {
                                 Log.wtf(Default.TAG_DB, Message.NO_DATA);
                             }
