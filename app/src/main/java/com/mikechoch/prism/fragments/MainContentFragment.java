@@ -32,6 +32,7 @@ import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.adapter.PrismPostRecyclerViewAdapter;
 import com.mikechoch.prism.constants.Message;
+import com.mikechoch.prism.helper.Helper;
 
 import java.util.ArrayList;
 
@@ -207,7 +208,7 @@ public class MainContentFragment extends Fragment {
 
                 if (dataSnapshot.exists()) {
                     for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                        PrismPost prismPost = constructPrismPostObject(postSnapshot);
+                        PrismPost prismPost = Helper.constructPrismPostObject(postSnapshot);
                         prismPostArrayList.add(prismPost);
                     }
                     noMainPostsRelativeLayout.setVisibility(View.GONE);
@@ -246,7 +247,7 @@ public class MainContentFragment extends Fragment {
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if (dataSnapshot.exists()) {
                             for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                                PrismPost prismPost = constructPrismPostObject(postSnapshot);
+                                PrismPost prismPost = Helper.constructPrismPostObject(postSnapshot);
                                 prismPostArrayList.add(prismPost);
                                 getActivity().runOnUiThread(new Runnable() {
                                     @Override
@@ -270,17 +271,6 @@ public class MainContentFragment extends Fragment {
                         Log.e(Default.TAG_DB, databaseError.getMessage(), databaseError.toException());
                     }
                 });
-    }
-
-    /**
-     * Takes in a dataSnapshot object and parses its contents
-     * and returns a prismPost object
-     */
-    public static PrismPost constructPrismPostObject(DataSnapshot postSnapshot) {
-        PrismPost prismPost = postSnapshot.getValue(PrismPost.class);
-        prismPost.setLikes((int) postSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount());
-        prismPost.setReposts((int) postSnapshot.child(Key.DB_REF_POST_REPOSTED_USERS).getChildrenCount());
-        return prismPost;
     }
 
     /**

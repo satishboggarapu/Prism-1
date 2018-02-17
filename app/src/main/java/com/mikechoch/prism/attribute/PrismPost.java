@@ -15,20 +15,19 @@ public class PrismPost {
 
 
     // Attributes not saved in cloud
-    private int likes;
-    private int reposts;
+    private Integer likes;
+    private Integer reposts;
     private PrismUser prismUser;
 
     // Empty Constructor required by Firebase to convert DataSnapshot to PrismPost.class
     public PrismPost() { }
 
     // Constructor used when creating prismPost when firebaseUser uploads the image
-    public PrismPost(String image, String caption, String uid, String postId, long timestamp) {
+    public PrismPost(String image, String caption, String uid, long timestamp) {
         this.image = image;
         this.caption = caption;
         this.uid = uid;
         this.timestamp = timestamp;
-        this.postId = postId;
     }
 
     // Getters
@@ -56,11 +55,11 @@ public class PrismPost {
 
 
     // Getters for attributes not saved in cloud
-    public int getLikes() {
+    public Integer getLikes() {
         return likes;
     }
 
-    public int getReposts() {
+    public Integer getReposts() {
         return reposts;
     }
 
@@ -79,6 +78,10 @@ public class PrismPost {
 
     public void setPrismUser(PrismUser prismUser) {
         this.prismUser = prismUser;
+    }
+
+    public void setPostId(String postId) {
+        this.postId = postId;
     }
 
 

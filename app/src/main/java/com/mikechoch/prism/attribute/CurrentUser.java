@@ -12,7 +12,6 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TableRow;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -29,10 +28,9 @@ import com.mikechoch.prism.adapter.UserUploadedPostsRecyclerViewAdapter;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.constants.Message;
-import com.mikechoch.prism.fragments.MainContentFragment;
+import com.mikechoch.prism.helper.Helper;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -139,7 +137,7 @@ public class CurrentUser {
                                     String postId = (String) key;
                                     DataSnapshot postSnapshot = dataSnapshot.child(postId);
                                     if (postSnapshot.exists()) {
-                                        PrismPost prismPost = MainContentFragment.constructPrismPostObject(postSnapshot);
+                                        PrismPost prismPost = Helper.constructPrismPostObject(postSnapshot);
                                         prismPost.setPrismUser(CurrentUser.prismUser);
                                         user_uploaded_posts.add(prismPost);
                                     }
