@@ -53,6 +53,10 @@
             android:windowSoftInputMode="stateVisible"
             android:theme="@style/SearchTheme"/>
 
+        <activity
+            android:name=".activity.PrismUserProfileActivity"
+            />
+
     </application>
 
 </manifest>

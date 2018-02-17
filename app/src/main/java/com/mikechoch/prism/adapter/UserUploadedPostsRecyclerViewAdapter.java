@@ -35,7 +35,7 @@ public class UserUploadedPostsRecyclerViewAdapter extends RecyclerView.Adapter<U
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return new ViewHolder(LayoutInflater.from(context).inflate(R.layout.user_uploaded_post_recycler_view_item, null));
+        return new ViewHolder(LayoutInflater.from(context).inflate(R.layout.user_uploaded_post_recycler_view_item_layout, null));
     }
 
     @Override

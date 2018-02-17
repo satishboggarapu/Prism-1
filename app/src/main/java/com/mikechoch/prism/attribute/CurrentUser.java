@@ -150,6 +150,7 @@ public class CurrentUser {
                                 userUploadedPostsLinearLayout.setWeightSum((float) Default.USER_UPLOADED_POSTS_COLUMNS);
 
 //                                ArrayList<ArrayList<PrismPost>> userUploadedPostsArrayLists = new ArrayList<>(Collections.nCopies(userUploadedColumns, new ArrayList<>()));
+                                // TODO: figure out how to initialize an ArrayList of ArrayLists without using while loop inside of populating for-loop
                                 ArrayList<ArrayList<PrismPost>> userUploadedPostsArrayLists = new ArrayList<>();
                                 for (int i = 0; i < user_uploaded_posts.size(); i++) {
                                     while (userUploadedPostsArrayLists.size() != Default.USER_UPLOADED_POSTS_COLUMNS) {
@@ -228,9 +229,15 @@ public class CurrentUser {
         ImageView userProfilePicImageView = ((Activity) context).findViewById(R.id.profile_frag_profile_picture_image_view);
         TextView userUsernameTextView = ((Activity) context).findViewById(R.id.profile_frag_username_text_view);
         TextView userFullNameTextView = ((Activity) context).findViewById(R.id.profile_frag_full_name_text_view);
+        TextView postsCountTextView = ((Activity) context).findViewById(R.id.posts_count_text_view);
+        TextView followersCountTextView = ((Activity) context).findViewById(R.id.followers_count_text_view);
+        TextView followingCountTextView = ((Activity) context).findViewById(R.id.following_count_text_view);
 
         userUsernameTextView.setText(prismUser.getUsername());
         userFullNameTextView.setText(prismUser.getFullName());
+        followersCountTextView.setText(String.valueOf(0));
+        postsCountTextView.setText(String.valueOf(user_uploaded_posts.size()));
+        followingCountTextView.setText(String.valueOf(0));
 
         Glide.with(context)
                 .asBitmap()

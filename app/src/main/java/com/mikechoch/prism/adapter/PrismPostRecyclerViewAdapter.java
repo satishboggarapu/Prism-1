@@ -47,6 +47,7 @@ import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.mikechoch.prism.activity.PrismUserProfileActivity;
 import com.mikechoch.prism.constants.Message;
 import com.mikechoch.prism.helper.AnimationBounceInterpolator;
 import com.mikechoch.prism.attribute.CurrentUser;
@@ -113,7 +114,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         switch (viewType) {
             case PRISM_POST_VIEW_TYPE:
                 viewHolder =  new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(
-                        R.layout.recycler_view_item_layout, parent, false));
+                        R.layout.prism_post_recycler_view_item_layout, parent, false));
                 break;
         }
         return viewHolder;
@@ -145,6 +146,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         private AnimationBounceInterpolator interpolator;
 
         private ImageView userProfilePicImageView;
+        private RelativeLayout postInformationRelativeLayout;
         private TextView prismUserTextView;
         private TextView prismPostDateTextView;
         private ImageView prismPostImageView;
@@ -186,6 +188,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             // Image initializations
             progressBar = itemView.findViewById(R.id.image_progress_bar);
             userProfilePicImageView = itemView.findViewById(R.id.recycler_view_profile_pic_image_view);
+            postInformationRelativeLayout = itemView.findViewById(R.id.recycler_view_post_info_relative_layout);
             prismUserTextView = itemView.findViewById(R.id.recycler_view_user_text_view);
             prismPostDateTextView = itemView.findViewById(R.id.recycler_view_date_text_view);
             prismPostImageView = itemView.findViewById(R.id.recycler_view_image_image_view);
@@ -221,7 +224,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
          * Populate fields related to the user who posted
          * Handles fields for user profile picture, username, and post date
          */
-        private void populatePostUserUIElements() {
+        private void setupPostUserUIElements() {
             if (prismPost.getPrismUser() != null) {
                 Glide.with(context)
                         .asBitmap()
@@ -247,6 +250,16 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                         });
                 prismUserTextView.setText(prismPost.getPrismUser().getUsername());
                 prismPostDateTextView.setText(postDate);
+
+                postInformationRelativeLayout.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent prismUserProfileIntent = new Intent(context, PrismUserProfileActivity.class);
+                        prismUserProfileIntent.putExtra("PrismUserUid", prismPost.getPrismUser().getUid());
+                        context.startActivity(prismUserProfileIntent);
+                        ((Activity) context).overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+                    }
+                });
             }
         }
 
@@ -463,8 +476,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             /*
              * Repost action button
              */
-            ColorStateList repostColor = getRepostColor(postReposted);
-            repostButton.setImageTintList(repostColor);
+            Drawable repostDrawable = createRepostDrawable(postReposted);
+            repostButton.setImageDrawable(repostDrawable);
 
             String repostStringTail = repostCount == 1 ? " repost" : " reposts";
             repostsCountTextView.setText(repostCount + repostStringTail);
@@ -473,10 +486,10 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                 @Override
                 public void onClick(View view) {
                     String postId = prismPost.getPostId();
-                    boolean postReposted = CurrentUser.user_reposted_posts.containsKey(postId);
-                    if (postReposted) {
-                        ColorStateList repostColor = getRepostColor(!postReposted);
-                        repostButton.setImageTintList(repostColor);
+                    boolean postReposted = !CurrentUser.user_reposted_posts.containsKey(postId);
+                    if (!postReposted) {
+                        Drawable repostDrawable = createRepostDrawable(postReposted);
+                        repostButton.setImageDrawable(repostDrawable);
                         repostButton.startAnimation(shareButtonBounceAnimation);
                         repostIrisAnimationImageView.startAnimation(unrepostIrisBounceAnimation);
 
@@ -529,7 +542,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             likesCountTextView.setTypeface(sourceSansProLight);
             repostsCountTextView.setTypeface(sourceSansProLight);
 
-            populatePostUserUIElements();
+            setupPostUserUIElements();
             setupPostImageView();
             setupUIAnimations();
             setupActionButtons();
@@ -550,10 +563,13 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         /**
          * Pass in a boolean that toggles the color of the repost button
          */
-        private ColorStateList getRepostColor(boolean isReposted) {
+        private Drawable createRepostDrawable(boolean isReposted) {
+            int repost = R.drawable.ic_camera_iris_black_36dp;
+            Drawable repostDrawable = context.getResources().getDrawable(repost);
             int color = isReposted ? R.color.colorAccent : android.R.color.white;
             int repostColor = context.getResources().getColor(color);
-            return ColorStateList.valueOf(repostColor);
+            repostDrawable.setTint(repostColor);
+            return repostDrawable;
         }
 
         /**
@@ -616,8 +632,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                         public void onClick(DialogInterface dialogInterface, int i) {
                             dialogInterface.dismiss();
                             handleRepostButtonClick(prismPost);
-                            ColorStateList repostColor = getRepostColor(true);
-                            repostButton.setImageTintList(repostColor);
+                            Drawable repostDrawable = createRepostDrawable(true);
+                            repostButton.setImageDrawable(repostDrawable);
                             repostButton.startAnimation(shareButtonBounceAnimation);
                             repostIrisAnimationImageView.startAnimation(repostIrisBounceAnimation);
 
