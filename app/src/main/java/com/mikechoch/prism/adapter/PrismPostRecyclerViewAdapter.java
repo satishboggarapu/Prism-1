@@ -162,8 +162,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         private PrismPost prismPost;
         private String postId;
         private String postDate;
-        private int likeCount;
-        private int repostCount;
+        private Integer likeCount;
+        private Integer repostCount;
         private boolean postLiked;
         private boolean postReposted;
 
@@ -217,6 +217,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             postLiked = CurrentUser.user_liked_posts.containsKey(postId);
             postReposted = CurrentUser.user_reposted_posts.containsKey(postId);
 
+            if (likeCount == null) likeCount = 0;
+            if (repostCount == null) repostCount = 0;
             populateUIElements();
         }
 

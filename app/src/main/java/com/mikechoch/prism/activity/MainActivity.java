@@ -25,7 +25,6 @@ import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
@@ -33,7 +32,6 @@ import android.view.animation.ScaleAnimation;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -49,7 +47,6 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.mikechoch.prism.attribute.CurrentUser;
 import com.mikechoch.prism.attribute.PrismPost;
-import com.mikechoch.prism.attribute.PrismUser;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.adapter.ViewPagerAdapter;
 import com.mikechoch.prism.constants.Default;
@@ -449,10 +446,10 @@ public class MainActivity extends FragmentActivity {
                 if (task.isSuccessful()) {
                     Uri downloadUrl = task.getResult().getDownloadUrl();
                     DatabaseReference postReference = databaseReference.push();
-                    PrismPost prismPost = createPrismPostObject(downloadUrl, postReference);
+                    PrismPost prismPost = createPrismPostObjectForUpload(downloadUrl);
 
                     // Add postId to USER_UPLOADS table
-                    DatabaseReference userPostRef = userReference.child(Key.DB_REF_USER_UPLOADS).child(prismPost.getPostId());
+                    DatabaseReference userPostRef = userReference.child(Key.DB_REF_USER_UPLOADS).child(postReference.getKey());
                     userPostRef.setValue(prismPost.getTimestamp());
 
                     // Create the post in cloud and on success, add the image to local recycler view adapter
@@ -508,7 +505,7 @@ public class MainActivity extends FragmentActivity {
         RecyclerView mainContentRecyclerView = MainActivity.this.findViewById(R.id.main_content_recycler_view);
         LinearLayoutManager layoutManager  = (LinearLayoutManager) mainContentRecyclerView.getLayoutManager();
         RelativeLayout noMainPostsRelativeLayout = MainActivity.this.findViewById(R.id.no_main_posts_relative_layout);
-        MainContentFragment.prismPostArrayList.add(prismPost);
+        MainContentFragment.prismPostArrayList.add(0, prismPost);
         mainContentRecyclerView.getAdapter().notifyItemInserted(0);
         noMainPostsRelativeLayout.setVisibility(View.GONE);
 
@@ -536,13 +533,12 @@ public class MainActivity extends FragmentActivity {
      * Takes in the downloadUri that was create in cloud and reference to the post that
      * got created in cloud and prepares the PrismPost object that will be pushed
      */
-    private PrismPost createPrismPostObject(Uri downloadUrl, DatabaseReference reference) {
+    private PrismPost createPrismPostObjectForUpload(Uri downloadUrl) {
         String imageUri = downloadUrl.toString();
         String description = uploadedImageDescription;
         String userId = auth.getCurrentUser().getUid();
-        String postId = reference.getKey();
         Long timestamp = -1 * Calendar.getInstance().getTimeInMillis();
-        return new PrismPost(imageUri, description, userId, postId, timestamp);
+        return new PrismPost(imageUri, description, userId, timestamp);
     }
 
 
