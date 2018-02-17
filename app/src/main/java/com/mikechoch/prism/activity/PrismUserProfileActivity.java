@@ -171,9 +171,17 @@ public class PrismUserProfileActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     for (String postId : prismUserUploadedPostIds.keySet()) {
-                        PrismPost prismPost = Helper.constructPrismPostObject(dataSnapshot.child(postId));
-                        prismPost.setPrismUser(prismUser);
-                        prismUserUploadedPostsArrayList.add(prismPost);
+                        DataSnapshot postSnapshot = dataSnapshot.child(postId);
+                        if (postSnapshot.exists()) {
+                            PrismPost prismPost = Helper.constructPrismPostObject(postSnapshot);
+                            prismPost.setPrismUser(prismUser);
+                            prismUserUploadedPostsArrayList.add(prismPost);
+                        } else {
+                            // TODO LOG this: this should never happen
+                            usersReference.child(prismUser.getUid())
+                                    .child(Key.DB_REF_USER_UPLOADS)
+                                    .child(postId).removeValue();
+                        }
                     }
 
                 } else {

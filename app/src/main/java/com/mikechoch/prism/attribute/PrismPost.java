@@ -9,7 +9,6 @@ public class PrismPost {
 
     private String image;
     private String caption;
-    private String postId;
     private long timestamp;
     private String uid;
 
@@ -17,6 +16,7 @@ public class PrismPost {
     // Attributes not saved in cloud
     private Integer likes;
     private Integer reposts;
+    private String postId;
     private PrismUser prismUser;
 
     // Empty Constructor required by Firebase to convert DataSnapshot to PrismPost.class
