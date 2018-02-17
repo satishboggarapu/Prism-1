@@ -28,6 +28,7 @@ import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.constants.Message;
 import com.mikechoch.prism.fragments.MainContentFragment;
+import com.mikechoch.prism.helper.Helper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -146,7 +147,7 @@ public class PrismUserProfileActivity extends AppCompatActivity {
                     String username = (String) dataSnapshot.child(Key.USER_PROFILE_USERNAME).getValue();
                     ProfilePicture profilePicture = new ProfilePicture((String) dataSnapshot.child(Key.USER_PROFILE_PIC).getValue());
                     prismUser = new PrismUser(userId, username, fullName, profilePicture);
-                    HashMap<String, String> prismUserUploadedPostIds = new HashMap<>();
+                    HashMap<String, Long> prismUserUploadedPostIds = new HashMap<>();
                     prismUserUploadedPostIds.putAll((Map) dataSnapshot.child(Key.DB_REF_USER_UPLOADS).getValue());
 
                     pullUserUploadedPrismPosts(prismUserUploadedPostIds);
@@ -164,13 +165,13 @@ public class PrismUserProfileActivity extends AppCompatActivity {
         });
     }
 
-    private void pullUserUploadedPrismPosts(HashMap<String, String> prismUserUploadedPostIds) {
+    private void pullUserUploadedPrismPosts(HashMap<String, Long> prismUserUploadedPostIds) {
         allPostsReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     for (String postId : prismUserUploadedPostIds.keySet()) {
-                        PrismPost prismPost = MainContentFragment.constructPrismPostObject(dataSnapshot.child(postId));
+                        PrismPost prismPost = Helper.constructPrismPostObject(dataSnapshot.child(postId));
                         prismPost.setPrismUser(prismUser);
                         prismUserUploadedPostsArrayList.add(prismPost);
                     }

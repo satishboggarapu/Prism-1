@@ -501,6 +501,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
                         handleRepostButtonClick(prismPost);
                     } else {
+                        repostIrisAnimationImageView.setVisibility(View.INVISIBLE);
                         AlertDialog repostConfirmationAlertDialog = createRepostConfirmationAlertDialog();
                         repostConfirmationAlertDialog.show();
                     }
