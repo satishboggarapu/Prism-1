@@ -1,35 +1,25 @@
 package com.mikechoch.prism.fragments;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
+import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
-import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.RequestOptions;
-import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
+import com.mikechoch.prism.activity.PrismUserProfileActivity;
+import com.mikechoch.prism.adapter.SettingsOptionRecyclerViewAdapter;
 import com.mikechoch.prism.attribute.CurrentUser;
-import com.mikechoch.prism.attribute.ProfilePicture;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.activity.LoginActivity;
-import com.mikechoch.prism.activity.ProfilePictureUploadActivity;
 
 /**
  * Created by mikechoch on 1/22/18.
@@ -38,7 +28,7 @@ import com.mikechoch.prism.activity.ProfilePictureUploadActivity;
 public class ProfileFragment extends Fragment {
 
     /*
-     * Global variables
+     * Globals
      */
     private FirebaseAuth auth;
     private DatabaseReference userReference;
@@ -46,28 +36,15 @@ public class ProfileFragment extends Fragment {
     private float scale;
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
-    private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
-    private String[] setProfilePicStrings = {"Choose from gallery", "Take a selfie"};
 
-    private SwipeRefreshLayout profileSwipeRefreshLayout;
-    private ImageView userProfilePicImageView;
-    private TextView followersCountTextView;
-    private TextView followersLabelTextView;
-    private TextView postsCountTextView;
-    private TextView postsLabelTextView;
-    private TextView followingCountTextView;
-    private TextView followingLabelTextView;
-    private TextView userUsernameTextView;
+    private CardView viewProfileCardView;
+    private RecyclerView settingsRecyclerView;
     private TextView userFullNameTextView;
-    private Button logoutButton;
+    private TextView viewProfileTextView;
 
 
-    public static final ProfileFragment newInstance(int title, String message) {
+    public static final ProfileFragment newInstance() {
         ProfileFragment profileFragment = new ProfileFragment();
-        Bundle bundle = new Bundle(2);
-        bundle.putInt("Title", title);
-        bundle.putString("Extra_Message", message);
-        profileFragment.setArguments(bundle);
         return profileFragment;
     }
 
@@ -75,14 +52,10 @@ public class ProfileFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        int title = getArguments().getInt("Title");
-        String message = getArguments().getString("Extra_Message");
-
         auth = FirebaseAuth.getInstance();
         userReference = Default.USERS_REFERENCE.child(auth.getCurrentUser().getUid());
 
         scale = this.getResources().getDisplayMetrics().density;
-
         sourceSansProLight = Typeface.createFromAsset(getContext().getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getContext().getAssets(), "fonts/SourceSansPro-Black.ttf");
     }
@@ -93,30 +66,25 @@ public class ProfileFragment extends Fragment {
         View view = inflater.inflate(R.layout.profile_fragment_layout, container, false);
 
         // Initialize all UI elements
-        profileSwipeRefreshLayout = view.findViewById(R.id.profile_swipe_refresh_layout);
-        userProfilePicImageView = view.findViewById(R.id.profile_frag_profile_picture_image_view);
-        followersCountTextView = view.findViewById(R.id.followers_count_text_view);
-        followersLabelTextView = view.findViewById(R.id.followers_label_text_view);
-        postsCountTextView = view.findViewById(R.id.posts_count_text_view);
-        postsLabelTextView = view.findViewById(R.id.posts_label_text_view);
-        followingCountTextView = view.findViewById(R.id.following_count_text_view);
-        followingLabelTextView = view.findViewById(R.id.following_label_text_view);
-        userUsernameTextView = view.findViewById(R.id.profile_frag_username_text_view);
-        userFullNameTextView = view.findViewById(R.id.profile_frag_full_name_text_view);
-        logoutButton = view.findViewById(R.id.logout_button);
+        viewProfileCardView = view.findViewById(R.id.profile_fragment_view_profile_card_view);
+        settingsRecyclerView = view.findViewById(R.id.profile_fragment_settings_recycler_view);
+        userFullNameTextView = view.findViewById(R.id.profile_fragment_user_full_name_text_view);
+        viewProfileTextView = view.findViewById(R.id.profile_fragment_view_profile_text_view);
 
-        logoutButton.setBackgroundTintList(getResources().getColorStateList(R.color.colorAccent));
-        logoutButton.setTypeface(sourceSansProLight);
-        logoutButton.setOnClickListener(new View.OnClickListener() {
+        viewProfileCardView.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                auth.signOut();
-                Intent intent = new Intent(getActivity(), LoginActivity.class);
-                startActivity(intent);
-                getActivity().finish();
+            public void onClick(View v) {
+                Intent prismUserProfileIntent = new Intent(getActivity(), PrismUserProfileActivity.class);
+                prismUserProfileIntent.putExtra("PrismUserUid", CurrentUser.prismUser.getUid());
+                getActivity().startActivity(prismUserProfileIntent);
                 getActivity().overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
             }
         });
+
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
+        settingsRecyclerView.setLayoutManager(linearLayoutManager);
+        SettingsOptionRecyclerViewAdapter settingsRecyclerViewAdapter = new SettingsOptionRecyclerViewAdapter(getActivity());
+        settingsRecyclerView.setAdapter(settingsRecyclerViewAdapter);
 
         setupUIElements();
 
@@ -124,62 +92,14 @@ public class ProfileFragment extends Fragment {
     }
 
     /**
-     * Setup the userProfilePicImageView so it is populated with a Default or custom picture
-     * When clicked it will show an AlertDialog of options for changing the picture
-     */
-    private void setupUserProfileUIElements() {
-        userProfilePicImageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AlertDialog setProfilePictureAlertDialog = createSetProfilePictureAlertDialog();
-                setProfilePictureAlertDialog.show();
-            }
-        });
-    }
-
-    /**
-     * Create an AlertDialog for when the userProfilePicImageView is clicked
-     * Gives the option to take a picture or select one from gallery
-     */
-    private AlertDialog createSetProfilePictureAlertDialog() {
-        AlertDialog.Builder profilePictureAlertDialog = new AlertDialog.Builder(getActivity());
-        profilePictureAlertDialog.setTitle("Set profile picture");
-        profilePictureAlertDialog.setItems(setProfilePicStrings, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                switch (which) {
-                    case 0:
-                        Intent imageUploadIntent = new Intent(getActivity(), ProfilePictureUploadActivity.class);
-                        getActivity().startActivityForResult(imageUploadIntent, Default.PROFILE_PIC_UPLOAD_INTENT_REQUEST_CODE);
-                        getActivity().overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
-                        break;
-                    case 1:
-                        // TODO: Figure out camera feature
-                        break;
-                    default:
-                        break;
-                }
-            }
-        });
-
-        return profilePictureAlertDialog.create();
-    }
-
-    /**
      * Setup all UI elements
      */
     private void setupUIElements() {
         // Setup Typefaces for all text based UI elements
-        followersCountTextView.setTypeface(sourceSansProBold);
-        followersLabelTextView.setTypeface(sourceSansProLight);
-        postsCountTextView.setTypeface(sourceSansProBold);
-        postsLabelTextView.setTypeface(sourceSansProLight);
-        followingCountTextView.setTypeface(sourceSansProBold);
-        followingLabelTextView.setTypeface(sourceSansProLight);
-        userUsernameTextView.setTypeface(sourceSansProBold);
         userFullNameTextView.setTypeface(sourceSansProLight);
+        viewProfileTextView.setTypeface(sourceSansProLight);
 
-        setupUserProfileUIElements();
+
     }
 
 }

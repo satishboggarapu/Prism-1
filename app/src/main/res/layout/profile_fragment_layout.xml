@@ -1,204 +1,101 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <android.support.v4.widget.SwipeRefreshLayout
-        android:id="@+id/profile_swipe_refresh_layout"
+    <android.support.v4.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <ScrollView
-            android:id="@+id/profile_scroll_view"
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:nestedScrollingEnabled="false">
+            android:layout_height="wrap_content">
 
-            <RelativeLayout
+            <android.support.v7.widget.CardView
+                android:id="@+id/profile_fragment_view_profile_card_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:focusableInTouchMode="true">
-
-                <TextView
-                    android:id="@+id/profile_frag_username_text_view"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerHorizontal="true"
-                    android:layout_alignParentTop="true"
-                    android:layout_marginTop="16dp"
-                    android:textSize="24sp"
-                    android:textColor="@android:color/white"/>
-
-                <TextView
-                    android:id="@+id/profile_frag_full_name_text_view"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerHorizontal="true"
-                    android:layout_below="@id/profile_frag_username_text_view"
-                    android:layout_marginTop="2dp"
-                    android:textSize="16sp"
-                    android:textColor="@android:color/white"/>
-
-                <ImageView
-                    android:id="@+id/profile_frag_profile_picture_image_view"
-                    android:layout_width="130dp"
-                    android:layout_height="130dp"
-                    android:layout_centerHorizontal="true"
-                    android:layout_below="@id/profile_frag_full_name_text_view"
-                    android:layout_marginTop="16dp"
-                    android:cropToPadding="false"
-                    android:elevation="5dp"
-                    android:foreground="@drawable/profile_pic_upload_selector"/>
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:padding="8dp"
+                android:foreground="@drawable/setting_option_selector">
 
                 <RelativeLayout
-                    android:id="@+id/user_profile_statistics"
+                    android:id="@+id/profile_fragment_view_profile_relative_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_centerHorizontal="true"
-                    android:layout_below="@id/profile_frag_profile_picture_image_view"
-                    android:layout_marginTop="16dp">
+                    android:padding="16dp"
+                    android:background="@color/colorPrimary">
 
-                    <RelativeLayout
-                        android:id="@+id/posts_relative_layout"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_centerInParent="true"
-                        android:layout_gravity="center"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginEnd="8dp">
+                    <ImageView
+                        android:id="@+id/profile_fragment_user_profile_image_view"
+                        android:layout_width="62dp"
+                        android:layout_height="62dp"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="16dp"/>
 
-                        <TextView
-                            android:id="@+id/posts_count_text_view"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentTop="true"
-                            android:layout_centerHorizontal="true"
-                            android:text="99"
-                            android:textSize="18sp"
-                            android:textStyle="bold"
-                            android:textColor="@android:color/white"
-                            android:textAlignment="center"/>
-
-                        <TextView
-                            android:id="@+id/posts_label_text_view"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_centerHorizontal="true"
-                            android:layout_below="@id/posts_count_text_view"
-                            android:text="posts"
-                            android:textSize="15sp"
-                            android:textColor="@android:color/white"
-                            android:textAlignment="center"/>
-
-                    </RelativeLayout>
-
-                    <RelativeLayout
-                        android:id="@+id/followers_relative_layout"
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerVertical="true"
-                        android:layout_toStartOf="@id/posts_relative_layout"
-                        android:layout_gravity="center"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginEnd="8dp">
+                        android:layout_toEndOf="@id/profile_fragment_user_profile_image_view"
+                        android:orientation="vertical">
 
                         <TextView
-                            android:id="@+id/followers_count_text_view"
+                            android:id="@+id/profile_fragment_user_full_name_text_view"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_alignParentTop="true"
-                            android:layout_centerHorizontal="true"
-                            android:text="697"
-                            android:textSize="18sp"
-                            android:textStyle="bold"
+                            android:textSize="17sp"
                             android:textColor="@android:color/white"
-                            android:textAlignment="center"/>
+                            android:layout_weight="1"/>
 
                         <TextView
-                            android:id="@+id/followers_label_text_view"
+                            android:id="@+id/profile_fragment_view_profile_text_view"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_centerHorizontal="true"
-                            android:layout_below="@id/followers_count_text_view"
-                            android:text="followers"
-                            android:textSize="15sp"
-                            android:textColor="@android:color/white"
-                            android:textAlignment="center"/>
+                            android:layout_marginTop="2dp"
+                            android:text="View your profile"
+                            android:textSize="17sp"
+                            android:textColor="@color/hintTextColor"
+                            android:layout_weight="1"/>
 
-                    </RelativeLayout>
-
-                    <RelativeLayout
-                        android:id="@+id/following_relative_layout"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_centerVertical="true"
-                        android:layout_toEndOf="@id/posts_relative_layout"
-                        android:layout_gravity="center"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginEnd="8dp">
-
-                        <TextView
-                            android:id="@+id/following_count_text_view"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentTop="true"
-                            android:layout_centerHorizontal="true"
-                            android:text="110"
-                            android:textSize="18sp"
-                            android:textStyle="bold"
-                            android:textColor="@android:color/white"
-                            android:textAlignment="center"/>
-
-                        <TextView
-                            android:id="@+id/following_label_text_view"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_centerHorizontal="true"
-                            android:layout_below="@id/following_count_text_view"
-                            android:text="following"
-                            android:textSize="15sp"
-                            android:textColor="@android:color/white"
-                            android:textAlignment="center"/>
-
-                    </RelativeLayout>
+                    </LinearLayout>
 
                 </RelativeLayout>
 
-                <LinearLayout
-                    android:id="@+id/user_uploaded_posts_linear_layout"
+            </android.support.v7.widget.CardView>
+
+            <android.support.v7.widget.CardView
+                android:id="@+id/profile_fragment_settings_card_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@id/profile_fragment_view_profile_card_view"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp">
+
+                <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@id/user_profile_statistics"
-                    android:layout_marginTop="20dp"
-                    android:layout_marginStart="6dp"
-                    android:layout_marginEnd="6dp"
-                    android:orientation="horizontal">
+                    android:background="@color/colorPrimary">
 
-                    <!-- Populates with RecyclerViews being treated as columns-->
-                    <!-- # of RecyclerViews based off the USER_UPLOADED_POSTS_COLUMNS Default value-->
+                    <android.support.v7.widget.RecyclerView
+                        android:id="@+id/profile_fragment_settings_recycler_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
 
-                </LinearLayout>
+                </RelativeLayout>
 
-                <Button
-                    android:id="@+id/logout_button"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@id/user_uploaded_posts_linear_layout"
-                    android:layout_centerHorizontal="true"
-                    android:layout_marginBottom="24dp"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="24dp"
-                    android:padding="10dp"
-                    android:text="LOGOUT"
-                    android:textSize="18sp"
-                    android:textColor="@android:color/white" />
+            </android.support.v7.widget.CardView>
 
-            </RelativeLayout>
+        </RelativeLayout>
 
-        </ScrollView>
+    </android.support.v4.widget.NestedScrollView>
 
-    </android.support.v4.widget.SwipeRefreshLayout>
-
-</RelativeLayout>
+</android.support.design.widget.CoordinatorLayout>

@@ -13,6 +13,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -25,6 +26,7 @@ import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
@@ -48,7 +50,7 @@ import com.google.firebase.storage.UploadTask;
 import com.mikechoch.prism.attribute.CurrentUser;
 import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.adapter.ViewPagerAdapter;
+import com.mikechoch.prism.adapter.MainViewPagerAdapter;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.constants.Message;
@@ -73,11 +75,16 @@ public class MainActivity extends FragmentActivity {
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
 
+    private AppBarLayout.LayoutParams params;
+
+    private Toolbar toolbar;
+
     private CoordinatorLayout mainCoordinateLayout;
     private TabLayout prismTabLayout;
     private ViewPager prismViewPager;
     private ImageView imageUploadPreview;
     private TextView uploadingImageTextView;
+    private RelativeLayout prismDecorationRelativeLayout;
     private RelativeLayout uploadingImageRelativeLayout;
     private FloatingActionButton uploadImageFab;
     private ProgressBar imageUploadProgressBar;
@@ -85,6 +92,7 @@ public class MainActivity extends FragmentActivity {
     private Uri profilePictureUri;
     private Uri uploadedImageUri;
     private String uploadedImageDescription;
+    private boolean isUploadingImage = false;
 
 
     @Override
@@ -123,17 +131,30 @@ public class MainActivity extends FragmentActivity {
         sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
 
+        toolbar = findViewById(R.id.toolbar);
+        TextView toolbarTextView = findViewById(R.id.prism_toolbar_title);
+        toolbarTextView.setTypeface(sourceSansProBold);
+
+        params = (AppBarLayout.LayoutParams) toolbar.getLayoutParams();
+
         // Initialize all UI elements
         mainCoordinateLayout = findViewById(R.id.main_coordinate_layout);
         prismTabLayout = findViewById(R.id.prism_tab_layout);
         prismViewPager = findViewById(R.id.prism_view_pager);
         imageUploadPreview = findViewById(R.id.image_upload_preview);
         uploadingImageTextView = findViewById(R.id.uploading_image_text_view);
+        prismDecorationRelativeLayout = findViewById(R.id.prism_toolbar_decoration);
         uploadingImageRelativeLayout = findViewById(R.id.uploading_image_relative_layout);
         uploadImageFab = findViewById(R.id.upload_image_fab);
         imageUploadProgressBar = findViewById(R.id.image_upload_progress_bar);
 
         setupUIElements();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
     }
 
     /**
@@ -166,9 +187,14 @@ public class MainActivity extends FragmentActivity {
                     imageUploadProgressBar.setProgress(0);
                     imageUploadProgressBar.setIndeterminate(false);
                     uploadingImageRelativeLayout.setVisibility(View.VISIBLE);
-                    uploadedImageUri = Uri.parse(data.getStringExtra("ImageUri"));
+                    prismDecorationRelativeLayout.setVisibility(View.GONE);
 
+                    params.setScrollFlags(0);
+                    toolbar.setLayoutParams(params);
+
+                    uploadedImageUri = Uri.parse(data.getStringExtra("ImageUri"));
                     uploadedImageDescription = data.getStringExtra("ImageDescription");
+
                     Glide.with(this)
                             .asBitmap()
                             .thumbnail(0.05f)
@@ -190,7 +216,7 @@ public class MainActivity extends FragmentActivity {
                 if (resultCode == RESULT_OK) {
                     profilePictureUri = Uri.parse(data.getStringExtra("CroppedProfilePicture"));
 
-                    ImageView profilePictureImageView = findViewById(R.id.profile_frag_profile_picture_image_view);
+                    ImageView profilePictureImageView = findViewById(R.id.user_profile_profile_picture_image_view);
                     Glide.with(this)
                             .asBitmap()
                             .thumbnail(0.05f)
@@ -219,12 +245,12 @@ public class MainActivity extends FragmentActivity {
 
     /**
      * Give PageChangeListener control to TabLayout
-     * Create ViewPagerAdapter and set it for the ViewPager
+     * Create MainViewPagerAdapter and set it for the ViewPager
      */
     private void setupPrismViewPager() {
-        prismViewPager.setOffscreenPageLimit(Default.VIEW_PAGER_SIZE);
+        prismViewPager.setOffscreenPageLimit(Default.MAIN_VIEW_PAGER_SIZE);
         prismViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(prismTabLayout));
-        ViewPagerAdapter prismViewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager());
+        MainViewPagerAdapter prismViewPagerAdapter = new MainViewPagerAdapter(getSupportFragmentManager());
         prismViewPager.setAdapter(prismViewPagerAdapter);
         prismTabLayout.setupWithViewPager(prismViewPager);
     }
@@ -236,37 +262,45 @@ public class MainActivity extends FragmentActivity {
      */
     private void setupPrismTabLayout() {
         // Setup all TabLayout tab icons
-        prismTabLayout.getTabAt(Default.VIEW_PAGER_HOME).setIcon(R.drawable.ic_image_filter_hdr_white_36dp);
-//        prismTabLayout.getTabAt(Default.VIEW_PAGER_TRENDING).setIcon(R.drawable.ic_flash_white_36dp);
-        prismTabLayout.getTabAt(Default.VIEW_PAGER_SEARCH - 1).setIcon(R.drawable.ic_magnify_white_36dp);
-        prismTabLayout.getTabAt(Default.VIEW_PAGER_NOTIFICATIONS - 1).setIcon(R.drawable.ic_bell_white_36dp);
-        prismTabLayout.getTabAt(Default.VIEW_PAGER_PROFILE - 1).setIcon(R.drawable.ic_account_white_36dp);
+        prismTabLayout.getTabAt(Default.MAIN_VIEW_PAGER_HOME).setIcon(R.drawable.ic_image_filter_hdr_white_36dp);
+//        prismTabLayout.getTabAt(Default.MAIN_VIEW_PAGER_TRENDING).setIcon(R.drawable.ic_flash_white_36dp);
+        prismTabLayout.getTabAt(Default.MAIN_VIEW_PAGER_SEARCH - 1).setIcon(R.drawable.ic_magnify_white_36dp);
+        prismTabLayout.getTabAt(Default.MAIN_VIEW_PAGER_NOTIFICATIONS - 1).setIcon(R.drawable.ic_bell_white_36dp);
+        prismTabLayout.getTabAt(Default.MAIN_VIEW_PAGER_PROFILE - 1).setIcon(R.drawable.ic_menu_white_36dp);
 
         // Create the selected and unselected tab icon colors
         int tabUnselectedColor = Color.WHITE;
         int tabSelectedColor = getResources().getColor(R.color.colorAccent);
+
         // Make first tab selected color and all others unselected
-        prismTabLayout.getTabAt(Default.VIEW_PAGER_HOME).getIcon().setColorFilter(
+        prismTabLayout.getTabAt(Default.MAIN_VIEW_PAGER_HOME).getIcon().setColorFilter(
                 tabSelectedColor, PorterDuff.Mode.SRC_IN);
-        prismTabLayout.getTabAt(Default.VIEW_PAGER_SEARCH - 1).getIcon().setColorFilter(
+        prismTabLayout.getTabAt(Default.MAIN_VIEW_PAGER_SEARCH - 1).getIcon().setColorFilter(
                 tabUnselectedColor, PorterDuff.Mode.SRC_IN);
-        prismTabLayout.getTabAt(Default.VIEW_PAGER_NOTIFICATIONS - 1).getIcon().setColorFilter(
+        prismTabLayout.getTabAt(Default.MAIN_VIEW_PAGER_NOTIFICATIONS - 1).getIcon().setColorFilter(
                 tabUnselectedColor, PorterDuff.Mode.SRC_IN);
-        prismTabLayout.getTabAt(Default.VIEW_PAGER_PROFILE - 1).getIcon().setColorFilter(
+        prismTabLayout.getTabAt(Default.MAIN_VIEW_PAGER_PROFILE - 1).getIcon().setColorFilter(
                 tabUnselectedColor, PorterDuff.Mode.SRC_IN);
 
         // Setup the tab selected, unselected, and reselected listener
         prismTabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
+//                params.setScrollFlags(isUploadingImage ?
+//                        0 : AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL |
+//                        AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS |
+//                        AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP);
                 // Sets the selected tab to the selected color and
                 // If at the HOME tab the uploadImageFab will be shown
                 // Otherwise, the uploadImageFab will be hidden
                 tab.getIcon().setColorFilter(tabSelectedColor, PorterDuff.Mode.SRC_IN);
                 prismViewPager.setCurrentItem(tab.getPosition(), true);
-                if (tab.getPosition() <= Default.VIEW_PAGER_TRENDING - 1 && !uploadImageFab.isShown()) {
+                if (tab.getPosition() <= Default.MAIN_VIEW_PAGER_TRENDING - 1 && !uploadImageFab.isShown()) {
+//                    toolbar.setLayoutParams(params);
                     uploadImageFab.startAnimation(showFabAnimation);
-                } else if (tab.getPosition() > Default.VIEW_PAGER_TRENDING - 1 && uploadImageFab.isShown()) {
+                } else if (tab.getPosition() > Default.MAIN_VIEW_PAGER_TRENDING - 1 && uploadImageFab.isShown()) {
+//                    params.setScrollFlags(0);
+//                    toolbar.setLayoutParams(params);
                     uploadImageFab.startAnimation(hideFabAnimation);
                 }
             }
@@ -286,9 +320,9 @@ public class MainActivity extends FragmentActivity {
                     case 0:
                         RecyclerView mainContentRecyclerView = MainActivity.this
                                 .findViewById(R.id.main_content_recycler_view);
-                        LinearLayoutManager layoutManager  = (LinearLayoutManager)
-                                mainContentRecyclerView.getLayoutManager();
                         if (mainContentRecyclerView != null) {
+                            LinearLayoutManager layoutManager  = (LinearLayoutManager)
+                                    mainContentRecyclerView.getLayoutManager();
                             if (layoutManager.findFirstVisibleItemPosition() < 10) {
                                 mainContentRecyclerView.smoothScrollToPosition(0);
                             } else {
@@ -353,6 +387,9 @@ public class MainActivity extends FragmentActivity {
         setupPrismViewPager();
         setupPrismTabLayout();
         setupUploadImageFab();
+
+        TabLayout.Tab currentTab = prismTabLayout.getTabAt(prismViewPager.getCurrentItem());
+        currentTab.select();
     }
 
     /**
@@ -525,6 +562,12 @@ public class MainActivity extends FragmentActivity {
             @Override
             public void run() {
                 uploadingImageRelativeLayout.setVisibility(View.GONE);
+                prismDecorationRelativeLayout.setVisibility(View.VISIBLE);
+
+                params.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL |
+                        AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS |
+                        AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP);
+                toolbar.setLayoutParams(params);
             }
         }, 2000);
     }

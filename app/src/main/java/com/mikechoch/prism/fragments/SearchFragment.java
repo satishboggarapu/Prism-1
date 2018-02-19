@@ -32,21 +32,14 @@ public class SearchFragment extends Fragment {
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
 
-    public static final SearchFragment newInstance(int title, String message) {
+    public static final SearchFragment newInstance() {
         SearchFragment searchFragment = new SearchFragment();
-        Bundle bundle = new Bundle(2);
-        bundle.putInt("Title", title);
-        bundle.putString("Extra_Message", message);
-        searchFragment.setArguments(bundle);
         return searchFragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        int title = getArguments().getInt("Title");
-        String message = getArguments().getString("Extra_Message");
 
         // Initialize normal and bold Prism font
         sourceSansProLight = Typeface.createFromAsset(getActivity().getAssets(), "fonts/SourceSansPro-Light.ttf");

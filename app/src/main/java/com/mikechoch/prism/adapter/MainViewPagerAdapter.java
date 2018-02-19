@@ -14,15 +14,15 @@ import com.mikechoch.prism.fragments.SearchFragment;
  * Created by mikechoch on 1/22/18.
  */
 
-public class ViewPagerAdapter extends FragmentStatePagerAdapter {
+public class MainViewPagerAdapter extends FragmentStatePagerAdapter {
 
     /*
      * Global variables
      */
-    private int NUM_ITEMS = Default.VIEW_PAGER_SIZE;
+    private int NUM_ITEMS = Default.MAIN_VIEW_PAGER_SIZE;
 
 
-    public ViewPagerAdapter(FragmentManager fragmentManager) {
+    public MainViewPagerAdapter(FragmentManager fragmentManager) {
         super(fragmentManager);
     }
 
@@ -35,15 +35,15 @@ public class ViewPagerAdapter extends FragmentStatePagerAdapter {
     public Fragment getItem(int position) {
         switch (position) {
             case 0:
-                return new MainContentFragment().newInstance(0, "");
+                return new MainContentFragment().newInstance();
 //            case 1:
-//                return new TrendingContentFragment().newInstance(1, "");
+//                return new TrendingContentFragment().newInstance();
             case 2 - 1:
-                return new SearchFragment().newInstance(2, "");
+                return new SearchFragment().newInstance();
             case 3 - 1:
-                return new NotificationsFragment().newInstance(3, "");
+                return new NotificationsFragment().newInstance();
             case 4 - 1:
-                return new ProfileFragment().newInstance(4, "");
+                return new ProfileFragment().newInstance();
             default:
                 return null;
         }

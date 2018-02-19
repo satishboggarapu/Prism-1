@@ -98,18 +98,18 @@
         <Button
             android:id="@+id/upload_button"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="38dp"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
-            android:layout_marginBottom="16dp"
-            android:layout_marginEnd="20dp"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="16dp"
-            android:padding="10dp"
-            android:text="UPLOAD"
-            android:textSize="18sp"
+            android:layout_marginBottom="24dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="24dp"
+            android:text="SAVE"
+            android:textSize="19sp"
+            android:clickable="true"
             android:textColor="@android:color/white"
-            android:backgroundTint="@color/colorAccent"/>
+            android:background="@drawable/button_selector" />
 
     </RelativeLayout>
 

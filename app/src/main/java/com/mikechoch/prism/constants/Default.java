@@ -25,12 +25,25 @@ public class Default {
     public static final int IMAGE_LOAD_THRESHOLD = 3;
     public static final int IMAGE_LOAD_COUNT = 10;
 
-    public static final int VIEW_PAGER_SIZE = 5 - 1;
-    public static final int VIEW_PAGER_HOME = 0;
-    public static final int VIEW_PAGER_TRENDING = 1;
-    public static final int VIEW_PAGER_SEARCH = 2;
-    public static final int VIEW_PAGER_NOTIFICATIONS = 3;
-    public static final int VIEW_PAGER_PROFILE = 4;
+    // ViewPager
+    public static final int MAIN_VIEW_PAGER_SIZE = 5 - 1;
+    public static final int MAIN_VIEW_PAGER_HOME = 0;
+    public static final int MAIN_VIEW_PAGER_TRENDING = 1;
+    public static final int MAIN_VIEW_PAGER_SEARCH = 2;
+    public static final int MAIN_VIEW_PAGER_NOTIFICATIONS = 3;
+    public static final int MAIN_VIEW_PAGER_PROFILE = 4;
+
+    public static final int USER_POSTS_VIEW_PAGER_SIZE = 2;
+    public static final int USER_POSTS_VIEW_PAGER_POSTS = 0;
+    public static final int USER_POSTS_VIEW_PAGER_LIKES = 1;
+
+    // SettingsOption
+    public static final int SETTINGS_OPTION_APP = 0;
+    public static final int SETTINGS_OPTION_NOTIFICATION = 1;
+    public static final int SETTINGS_OPTION_ACCOUNT = 2;
+    public static final int SETTINGS_OPTION_HELP = 3;
+    public static final int SETTINGS_OPTION_ABOUT = 4;
+    public static final int SETTINGS_OPTION_LOGOUT = 5;
 
     public static final int USER_UPLOADED_POSTS_COLUMNS = 3;
 

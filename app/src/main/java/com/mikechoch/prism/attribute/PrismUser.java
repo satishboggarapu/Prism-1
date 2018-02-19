@@ -1,5 +1,7 @@
 package com.mikechoch.prism.attribute;
 
+import android.os.Parcelable;
+
 /**
  * Created by mikechoch on 1/30/18.
  */

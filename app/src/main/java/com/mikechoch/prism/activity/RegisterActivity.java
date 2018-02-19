@@ -3,7 +3,6 @@ package com.mikechoch.prism.activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.net.Uri;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
@@ -97,7 +96,7 @@ public class RegisterActivity extends AppCompatActivity {
         emailEditText = findViewById(R.id.register_email_edit_text);
         passwordTextInputLayout = findViewById(R.id.register_password_text_input_layout);
         passwordEditText = findViewById(R.id.register_password_edit_text);
-        registerButton = findViewById(R.id.submit_button);
+        registerButton = findViewById(R.id.register_submit_button);
         goToLoginButton = findViewById(R.id.login_text_view);
         registerProgressBar = findViewById(R.id.register_progress_bar);
 

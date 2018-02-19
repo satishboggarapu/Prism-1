@@ -4,11 +4,23 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <android.support.v4.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        </RelativeLayout>
+
+    </android.support.v4.widget.NestedScrollView>
+
     <android.support.v7.widget.CardView
         android:id="@+id/search_bar_card_view"
         android:layout_width="match_parent"
         android:layout_height="52dp"
-        android:layout_gravity="center|top"
+        android:layout_gravity="top|center_horizontal"
         android:layout_marginTop="16dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
@@ -29,7 +41,7 @@
                 android:layout_alignParentStart="true"
                 android:layout_centerVertical="true"
                 android:layout_marginStart="12dp"
-                android:text="Search Prism"
+                android:text="Search Prism..."
                 android:textSize="22sp"
                 android:textColor="@color/searchHintTextColor"/>
 
@@ -39,8 +51,8 @@
 
     <RelativeLayout
         android:id="@+id/search_relative_layout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_gravity="center"
         android:visibility="visible">
 
@@ -58,7 +70,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/search_image_view"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="52dp"
+            android:layout_marginTop="8dp"
             android:text="Search by"
             android:textSize="16sp"
             android:textColor="@android:color/white"

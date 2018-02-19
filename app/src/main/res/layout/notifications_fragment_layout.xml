@@ -3,40 +3,54 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <RelativeLayout
-        android:id="@+id/no_notifications_relative_layout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="visible">
+    <android.support.v4.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-        <ImageView
-            android:id="@+id/no_notifications_image_view"
-            android:layout_width="92dp"
-            android:layout_height="92dp"
-            android:layout_centerInParent="true"
-            android:src="@drawable/no_notifications_icon"
-            android:tint="@android:color/white"/>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:gravity="center">
 
-        <TextView
-            android:id="@+id/no_notifications_text_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/no_notifications_image_view"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="36dp"
-            android:text="No notifications"
-            android:textColor="@android:color/white"/>
+            <RelativeLayout
+                android:id="@+id/no_notifications_relative_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:visibility="visible">
 
-    </RelativeLayout>
+                <ImageView
+                    android:id="@+id/no_notifications_image_view"
+                    android:layout_width="92dp"
+                    android:layout_height="92dp"
+                    android:layout_centerInParent="true"
+                    android:src="@drawable/no_notifications_icon"
+                    android:tint="@android:color/white"/>
 
-    <!--<ProgressBar-->
-        <!--android:id="@+id/main_content_progress_bar"-->
-        <!--android:layout_width="80dp"-->
-        <!--android:layout_height="80dp"-->
-        <!--android:layout_gravity="center"-->
-        <!--android:indeterminate="true"-->
-        <!--android:indeterminateDrawable="@drawable/circle_progress_foreground"-->
-        <!--android:visibility="visible" />-->
+                <TextView
+                    android:id="@+id/no_notifications_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/no_notifications_image_view"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="36dp"
+                    android:text="No notifications"
+                    android:textColor="@android:color/white"/>
+
+            </RelativeLayout>
+
+            <!--<ProgressBar-->
+                <!--android:id="@+id/main_content_progress_bar"-->
+                <!--android:layout_width="80dp"-->
+                <!--android:layout_height="80dp"-->
+                <!--android:layout_gravity="center"-->
+                <!--android:indeterminate="true"-->
+                <!--android:indeterminateDrawable="@drawable/circle_progress_foreground"-->
+                <!--android:visibility="visible" />-->
+
+        </RelativeLayout>
+
+    </android.support.v4.widget.NestedScrollView>
 
 </android.support.design.widget.CoordinatorLayout>

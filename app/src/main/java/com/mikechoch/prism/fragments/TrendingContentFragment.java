@@ -15,21 +15,14 @@ import com.mikechoch.prism.R;
 public class TrendingContentFragment extends Fragment {
 
 
-    public static final TrendingContentFragment newInstance(int title, String message) {
+    public static final TrendingContentFragment newInstance() {
         TrendingContentFragment trendingContentFragment = new TrendingContentFragment();
-        Bundle bundle = new Bundle(2);
-        bundle.putInt("Title", title);
-        bundle.putString("Extra_Message", message);
-        trendingContentFragment.setArguments(bundle);
         return trendingContentFragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        int title = getArguments().getInt("Title");
-        String message = getArguments().getString("Extra_Message");
     }
 
     @Override

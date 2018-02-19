@@ -23,21 +23,14 @@ public class NotificationsFragment extends Fragment {
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
 
-    public static final NotificationsFragment newInstance(int title, String message) {
+    public static final NotificationsFragment newInstance() {
         NotificationsFragment notificationsFragment = new NotificationsFragment();
-        Bundle bundle = new Bundle(2);
-        bundle.putInt("Title", title);
-        bundle.putString("Extra_Message", message);
-        notificationsFragment.setArguments(bundle);
         return notificationsFragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        int title = getArguments().getInt("Title");
-        String message = getArguments().getString("Extra_Message");
 
         // Initialize normal and bold Prism font
         sourceSansProLight = Typeface.createFromAsset(getActivity().getAssets(), "fonts/SourceSansPro-Light.ttf");

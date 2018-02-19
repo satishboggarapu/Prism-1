@@ -45,8 +45,6 @@ public class MainContentFragment extends Fragment {
     private DatabaseReference databaseReferenceAllPosts;
     private DatabaseReference usersReference;
 
-    public static ArrayList<PrismPost> prismPostArrayList;
-
     private RelativeLayout noMainPostsRelativeLayout;
     private TextView noMainPostsTextView;
     private RecyclerView mainContentRecyclerView;
@@ -55,30 +53,23 @@ public class MainContentFragment extends Fragment {
 
     private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
     private SwipeRefreshLayout mainContentSwipeRefreshLayout;
-
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
-
     private int screenWidth;
     private int screenHeight;
+
+    public static ArrayList<PrismPost> prismPostArrayList;
     private boolean isLoading = false;
 
 
-    public static final MainContentFragment newInstance(int title, String message) {
+    public static final MainContentFragment newInstance() {
         MainContentFragment mainContentFragment = new MainContentFragment();
-        Bundle bundle = new Bundle(2);
-        bundle.putInt("Title", title);
-        bundle.putString("Extra_Message", message);
-        mainContentFragment.setArguments(bundle);
         return mainContentFragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        int title = getArguments().getInt("Title");
-        String message = getArguments().getString("Extra_Message");
 
         screenWidth = getActivity().getWindowManager().getDefaultDisplay().getWidth();
         screenHeight = getActivity().getWindowManager().getDefaultDisplay().getHeight();

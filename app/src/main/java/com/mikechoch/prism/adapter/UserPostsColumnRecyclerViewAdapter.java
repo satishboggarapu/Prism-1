@@ -1,6 +1,11 @@
 package com.mikechoch.prism.adapter;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.os.Parcelable;
+import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +15,7 @@ import android.widget.ImageView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.mikechoch.prism.R;
+import com.mikechoch.prism.activity.PrismPostDetailActivity;
 import com.mikechoch.prism.attribute.PrismPost;
 
 import java.util.ArrayList;
@@ -19,7 +25,7 @@ import java.util.List;
  * Created by mikechoch on 2/7/18.
  */
 
-public class UserUploadedPostsRecyclerViewAdapter extends RecyclerView.Adapter<UserUploadedPostsRecyclerViewAdapter.ViewHolder> {
+public class UserPostsColumnRecyclerViewAdapter extends RecyclerView.Adapter<UserPostsColumnRecyclerViewAdapter.ViewHolder> {
 
     /*
      * Global variables
@@ -28,7 +34,7 @@ public class UserUploadedPostsRecyclerViewAdapter extends RecyclerView.Adapter<U
     private List<PrismPost> prismPostsArrayList;
 
 
-    public UserUploadedPostsRecyclerViewAdapter(Context context, ArrayList<PrismPost> prismPostsArrayList) {
+    public UserPostsColumnRecyclerViewAdapter(Context context, ArrayList<PrismPost> prismPostsArrayList) {
         this.context = context;
         this.prismPostsArrayList = prismPostsArrayList;
     }
@@ -73,10 +79,32 @@ public class UserUploadedPostsRecyclerViewAdapter extends RecyclerView.Adapter<U
          * Populate userPostImageView using Glide with the specific post image
          */
         private void setupPostImageView() {
+            ViewCompat.setTransitionName(userPostImageView, prismPost.getImage());
+
+            float scale = context.getResources().getDisplayMetrics().density;
+            userPostImageView.setMaxHeight((int) (scale * 150));
+
             Glide.with(context)
                     .load(prismPost.getImage())
                     .apply(new RequestOptions().fitCenter())
                     .into(userPostImageView);
+
+            userPostImageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent prismPostDetailIntent = new Intent(context, PrismPostDetailActivity.class);
+                    prismPostDetailIntent.putExtra("PrismPostImage", prismPost.getImage());
+                    prismPostDetailIntent.putExtra("PrismPostForDetailTransitionName", ViewCompat.getTransitionName(userPostImageView));
+
+                    ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
+                            (Activity) context,
+                            userPostImageView,
+                            ViewCompat.getTransitionName(userPostImageView));
+
+                    context.startActivity(prismPostDetailIntent, options.toBundle());
+                    ((Activity) context).overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+                }
+            });
         }
 
         /**
