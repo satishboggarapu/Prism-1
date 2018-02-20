@@ -252,9 +252,22 @@ public class LoginActivity extends AppCompatActivity {
      * Intent to Main Activity from Login Activity
      */
     private void intentToMainActivity() {
-        startActivity(new Intent(LoginActivity.this, MainActivity.class));
-        finish();
-        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+        Intent mainActivityIntent = new Intent(LoginActivity.this, MainActivity.class);
+        ActivityOptionsCompat options = ActivityOptionsCompat.
+                makeSceneTransitionAnimation(LoginActivity.this, iconImageView, "icon");
+        iconImageView.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                startActivity(mainActivityIntent, options.toBundle());
+//                    overridePendingTransition(enterAnim, exitAnim);
+                iconImageView.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        finish();
+                    }
+                }, 1000);
+            }
+        }, 250);
     }
 
     /**

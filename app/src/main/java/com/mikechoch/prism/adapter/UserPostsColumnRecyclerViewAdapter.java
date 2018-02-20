@@ -21,6 +21,7 @@ import com.mikechoch.prism.attribute.PrismPost;
 import java.util.ArrayList;
 import java.util.List;
 
+
 /**
  * Created by mikechoch on 2/7/18.
  */
@@ -93,6 +94,7 @@ public class UserPostsColumnRecyclerViewAdapter extends RecyclerView.Adapter<Use
                 @Override
                 public void onClick(View v) {
                     Intent prismPostDetailIntent = new Intent(context, PrismPostDetailActivity.class);
+
                     prismPostDetailIntent.putExtra("PrismPostDetail", prismPost);
                     prismPostDetailIntent.putExtra("PrismPostDetailTransitionName", ViewCompat.getTransitionName(userPostImageView));
 
@@ -102,7 +104,7 @@ public class UserPostsColumnRecyclerViewAdapter extends RecyclerView.Adapter<Use
                             ViewCompat.getTransitionName(userPostImageView));
 
                     context.startActivity(prismPostDetailIntent, options.toBundle());
-                    ((Activity) context).overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+//                    ((Activity) context).overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
                 }
             });
         }

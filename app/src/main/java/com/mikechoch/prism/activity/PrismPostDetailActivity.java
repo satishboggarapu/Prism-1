@@ -12,6 +12,7 @@ import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Html;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -29,11 +30,14 @@ import com.mikechoch.prism.R;
 import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.helper.Helper;
 
+import ooo.oxo.library.widget.PullBackLayout;
+
+
 /**
  * Created by mikechoch on 2/19/18.
  */
 
-public class PrismPostDetailActivity extends AppCompatActivity {
+public class PrismPostDetailActivity extends AppCompatActivity implements PullBackLayout.Callback {
 
     /*
      * Globals
@@ -44,15 +48,22 @@ public class PrismPostDetailActivity extends AppCompatActivity {
     private int screenWidth;
     private int screenHeight;
 
+    private PullBackLayout prismPostDetailPuller;
     private AppBarLayout appBarLayout;
     private Toolbar toolbar;
     private CollapsingToolbarLayout collapsingToolbarLayout;
 
+    private ImageView likeActionButton;
+    private TextView likeCountTextView;
+    private ImageView repostActionButton;
+    private TextView repostCountTextView;
+    private ImageView moreActionButton;
     private ImageView detailImageView;
     private ImageView detailUserProfilePictureImageView;
     private TextView detailUsernameTextView;
     private TextView detailPrismPostDateTextView;
     private TextView detailPrismPostDescriptionTextView;
+    private TextView detailPrismPostTagsTextView;
 
     private PrismPost prismPost;
 
@@ -93,15 +104,22 @@ public class PrismPostDetailActivity extends AppCompatActivity {
         screenHeight = getWindowManager().getDefaultDisplay().getHeight();
 
         // Initialize all UI elements
+        prismPostDetailPuller = findViewById(R.id.prism_post_detail_puller);
         appBarLayout = findViewById(R.id.prism_post_detail_app_bar_layout);
         toolbar = findViewById(R.id.toolbar);
         collapsingToolbarLayout = findViewById(R.id.collapsing_toolbar);
 
+        likeActionButton = findViewById(R.id.image_like_button);
+        likeCountTextView = findViewById(R.id.like_count);
+        repostActionButton = findViewById(R.id.image_repost_button);
+        repostCountTextView = findViewById(R.id.repost_count);
+        moreActionButton = findViewById(R.id.image_more_button);
         detailImageView = findViewById(R.id.prism_post_detail_image_view);
         detailUserProfilePictureImageView = findViewById(R.id.prism_post_detail_user_profile_picture_image_view);
         detailUsernameTextView = findViewById(R.id.prism_post_detail_username_text_view);
         detailPrismPostDateTextView = findViewById(R.id.prism_post_detail_date_text_view);
         detailPrismPostDescriptionTextView = findViewById(R.id.prism_post_description);
+        detailPrismPostTagsTextView = findViewById(R.id.prism_post_tags);
 
         Bundle extras = getIntent().getExtras();
         prismPost = extras.getParcelable("PrismPostDetail");
@@ -112,6 +130,28 @@ public class PrismPostDetailActivity extends AppCompatActivity {
         }
 
         setupUIElements();
+        prismPostDetailPuller.setCallback(this);
+    }
+
+    @Override
+    public void onPullStart() {
+
+    }
+
+    @Override
+    public void onPull(float pullFloat) {
+        float viewAlpha = 1 - pullFloat;
+        prismPostDetailPuller.setAlpha(1 - viewAlpha);
+    }
+
+    @Override
+    public void onPullCancel() {
+
+    }
+
+    @Override
+    public void onPullComplete() {
+        supportFinishAfterTransition();
     }
 
     @Override
@@ -229,12 +269,23 @@ public class PrismPostDetailActivity extends AppCompatActivity {
         setupToolbar();
 
         // Setup Typefaces for all text based UI elements
+        likeCountTextView.setTypeface(sourceSansProLight);
+        repostCountTextView.setTypeface(sourceSansProLight);
         detailUsernameTextView.setTypeface(sourceSansProBold);
         detailPrismPostDateTextView.setTypeface(sourceSansProLight);
         detailPrismPostDescriptionTextView.setTypeface(sourceSansProLight);
+        detailPrismPostTagsTextView.setTypeface(sourceSansProLight);
+
+        detailPrismPostTagsTextView.setText(Html.fromHtml(
+                "<u>#burger</u> " +
+                        "<u>#delicous</u> " +
+                        "<u>#foodporn</u> " +
+                        "<u>#inandout</u> " +
+                        "<u>#fries</u> " +
+                        "<u>#carkeys</u> " +
+                        "<u>#amazing</u>"));
 
         setupPrismPostUserInfo();
 
     }
-
 }
