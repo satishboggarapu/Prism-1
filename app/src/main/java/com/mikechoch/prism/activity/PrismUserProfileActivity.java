@@ -3,7 +3,9 @@ package com.mikechoch.prism.activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
@@ -506,6 +508,55 @@ public class PrismUserProfileActivity extends AppCompatActivity {
         followUserButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                boolean performFollow = !(CurrentUser.followings.containsKey(prismUser.getUsername()));
+
+                usersReference.child(prismUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            if (performFollow) {
+                                usersReference.child(prismUser.getUid())
+                                        .child(Key.DB_REF_USER_FOLLOWERS)
+                                        .child(CurrentUser.prismUser.getUsername())
+                                        .setValue(CurrentUser.prismUser.getUid());
+
+                                usersReference.child(CurrentUser.prismUser.getUid())
+                                        .child(Key.DB_REF_USER_FOLLOWINGS)
+                                        .child(prismUser.getUsername())
+                                        .setValue(prismUser.getUid());
+
+                                // Add prismUser to local followers HashMap
+                                CurrentUser.followings.put(prismUser.getUsername(), prismUser.getUid());
+                                toast("Following " + prismUser.getUsername());
+                                // TODO @Mike show FOLLOWING button
+                            } else {
+                                usersReference.child(prismUser.getUid())
+                                        .child(Key.DB_REF_USER_FOLLOWERS)
+                                        .child(CurrentUser.prismUser.getUsername())
+                                        .removeValue();
+
+                                usersReference.child(CurrentUser.prismUser.getUid())
+                                        .child(Key.DB_REF_USER_FOLLOWINGS)
+                                        .child(prismUser.getUsername())
+                                        .removeValue();
+
+                                // Add prismUser to local followers HashMap
+                                CurrentUser.followings.remove(prismUser.getUsername());
+                                toast("Unfollowed " + prismUser.getUsername());
+                                // TODO @Mike show FOLLOW button cuz user unfollowed the guy
+                            }
+                        } else {
+                            Log.e(Default.TAG_DB, Message.FETCH_USER_DETAILS_FAIL);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.wtf(Default.TAG_DB, databaseError.getMessage(), databaseError.toException());
+                    }
+                });
+
+
 
             }
         });
@@ -519,6 +570,7 @@ public class PrismUserProfileActivity extends AppCompatActivity {
 
         // Setup Typefaces for all text based UI elements
         toolbarUserUsernameTextView.setTypeface(sourceSansProBold);
+        toolbarFollowButton.setTypeface(sourceSansProLight);
         followUserButton.setTypeface(sourceSansProLight);
         followersCountTextView.setTypeface(sourceSansProBold);
         followersLabelTextView.setTypeface(sourceSansProLight);
