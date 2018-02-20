@@ -93,8 +93,8 @@ public class UserPostsColumnRecyclerViewAdapter extends RecyclerView.Adapter<Use
                 @Override
                 public void onClick(View v) {
                     Intent prismPostDetailIntent = new Intent(context, PrismPostDetailActivity.class);
-                    prismPostDetailIntent.putExtra("PrismPostImage", prismPost.getImage());
-                    prismPostDetailIntent.putExtra("PrismPostForDetailTransitionName", ViewCompat.getTransitionName(userPostImageView));
+                    prismPostDetailIntent.putExtra("PrismPostDetail", prismPost);
+                    prismPostDetailIntent.putExtra("PrismPostDetailTransitionName", ViewCompat.getTransitionName(userPostImageView));
 
                     ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
                             (Activity) context,

@@ -8,24 +8,26 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
-import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.bumptech.glide.request.target.Target;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.attribute.PrismPost;
+import com.mikechoch.prism.helper.Helper;
 
 /**
  * Created by mikechoch on 2/19/18.
@@ -39,11 +41,20 @@ public class PrismPostDetailActivity extends AppCompatActivity {
     private float scale;
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
+    private int screenWidth;
+    private int screenHeight;
 
     private AppBarLayout appBarLayout;
     private Toolbar toolbar;
+    private CollapsingToolbarLayout collapsingToolbarLayout;
 
     private ImageView detailImageView;
+    private ImageView detailUserProfilePictureImageView;
+    private TextView detailUsernameTextView;
+    private TextView detailPrismPostDateTextView;
+    private TextView detailPrismPostDescriptionTextView;
+
+    private PrismPost prismPost;
 
 
     @Override
@@ -77,51 +88,28 @@ public class PrismPostDetailActivity extends AppCompatActivity {
         sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
 
+        // Get the screen width and height of the current phone
+        screenWidth = getWindowManager().getDefaultDisplay().getWidth();
+        screenHeight = getWindowManager().getDefaultDisplay().getHeight();
+
         // Initialize all UI elements
         appBarLayout = findViewById(R.id.prism_post_detail_app_bar_layout);
         toolbar = findViewById(R.id.toolbar);
+        collapsingToolbarLayout = findViewById(R.id.collapsing_toolbar);
 
         detailImageView = findViewById(R.id.prism_post_detail_image_view);
-
-        getWindow().setStatusBarColor(Color.TRANSPARENT);
-        getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-
-//        toolbar.setPadding(0, getStatusBarHeight(), 0, 0);
-//        appBarLayout.setPadding(0, getStatusBarHeight(), 0, 0);
-
-        CollapsingToolbarLayout.LayoutParams params = (CollapsingToolbarLayout.LayoutParams) toolbar.getLayoutParams();
-        params.setMargins(0, getStatusBarHeight(), 0, 0);
-        toolbar.setLayoutParams(params);
+        detailUserProfilePictureImageView = findViewById(R.id.prism_post_detail_user_profile_picture_image_view);
+        detailUsernameTextView = findViewById(R.id.prism_post_detail_username_text_view);
+        detailPrismPostDateTextView = findViewById(R.id.prism_post_detail_date_text_view);
+        detailPrismPostDescriptionTextView = findViewById(R.id.prism_post_description);
 
         Bundle extras = getIntent().getExtras();
-        String imageUrl = extras.getString("PrismPostImage");
+        prismPost = extras.getParcelable("PrismPostDetail");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            String imageTransitionName = extras.getString("PrismPostForDetailTransitionName");
+            String imageTransitionName = extras.getString("PrismPostDetailTransitionName");
             detailImageView.setTransitionName(imageTransitionName);
         }
-
-        Glide.with(this)
-                .asBitmap()
-                .load(imageUrl)
-                .apply(new RequestOptions().fitCenter())
-                .listener(new RequestListener<Bitmap>() {
-                    @Override
-                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
-                        // TODO: @Mike we should hide progressBar here as well and display a toast or something
-                        supportStartPostponedEnterTransition();
-                        return false;
-                    }
-
-                    @Override
-                    public boolean onResourceReady(Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
-                        // TODO: @Mike we should hide progressBar here as well and display a toast or something
-                        supportStartPostponedEnterTransition();
-                        return false;
-                    }
-                })
-                .into(detailImageView);
 
         setupUIElements();
     }
@@ -144,22 +132,108 @@ public class PrismPostDetailActivity extends AppCompatActivity {
     }
 
     /**
+     *
+     */
+    private void setupStatusBar() {
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+    }
+
+    /**
      * Setup the toolbar and back button to return to MainActivity
      */
     private void setupToolbar() {
         toolbar.setTitle("");
+
+        CollapsingToolbarLayout.LayoutParams params = (CollapsingToolbarLayout.LayoutParams) toolbar.getLayoutParams();
+        params.setMargins(0, getStatusBarHeight(), 0, 0);
+        toolbar.setLayoutParams(params);
+
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
+
+    /**
+     *
+     */
+    private void setupPrismPostImageView() {
+        supportStartPostponedEnterTransition();
+
+        Glide.with(this)
+                .asBitmap()
+                .load(prismPost.getImage())
+                .apply(new RequestOptions().fitCenter())
+                .listener(new RequestListener<Bitmap>() {
+                    @Override
+                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
+                        startPostponedEnterTransition();
+                        return false;
+                    }
+
+                    @Override
+                    public boolean onResourceReady(Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
+                        detailImageView.getLayoutParams().height = resource.getHeight();
+                        appBarLayout.getLayoutParams().height = resource.getHeight();
+
+                        boolean isLongPortraitImage = resource.getHeight() >= screenHeight;
+                        detailImageView.setScaleType(isLongPortraitImage ? ImageView.ScaleType.CENTER_CROP : ImageView.ScaleType.FIT_START);
+
+                        boolean isPortraitImage = resource.getHeight() > (screenHeight * 0.25);
+                        toolbar.getLayoutParams().height = (int) (isPortraitImage ? (screenHeight * 0.25) : resource.getHeight());
+
+                        startPostponedEnterTransition();
+                        return false;
+                    }
+                })
+                .into(detailImageView);
+    }
+
+    /**
+     *
+     */
+    private void setupPrismPostUserInfo() {
+        Glide.with(this)
+                .asBitmap()
+                .load(prismPost.getPrismUser().getProfilePicture().lowResUri)
+                .apply(new RequestOptions().fitCenter())
+                .into(new BitmapImageViewTarget(detailUserProfilePictureImageView) {
+                    @Override
+                    protected void setResource(Bitmap resource) {
+                        if (!prismPost.getPrismUser().getProfilePicture().isDefault) {
+                            int whiteOutlinePadding = (int) (1 * scale);
+                            detailUserProfilePictureImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
+                            detailUserProfilePictureImageView.setBackground(getResources().getDrawable(R.drawable.circle_profile_frame));
+                        } else {
+                            detailUserProfilePictureImageView.setPadding(0, 0, 0, 0);
+                            detailUserProfilePictureImageView.setBackground(null);
+                        }
+
+                        RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), resource);
+                        drawable.setCircular(true);
+                        detailUserProfilePictureImageView.setImageDrawable(drawable);
+                    }
+                });
+
+        detailUsernameTextView.setText(prismPost.getPrismUser().getUsername());
+        detailPrismPostDateTextView.setText(Helper.getFancyDateDifferenceString(prismPost.getTimestamp() * -1));
+        detailPrismPostDescriptionTextView.setText(prismPost.getCaption());
     }
 
     /**
      * Setup all UI elements
      */
     private void setupUIElements() {
+        setupPrismPostImageView();
+        setupStatusBar();
         setupToolbar();
 
         // Setup Typefaces for all text based UI elements
+        detailUsernameTextView.setTypeface(sourceSansProBold);
+        detailPrismPostDateTextView.setTypeface(sourceSansProLight);
+        detailPrismPostDescriptionTextView.setTypeface(sourceSansProLight);
 
+        setupPrismPostUserInfo();
 
     }
 
