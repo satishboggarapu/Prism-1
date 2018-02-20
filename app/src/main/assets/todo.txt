@@ -1,0 +1,25 @@
+---------------------
+* THINGS TO IMPLEMENT *
+---------------------
+- Make sure the user uploaded posts and user liked posts are in descending sorted order.
+    Also there should be MAX limit on how many user uploaded/liked posts I pull from cloud
+    and pull more as user scrolls down the list
+
+- Try to fetch user posts without negative timestamp (maybe do get `limitToLast`)
+
+- Make sure post author/owner cannot repost the prismPost
+
+
+---------------------
+* BUGS TO FIX *
+---------------------
+- Repost UI glitch
+
+
+
+---------------------
+* FEATURES TO ADD *
+---------------------
+- Image title/caption on main page
+- Tags
+

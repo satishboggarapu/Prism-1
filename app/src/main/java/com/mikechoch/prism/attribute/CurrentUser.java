@@ -45,18 +45,27 @@ public class CurrentUser {
     private static Context context;
     private float scale;
 
-    // Key: String postId
-    // Value: long timestamp
-    public static ArrayList<PrismPost> user_liked_posts;
-    public static HashMap user_liked_posts_map;
-    public static ArrayList<PrismPost> user_reposted_posts;
-    public static HashMap user_reposted_posts_map;
+    /**
+     * Key: String postId
+     * Value: long timestamp
+    **/
+    public static HashMap liked_posts_map;
+    public static HashMap reposted_posts_map;
+    private static HashMap uploaded_posts_map;
 
-    public static ArrayList<PrismPost> user_uploaded_posts;
-    private static HashMap user_uploaded_posts_map;
+    /* ArrayList of PrismPost object for above structures */
+    public static ArrayList<PrismPost> liked_posts;
+    public static ArrayList<PrismPost> reposted_posts;
+    public static ArrayList<PrismPost> uploaded_posts;
+
+    /**
+     * Key: String username
+     * Value: String uid
+     */
+    public static HashMap followers;
+    public static HashMap followings;
 
     public static PrismUser prismUser;
-
 
     public CurrentUser(Context context) {
         auth = FirebaseAuth.getInstance();
@@ -67,45 +76,74 @@ public class CurrentUser {
         CurrentUser.context = context;
         scale = context.getResources().getDisplayMetrics().density;
 
-        refreshUserLinkedPosts();
+        refreshUserRelatedEverything();
         getUserProfileDetails();
     }
 
     /**
      * Refreshes list of liked, reposted and uploaded posts by current firebaseUser
+     * TODO: need a better function name lol
+     *
      */
-    public static void refreshUserLinkedPosts() {
+    public static void refreshUserRelatedEverything() {
         refreshUserLikedPosts();
         refreshUserRepostedPosts();
         refreshUserUploadedPosts();
+        refreshUserFollowersAndFollowings();
+    }
+
+    private static void refreshUserFollowersAndFollowings() {
+        followers = new HashMap<String, String>();
+        followings = new HashMap<String, String>();
+        userReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    if (dataSnapshot.hasChild(Key.DB_REF_USER_FOLLOWERS)) {
+                        followers.putAll((Map) dataSnapshot.child(Key.DB_REF_USER_FOLLOWERS).getValue());
+                    }
+                    if (dataSnapshot.hasChild(Key.DB_REF_USER_FOLLOWINGS)) {
+                        followings.putAll((Map) dataSnapshot.child(Key.DB_REF_USER_FOLLOWINGS).getValue());
+                    }
+                } else {
+                    Log.wtf(Default.TAG_DB, Message.NO_DATA);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e(Default.TAG_DB, databaseError.getMessage(), databaseError.toException());
+            }
+        });
+
     }
 
     /**
      * Pulls current firebaseUser's list of liked posts and puts them in a HashMap
      */
     public static void refreshUserLikedPosts() {
-        user_liked_posts = new ArrayList<>();
-        user_liked_posts_map = new HashMap<String, Long>();
+        liked_posts = new ArrayList<>();
+        liked_posts_map = new HashMap<String, Long>();
         userReference.child(Key.DB_REF_USER_LIKES).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    user_liked_posts_map.putAll((Map) dataSnapshot.getValue());
+                    liked_posts_map.putAll((Map) dataSnapshot.getValue());
                     allPostReference.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             if (dataSnapshot.exists()) {
-                                for (Object key : user_liked_posts_map.keySet()) {
+                                for (Object key : liked_posts_map.keySet()) {
                                     String postId = (String) key;
                                     DataSnapshot postSnapshot = dataSnapshot.child(postId);
                                     if (postSnapshot.exists()) {
                                         PrismPost prismPost = Helper.constructPrismPostObject(postSnapshot);
                                         prismPost.setPrismUser(CurrentUser.prismUser);
-                                        user_liked_posts.add(prismPost);
+                                        liked_posts.add(prismPost);
                                     }
                                 }
                             } else {
-                                Log.wtf(Default.TAG_DB, Message.NO_DATA);
+                                Log.i(Default.TAG_DB, Message.NO_DATA);
                             }
                         }
 
@@ -127,28 +165,28 @@ public class CurrentUser {
      * Pulls current firebaseUser's list of reposted posts and puts them in a HashMap
      */
     public static void refreshUserRepostedPosts() {
-        user_reposted_posts = new ArrayList<>();
-        user_reposted_posts_map = new HashMap<String, Long>();
+        reposted_posts = new ArrayList<>();
+        reposted_posts_map = new HashMap<String, Long>();
         userReference.child(Key.DB_REF_USER_REPOSTS).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    user_reposted_posts_map.putAll((Map) dataSnapshot.getValue());
+                    reposted_posts_map.putAll((Map) dataSnapshot.getValue());
                     allPostReference.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             if (dataSnapshot.exists()) {
-                                for (Object key : user_reposted_posts_map.keySet()) {
+                                for (Object key : reposted_posts_map.keySet()) {
                                     String postId = (String) key;
                                     DataSnapshot postSnapshot = dataSnapshot.child(postId);
                                     if (postSnapshot.exists()) {
                                         PrismPost prismPost = Helper.constructPrismPostObject(postSnapshot);
                                         prismPost.setPrismUser(CurrentUser.prismUser);
-                                        user_reposted_posts.add(prismPost);
+                                        reposted_posts.add(prismPost);
                                     }
                                 }
                             } else {
-                                Log.wtf(Default.TAG_DB, Message.NO_DATA);
+                                Log.i(Default.TAG_DB, Message.NO_DATA);
                             }
                         }
 
@@ -171,24 +209,24 @@ public class CurrentUser {
      * TODO: convert items to PrismPost or something for User Profile Page
      */
     public static void refreshUserUploadedPosts() {
-        user_uploaded_posts = new ArrayList<>();
-        user_uploaded_posts_map = new HashMap<String, Long>();
+        uploaded_posts = new ArrayList<>();
+        uploaded_posts_map = new HashMap<String, Long>();
         userReference.child(Key.DB_REF_USER_UPLOADS).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    user_uploaded_posts_map.putAll((Map) dataSnapshot.getValue());
+                    uploaded_posts_map.putAll((Map) dataSnapshot.getValue());
                     allPostReference.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             if (dataSnapshot.exists()) {
-                                for (Object key : user_uploaded_posts_map.keySet()) {
+                                for (Object key : uploaded_posts_map.keySet()) {
                                     String postId = (String) key;
                                     DataSnapshot postSnapshot = dataSnapshot.child(postId);
                                     if (postSnapshot.exists()) {
                                         PrismPost prismPost = Helper.constructPrismPostObject(postSnapshot);
                                         prismPost.setPrismUser(CurrentUser.prismUser);
-                                        user_uploaded_posts.add(prismPost);
+                                        uploaded_posts.add(prismPost);
                                     }
                                 }
                             } else {

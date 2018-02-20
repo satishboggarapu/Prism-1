@@ -238,7 +238,7 @@
                         android:layout_marginStart="12dp"
                         android:text="Follow"
                         android:textColor="@android:color/white"
-                        android:textSize="11sp"
+                        android:textSize="12sp"
                         android:visibility="gone"
                         android:background="@drawable/button_selector"/>
 

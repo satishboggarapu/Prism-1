@@ -59,11 +59,11 @@ public class UploadedRepostedPostsFragment extends Fragment {
 //        ArrayList<ArrayList<PrismPost>> userUploadedPostsArrayLists = new ArrayList<>(Collections.nCopies(userUploadedColumns, new ArrayList<>()));
         // TODO: figure out how to initialize an ArrayList of ArrayLists without using while loop inside of populating for-loop
         ArrayList<ArrayList<PrismPost>> userUploadedPostsArrayLists = new ArrayList<>();
-        for (int i = 0; i < CurrentUser.user_uploaded_posts.size(); i++) {
+        for (int i = 0; i < CurrentUser.uploaded_posts.size(); i++) {
             while (userUploadedPostsArrayLists.size() != Default.USER_UPLOADED_POSTS_COLUMNS) {
                 userUploadedPostsArrayLists.add(new ArrayList<>());
             }
-            userUploadedPostsArrayLists.get((i % Default.USER_UPLOADED_POSTS_COLUMNS)).add(CurrentUser.user_uploaded_posts.get(i));
+            userUploadedPostsArrayLists.get((i % Default.USER_UPLOADED_POSTS_COLUMNS)).add(CurrentUser.uploaded_posts.get(i));
         }
 
         for (int i = 0; i < Default.USER_UPLOADED_POSTS_COLUMNS; i++) {

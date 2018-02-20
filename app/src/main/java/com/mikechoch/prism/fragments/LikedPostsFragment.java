@@ -56,14 +56,14 @@ public class LikedPostsFragment extends Fragment {
         userUploadedPostsLinearLayout.removeAllViews();
         userUploadedPostsLinearLayout.setWeightSum((float) Default.USER_UPLOADED_POSTS_COLUMNS);
 
-//        ArrayList<ArrayList<PrismPost>> userUploadedPostsArrayLists = new ArrayList<>(Collections.nCopies(userUploadedColumns, new ArrayList<>()));
+//        ArrayList<ArrayList<PrismPost>> userLikedPostsArrayLists = new ArrayList<>(Collections.nCopies(userUploadedColumns, new ArrayList<>()));
         // TODO: figure out how to initialize an ArrayList of ArrayLists without using while loop inside of populating for-loop
-        ArrayList<ArrayList<PrismPost>> userUploadedPostsArrayLists = new ArrayList<>();
-        for (int i = 0; i < CurrentUser.user_liked_posts.size(); i++) {
-            while (userUploadedPostsArrayLists.size() != Default.USER_UPLOADED_POSTS_COLUMNS) {
-                userUploadedPostsArrayLists.add(new ArrayList<>());
+        ArrayList<ArrayList<PrismPost>> userLikedPostsArrayLists = new ArrayList<>();
+        for (int i = 0; i < CurrentUser.liked_posts.size(); i++) {
+            while (userLikedPostsArrayLists.size() != Default.USER_UPLOADED_POSTS_COLUMNS) {
+                userLikedPostsArrayLists.add(new ArrayList<>());
             }
-            userUploadedPostsArrayLists.get((i % Default.USER_UPLOADED_POSTS_COLUMNS)).add(CurrentUser.user_liked_posts.get(i));
+            userLikedPostsArrayLists.get((i % Default.USER_UPLOADED_POSTS_COLUMNS)).add(CurrentUser.liked_posts.get(i));
         }
 
         for (int i = 0; i < Default.USER_UPLOADED_POSTS_COLUMNS; i++) {
@@ -74,7 +74,7 @@ public class LikedPostsFragment extends Fragment {
             RecyclerView currentUserLikedPostsRecyclerView = (RecyclerView) LayoutInflater.from(getActivity()).inflate(R.layout.user_uploaded_posts_recycler_view_layout, null);
             LinearLayoutManager recyclerViewLinearLayoutManager = new LinearLayoutManager(getActivity());
             currentUserLikedPostsRecyclerView.setLayoutManager(recyclerViewLinearLayoutManager);
-            UserPostsColumnRecyclerViewAdapter recyclerViewAdapter = new UserPostsColumnRecyclerViewAdapter(getActivity(), userUploadedPostsArrayLists.get(i));
+            UserPostsColumnRecyclerViewAdapter recyclerViewAdapter = new UserPostsColumnRecyclerViewAdapter(getActivity(), userLikedPostsArrayLists.get(i));
             currentUserLikedPostsRecyclerView.setAdapter(recyclerViewAdapter);
 
             recyclerViewLinearLayout.addView(currentUserLikedPostsRecyclerView);

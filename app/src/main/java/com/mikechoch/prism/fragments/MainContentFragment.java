@@ -160,7 +160,7 @@ public class MainContentFragment extends Fragment {
             @Override
             public void onRefresh() {
                 if (!isLoading || !(mainContentRecyclerViewAdapter.getItemCount() < Default.IMAGE_LOAD_THRESHOLD)) {
-                    CurrentUser.refreshUserLinkedPosts();
+                    CurrentUser.refreshUserRelatedEverything();
                     refreshData();
                 } else {
                     mainContentSwipeRefreshLayout.setRefreshing(false);
