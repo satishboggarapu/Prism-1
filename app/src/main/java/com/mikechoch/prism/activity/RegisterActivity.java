@@ -6,6 +6,7 @@ import android.graphics.Typeface;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
@@ -340,9 +341,22 @@ public class RegisterActivity extends AppCompatActivity {
      * Intent to Main Activity from Register Activity
      */
     private void intentToMainActivity() {
-        startActivity(new Intent(RegisterActivity.this, MainActivity.class));
-        finish();
-        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+        Intent mainActivityIntent = new Intent(RegisterActivity.this, MainActivity.class);
+        ActivityOptionsCompat options = ActivityOptionsCompat.
+                makeSceneTransitionAnimation(RegisterActivity.this, iconImageView, "icon");
+        iconImageView.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                startActivity(mainActivityIntent, options.toBundle());
+//                    overridePendingTransition(enterAnim, exitAnim);
+                iconImageView.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        finish();
+                    }
+                }, 1000);
+            }
+        }, 250);
     }
 
     /**

@@ -1,12 +1,13 @@
 package com.mikechoch.prism.attribute;
 
+import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
  * Created by mikechoch on 1/30/18.
  */
 
-public class PrismUser {
+public class PrismUser implements Parcelable {
 
     private String uid;
     private String username;
@@ -67,11 +68,49 @@ public class PrismUser {
     }
 
     public void setFollowerCount(int followerCount) {
-        this.followingCount = followerCount;
+        this.followerCount = followerCount;
     }
 
     public void setFollowingCount(int followingCount) {
         this.followingCount = followingCount;
     }
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(uid);
+        dest.writeString(username);
+        dest.writeString(fullName);
+        dest.writeInt(followerCount);
+        dest.writeInt(followingCount);
+        dest.writeParcelable(profilePicture, 0);
+    }
+
+    protected PrismUser(Parcel in) {
+        uid = in.readString();
+        username = in.readString();
+        fullName = in.readString();
+        followerCount = in.readInt();
+        followingCount = in.readInt();
+        profilePicture = in.readParcelable(ProfilePicture.class.getClassLoader());
+    }
+
+    public static final Creator<PrismUser> CREATOR = new Creator<PrismUser>() {
+        @Override
+        public PrismUser createFromParcel(Parcel in) {
+            return new PrismUser(in);
+        }
+
+        @Override
+        public PrismUser[] newArray(int size) {
+            return new PrismUser[size];
+        }
+    };
+
 
 }

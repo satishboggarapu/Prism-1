@@ -27,7 +27,7 @@ dependencies {
     compile 'com.android.support:appcompat-v7:27.0.2'
     compile 'com.android.support:design:27.0.2'
     compile 'com.android.support:cardview-v7:27.0.2'
-    compile 'com.squareup.picasso:picasso:2.5.2'
+    compile 'com.github.oxoooo:pull-back-layout:1.0.1'
     compile 'com.theartofdev.edmodo:android-image-cropper:2.6.+'
     implementation 'com.google.firebase:firebase-database:11.8.0'
     implementation 'com.google.firebase:firebase-storage:11.8.0'

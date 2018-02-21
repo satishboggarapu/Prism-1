@@ -1,6 +1,9 @@
 package com.mikechoch.prism.attribute;
 
-public class PrismPost {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class PrismPost implements Parcelable {
 
     // --------------------------------------- //
     // DO NOT CHANGE ANYTHING IN THIS FILE     //
@@ -85,4 +88,61 @@ public class PrismPost {
     }
 
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(image);
+        dest.writeString(caption);
+        dest.writeLong(timestamp);
+        dest.writeString(uid);
+        if (likes == null) {
+            dest.writeByte((byte) 0);
+        } else {
+            dest.writeByte((byte) 1);
+            dest.writeInt(likes);
+        }
+        if (reposts == null) {
+            dest.writeByte((byte) 0);
+        } else {
+            dest.writeByte((byte) 1);
+            dest.writeInt(reposts);
+        }
+        dest.writeParcelable(prismUser, 0);
+        dest.writeString(postId);
+    }
+
+    protected PrismPost(Parcel in) {
+        image = in.readString();
+        caption = in.readString();
+        timestamp = in.readLong();
+        uid = in.readString();
+        if (in.readByte() == 0) {
+            likes = null;
+        } else {
+            likes = in.readInt();
+        }
+        if (in.readByte() == 0) {
+            reposts = null;
+        } else {
+            reposts = in.readInt();
+        }
+        prismUser = in.readParcelable(PrismUser.class.getClassLoader());
+        postId = in.readString();
+    }
+
+    public static final Creator<PrismPost> CREATOR = new Creator<PrismPost>() {
+        @Override
+        public PrismPost createFromParcel(Parcel in) {
+            return new PrismPost(in);
+        }
+
+        @Override
+        public PrismPost[] newArray(int size) {
+            return new PrismPost[size];
+        }
+    };
 }

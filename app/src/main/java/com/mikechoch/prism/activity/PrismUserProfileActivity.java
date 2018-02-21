@@ -257,7 +257,8 @@ public class PrismUserProfileActivity extends AppCompatActivity {
     private void setupUserProfileUIElements(boolean isCurrentUser) {
         userFullNameTextView.setText(prismUser.getFullName());
         userUsernameTextView.setText(prismUser.getUsername());
-
+        followersCountTextView.setText(String.valueOf(prismUser.getFollowerCount()));
+        followingCountTextView.setText(String.valueOf(prismUser.getFollowingCount()));
         Glide.with(this)
                 .asBitmap()
                 .thumbnail(0.05f)
@@ -283,7 +284,7 @@ public class PrismUserProfileActivity extends AppCompatActivity {
 
         userProfilePicImageView.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onClick(View view) {
                 if (isCurrentUser) {
                     AlertDialog setProfilePictureAlertDialog = createSetProfilePictureAlertDialog();
                     setProfilePictureAlertDialog.show();

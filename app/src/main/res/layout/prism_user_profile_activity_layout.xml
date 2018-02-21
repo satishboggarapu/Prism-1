@@ -16,7 +16,7 @@
             android:id="@+id/collapsing_toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed"
+            app:layout_scrollFlags="snap|scroll|exitUntilCollapsed"
             app:contentScrim="?attr/colorPrimary">
 
             <RelativeLayout
@@ -100,7 +100,7 @@
                             android:layout_height="wrap_content"
                             android:layout_alignParentTop="true"
                             android:layout_centerHorizontal="true"
-                            android:text="99"
+                            android:text="-"
                             android:textSize="18sp"
                             android:textStyle="bold"
                             android:textColor="@android:color/white"
@@ -135,7 +135,7 @@
                             android:layout_height="wrap_content"
                             android:layout_alignParentTop="true"
                             android:layout_centerHorizontal="true"
-                            android:text="---"
+                            android:text="-"
                             android:textSize="18sp"
                             android:textStyle="bold"
                             android:textColor="@android:color/white"
@@ -170,7 +170,7 @@
                             android:layout_height="wrap_content"
                             android:layout_alignParentTop="true"
                             android:layout_centerHorizontal="true"
-                            android:text="---"
+                            android:text="-"
                             android:textSize="18sp"
                             android:textStyle="bold"
                             android:textColor="@android:color/white"

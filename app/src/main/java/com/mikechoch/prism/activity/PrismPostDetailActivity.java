@@ -8,30 +8,36 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
-import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Html;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.bumptech.glide.request.target.Target;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.attribute.PrismPost;
+import com.mikechoch.prism.helper.Helper;
+
+import ooo.oxo.library.widget.PullBackLayout;
+
 
 /**
  * Created by mikechoch on 2/19/18.
  */
 
-public class PrismPostDetailActivity extends AppCompatActivity {
+public class PrismPostDetailActivity extends AppCompatActivity implements PullBackLayout.Callback {
 
     /*
      * Globals
@@ -39,11 +45,27 @@ public class PrismPostDetailActivity extends AppCompatActivity {
     private float scale;
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
+    private int screenWidth;
+    private int screenHeight;
 
+    private PullBackLayout prismPostDetailPuller;
     private AppBarLayout appBarLayout;
     private Toolbar toolbar;
+    private CollapsingToolbarLayout collapsingToolbarLayout;
 
+    private ImageView likeActionButton;
+    private TextView likeCountTextView;
+    private ImageView repostActionButton;
+    private TextView repostCountTextView;
+    private ImageView moreActionButton;
     private ImageView detailImageView;
+    private ImageView detailUserProfilePictureImageView;
+    private TextView detailUsernameTextView;
+    private TextView detailPrismPostDateTextView;
+    private TextView detailPrismPostDescriptionTextView;
+    private TextView detailPrismPostTagsTextView;
+
+    private PrismPost prismPost;
 
 
     @Override
@@ -77,53 +99,59 @@ public class PrismPostDetailActivity extends AppCompatActivity {
         sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
 
+        // Get the screen width and height of the current phone
+        screenWidth = getWindowManager().getDefaultDisplay().getWidth();
+        screenHeight = getWindowManager().getDefaultDisplay().getHeight();
+
         // Initialize all UI elements
+        prismPostDetailPuller = findViewById(R.id.prism_post_detail_puller);
         appBarLayout = findViewById(R.id.prism_post_detail_app_bar_layout);
         toolbar = findViewById(R.id.toolbar);
+        collapsingToolbarLayout = findViewById(R.id.collapsing_toolbar);
 
+        likeActionButton = findViewById(R.id.image_like_button);
+        likeCountTextView = findViewById(R.id.like_count);
+        repostActionButton = findViewById(R.id.image_repost_button);
+        repostCountTextView = findViewById(R.id.repost_count);
+        moreActionButton = findViewById(R.id.image_more_button);
         detailImageView = findViewById(R.id.prism_post_detail_image_view);
-
-        getWindow().setStatusBarColor(Color.TRANSPARENT);
-        getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-
-//        toolbar.setPadding(0, getStatusBarHeight(), 0, 0);
-//        appBarLayout.setPadding(0, getStatusBarHeight(), 0, 0);
-
-        CollapsingToolbarLayout.LayoutParams params = (CollapsingToolbarLayout.LayoutParams) toolbar.getLayoutParams();
-        params.setMargins(0, getStatusBarHeight(), 0, 0);
-        toolbar.setLayoutParams(params);
+        detailUserProfilePictureImageView = findViewById(R.id.prism_post_detail_user_profile_picture_image_view);
+        detailUsernameTextView = findViewById(R.id.prism_post_detail_username_text_view);
+        detailPrismPostDateTextView = findViewById(R.id.prism_post_detail_date_text_view);
+        detailPrismPostDescriptionTextView = findViewById(R.id.prism_post_description);
+        detailPrismPostTagsTextView = findViewById(R.id.prism_post_tags);
 
         Bundle extras = getIntent().getExtras();
-        String imageUrl = extras.getString("PrismPostImage");
+        prismPost = extras.getParcelable("PrismPostDetail");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            String imageTransitionName = extras.getString("PrismPostForDetailTransitionName");
+            String imageTransitionName = extras.getString("PrismPostDetailTransitionName");
             detailImageView.setTransitionName(imageTransitionName);
         }
 
-        Glide.with(this)
-                .asBitmap()
-                .load(imageUrl)
-                .apply(new RequestOptions().fitCenter())
-                .listener(new RequestListener<Bitmap>() {
-                    @Override
-                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
-                        // TODO: @Mike we should hide progressBar here as well and display a toast or something
-                        supportStartPostponedEnterTransition();
-                        return false;
-                    }
-
-                    @Override
-                    public boolean onResourceReady(Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
-                        // TODO: @Mike we should hide progressBar here as well and display a toast or something
-                        supportStartPostponedEnterTransition();
-                        return false;
-                    }
-                })
-                .into(detailImageView);
-
         setupUIElements();
+        prismPostDetailPuller.setCallback(this);
+    }
+
+    @Override
+    public void onPullStart() {
+
+    }
+
+    @Override
+    public void onPull(float pullFloat) {
+        float viewAlpha = 1 - pullFloat;
+        prismPostDetailPuller.setAlpha(1 - viewAlpha);
+    }
+
+    @Override
+    public void onPullCancel() {
+
+    }
+
+    @Override
+    public void onPullComplete() {
+        supportFinishAfterTransition();
     }
 
     @Override
@@ -144,23 +172,120 @@ public class PrismPostDetailActivity extends AppCompatActivity {
     }
 
     /**
+     *
+     */
+    private void setupStatusBar() {
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+    }
+
+    /**
      * Setup the toolbar and back button to return to MainActivity
      */
     private void setupToolbar() {
         toolbar.setTitle("");
+
+        CollapsingToolbarLayout.LayoutParams params = (CollapsingToolbarLayout.LayoutParams) toolbar.getLayoutParams();
+        params.setMargins(0, getStatusBarHeight(), 0, 0);
+        toolbar.setLayoutParams(params);
+
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
+
+    /**
+     *
+     */
+    private void setupPrismPostImageView() {
+        supportStartPostponedEnterTransition();
+
+        Glide.with(this)
+                .asBitmap()
+                .load(prismPost.getImage())
+                .apply(new RequestOptions().fitCenter())
+                .listener(new RequestListener<Bitmap>() {
+                    @Override
+                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
+                        startPostponedEnterTransition();
+                        return false;
+                    }
+
+                    @Override
+                    public boolean onResourceReady(Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
+                        detailImageView.getLayoutParams().height = resource.getHeight();
+                        appBarLayout.getLayoutParams().height = resource.getHeight();
+
+                        boolean isLongPortraitImage = resource.getHeight() >= screenHeight;
+                        detailImageView.setScaleType(isLongPortraitImage ? ImageView.ScaleType.CENTER_CROP : ImageView.ScaleType.FIT_START);
+
+                        boolean isPortraitImage = resource.getHeight() > (screenHeight * 0.25);
+                        toolbar.getLayoutParams().height = (int) (isPortraitImage ? (screenHeight * 0.25) : resource.getHeight());
+
+                        startPostponedEnterTransition();
+                        return false;
+                    }
+                })
+                .into(detailImageView);
+    }
+
+    /**
+     *
+     */
+    private void setupPrismPostUserInfo() {
+        Glide.with(this)
+                .asBitmap()
+                .load(prismPost.getPrismUser().getProfilePicture().lowResUri)
+                .apply(new RequestOptions().fitCenter())
+                .into(new BitmapImageViewTarget(detailUserProfilePictureImageView) {
+                    @Override
+                    protected void setResource(Bitmap resource) {
+                        if (!prismPost.getPrismUser().getProfilePicture().isDefault) {
+                            int whiteOutlinePadding = (int) (1 * scale);
+                            detailUserProfilePictureImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
+                            detailUserProfilePictureImageView.setBackground(getResources().getDrawable(R.drawable.circle_profile_frame));
+                        } else {
+                            detailUserProfilePictureImageView.setPadding(0, 0, 0, 0);
+                            detailUserProfilePictureImageView.setBackground(null);
+                        }
+
+                        RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), resource);
+                        drawable.setCircular(true);
+                        detailUserProfilePictureImageView.setImageDrawable(drawable);
+                    }
+                });
+
+        detailUsernameTextView.setText(prismPost.getPrismUser().getUsername());
+        detailPrismPostDateTextView.setText(Helper.getFancyDateDifferenceString(prismPost.getTimestamp() * -1));
+        detailPrismPostDescriptionTextView.setText(prismPost.getCaption());
     }
 
     /**
      * Setup all UI elements
      */
     private void setupUIElements() {
+        setupPrismPostImageView();
+        setupStatusBar();
         setupToolbar();
 
         // Setup Typefaces for all text based UI elements
+        likeCountTextView.setTypeface(sourceSansProLight);
+        repostCountTextView.setTypeface(sourceSansProLight);
+        detailUsernameTextView.setTypeface(sourceSansProBold);
+        detailPrismPostDateTextView.setTypeface(sourceSansProLight);
+        detailPrismPostDescriptionTextView.setTypeface(sourceSansProLight);
+        detailPrismPostTagsTextView.setTypeface(sourceSansProLight);
 
+        detailPrismPostTagsTextView.setText(Html.fromHtml(
+                "<u>#burger</u> " +
+                        "<u>#delicous</u> " +
+                        "<u>#foodporn</u> " +
+                        "<u>#inandout</u> " +
+                        "<u>#fries</u> " +
+                        "<u>#carkeys</u> " +
+                        "<u>#amazing</u>"));
+
+        setupPrismPostUserInfo();
 
     }
-
 }
