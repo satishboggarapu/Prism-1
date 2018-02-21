@@ -73,8 +73,8 @@ public class PrismUserProfileActivity extends AppCompatActivity {
     private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
     private String[] setProfilePicStrings = {"Choose from gallery", "Take a selfie"};
 
-    private Toolbar toolbar;
     private AppBarLayout appBarLayout;
+    private Toolbar toolbar;
 
     private ImageView toolbarUserProfilePicImageView;
     private TextView toolbarUserUsernameTextView;
@@ -95,8 +95,8 @@ public class PrismUserProfileActivity extends AppCompatActivity {
     private TabLayout userPostsTabLayout;
     private ViewPager userPostsViewPager;
 
-    private String userUid;
     private PrismUser prismUser;
+    private boolean isCurrentUser;
     private ArrayList<PrismPost> prismUserUploadedPostsArrayList;
 
 
@@ -158,17 +158,12 @@ public class PrismUserProfileActivity extends AppCompatActivity {
         userPostsTabLayout = findViewById(R.id.current_user_profile_tab_layout);
         userPostsViewPager = findViewById(R.id.current_user_profile_view_pager);
 
-        profileSwipeRefreshLayout.setColorSchemeResources(swipeRefreshLayoutColors);
-        profileSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                profileSwipeRefreshLayout.setRefreshing(false);
-            }
-        });
-
+        //
         Intent intent = getIntent();
-        userUid = intent.getStringExtra("PrismUserUid");
+        prismUser = intent.getParcelableExtra("PrismUser");
         prismUserUploadedPostsArrayList = new ArrayList<>();
+
+        isCurrentUser = prismUser.getUid().equals(CurrentUser.prismUser.getUid());
 
         setupUIElements();
         pullUserDetails();
@@ -184,15 +179,15 @@ public class PrismUserProfileActivity extends AppCompatActivity {
      *
      */
     private void pullUserDetails() {
-        usersReference.child(userUid).addListenerForSingleValueEvent(new ValueEventListener() {
+        usersReference.child(prismUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    String userId = dataSnapshot.getKey();
-                    String fullName = (String) dataSnapshot.child(Key.USER_PROFILE_FULL_NAME).getValue();
-                    String username = (String) dataSnapshot.child(Key.USER_PROFILE_USERNAME).getValue();
-                    ProfilePicture profilePicture = new ProfilePicture((String) dataSnapshot.child(Key.USER_PROFILE_PIC).getValue());
-                    prismUser = new PrismUser(userId, username, fullName, profilePicture);
+//                    String userId = dataSnapshot.getKey();
+//                    String fullName = (String) dataSnapshot.child(Key.USER_PROFILE_FULL_NAME).getValue();
+//                    String username = (String) dataSnapshot.child(Key.USER_PROFILE_USERNAME).getValue();
+//                    ProfilePicture profilePicture = new ProfilePicture((String) dataSnapshot.child(Key.USER_PROFILE_PIC).getValue());
+//                    prismUser = new PrismUser(userId, username, fullName, profilePicture);
                     HashMap<String, Long> prismUserUploadedPostIds = new HashMap<>();
                     prismUserUploadedPostIds.putAll((Map) dataSnapshot.child(Key.DB_REF_USER_UPLOADS).getValue());
 
@@ -371,9 +366,18 @@ public class PrismUserProfileActivity extends AppCompatActivity {
         followUserButton.setVisibility(View.VISIBLE);
         setupFollowUserButton();
 
-        toolbarFollowButton.setVisibility(View.VISIBLE);
         profileSwipeRefreshLayout.setVisibility(View.VISIBLE);
+        profileSwipeRefreshLayout.setColorSchemeResources(swipeRefreshLayoutColors);
+        profileSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                profileSwipeRefreshLayout.setRefreshing(false);
+            }
+        });
+
         profileNestedScrollView.setVisibility(View.VISIBLE);
+
+        toolbarFollowButton.setVisibility(View.VISIBLE);
         setupUserUploadedPostsRecyclerView();
     }
 
@@ -387,19 +391,24 @@ public class PrismUserProfileActivity extends AppCompatActivity {
         userPostsViewPager.setAdapter(userPostsViewPagerAdapter);
         userPostsTabLayout.setupWithViewPager(userPostsViewPager);
 
-        userPostsTabLayout.getTabAt(Default.USER_POSTS_VIEW_PAGER_POSTS).setText("Posts");
-        userPostsTabLayout.getTabAt(Default.USER_POSTS_VIEW_PAGER_LIKES).setText("Likes");
+        userPostsTabLayout.getTabAt(Default.USER_POSTS_VIEW_PAGER_POSTS).setCustomView(createTabTextView("POSTS"));
+        userPostsTabLayout.getTabAt(Default.USER_POSTS_VIEW_PAGER_LIKES).setCustomView(createTabTextView("LIKES"));
+
+        int selectedTabColor = getResources().getColor(R.color.colorAccent);
+        int unselectedTabColor = Color.WHITE;
+        ((TextView) userPostsTabLayout.getTabAt(userPostsTabLayout.getSelectedTabPosition()).getCustomView())
+                .setTextColor(selectedTabColor);
 
         // Setup the tab selected, unselected, and reselected listener
         userPostsTabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-
+                ((TextView) tab.getCustomView()).setTextColor(selectedTabColor);
             }
 
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
-
+                ((TextView) tab.getCustomView()).setTextColor(unselectedTabColor);
             }
 
             @Override
@@ -418,6 +427,19 @@ public class PrismUserProfileActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    /**
+     *
+     */
+    private TextView createTabTextView(String tabTitle) {
+        TextView postsTabTextView = new TextView(this);
+        postsTabTextView.setText(tabTitle);
+        postsTabTextView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        postsTabTextView.setTextSize((int) (6 * scale));
+        postsTabTextView.setTextColor(Color.WHITE);
+        postsTabTextView.setTypeface(sourceSansProBold);
+        return postsTabTextView;
     }
 
     /**
@@ -582,14 +604,13 @@ public class PrismUserProfileActivity extends AppCompatActivity {
         userFullNameTextView.setTypeface(sourceSansProLight);
 
         setupAppBarLayout();
+        setupUserProfileUIElements(isCurrentUser);
     }
 
     /**
      *
      */
     private void setupUserPostsUIElements() {
-        final boolean isCurrentUser = userUid.equals(CurrentUser.prismUser.getUid());
-        setupUserProfileUIElements(isCurrentUser);
         if (isCurrentUser) {
             setupCurrentUserProfilePage();
         } else {

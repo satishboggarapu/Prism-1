@@ -256,13 +256,20 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                 postInformationRelativeLayout.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Intent prismUserProfileIntent = new Intent(context, PrismUserProfileActivity.class);
-                        prismUserProfileIntent.putExtra("PrismUserUid", prismPost.getPrismUser().getUid());
-                        context.startActivity(prismUserProfileIntent);
-                        ((Activity) context).overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+                        intentToUserProfileActivity();
                     }
                 });
             }
+        }
+
+        /**
+         * Intent from the current clicked PrismPost user to their PrismUserProfileActivity
+         */
+        private void intentToUserProfileActivity() {
+            Intent prismUserProfileIntent = new Intent(context, PrismUserProfileActivity.class);
+            prismUserProfileIntent.putExtra("PrismUser", prismPost.getPrismUser());
+            context.startActivity(prismUserProfileIntent);
+            ((Activity) context).overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
         }
 
         /**

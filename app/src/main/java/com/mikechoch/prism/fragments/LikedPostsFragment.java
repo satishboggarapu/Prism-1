@@ -24,7 +24,11 @@ import java.util.ArrayList;
 
 public class LikedPostsFragment extends Fragment {
 
+    /*
+     * Globals
+     */
     private SwipeRefreshLayout likedPostsSwipeRefreshLayout;
+    private LinearLayout userLikedPostsLinearLayout;
 
     private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
 
@@ -44,6 +48,17 @@ public class LikedPostsFragment extends Fragment {
         View view = inflater.inflate(R.layout.liked_posts_fragment_layout, container, false);
 
         likedPostsSwipeRefreshLayout = view.findViewById(R.id.liked_posts_swipe_refresh_layout);
+        userLikedPostsLinearLayout = view.findViewById(R.id.current_user_liked_posts_linear_layout);
+
+        setupUIElements();
+
+        return view;
+    }
+
+    /**
+     *
+     */
+    private void setupUploadedRepostedSwipeRefreshLayout() {
         likedPostsSwipeRefreshLayout.setColorSchemeResources(swipeRefreshLayoutColors);
         likedPostsSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -51,10 +66,14 @@ public class LikedPostsFragment extends Fragment {
                 likedPostsSwipeRefreshLayout.setRefreshing(false);
             }
         });
+    }
 
-        LinearLayout userUploadedPostsLinearLayout = view.findViewById(R.id.current_user_liked_posts_linear_layout);
-        userUploadedPostsLinearLayout.removeAllViews();
-        userUploadedPostsLinearLayout.setWeightSum((float) Default.USER_UPLOADED_POSTS_COLUMNS);
+    /**
+     *
+     */
+    private void setupLikedRecyclerViewColumns() {
+        userLikedPostsLinearLayout.removeAllViews();
+        userLikedPostsLinearLayout.setWeightSum((float) Default.USER_UPLOADED_POSTS_COLUMNS);
 
 //        ArrayList<ArrayList<PrismPost>> userLikedPostsArrayLists = new ArrayList<>(Collections.nCopies(userUploadedColumns, new ArrayList<>()));
         // TODO: figure out how to initialize an ArrayList of ArrayLists without using while loop inside of populating for-loop
@@ -78,10 +97,16 @@ public class LikedPostsFragment extends Fragment {
             currentUserLikedPostsRecyclerView.setAdapter(recyclerViewAdapter);
 
             recyclerViewLinearLayout.addView(currentUserLikedPostsRecyclerView);
-            userUploadedPostsLinearLayout.addView(recyclerViewLinearLayout);
+            userLikedPostsLinearLayout.addView(recyclerViewLinearLayout);
         }
+    }
 
-        return view;
+    /**
+     * Setup all UI elements
+     */
+    private void setupUIElements() {
+        setupUploadedRepostedSwipeRefreshLayout();
+        setupLikedRecyclerViewColumns();
     }
 
 }

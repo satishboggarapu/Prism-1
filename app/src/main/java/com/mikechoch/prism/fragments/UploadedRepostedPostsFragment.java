@@ -3,6 +3,7 @@ package com.mikechoch.prism.fragments;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -24,9 +25,14 @@ import java.util.ArrayList;
 
 public class UploadedRepostedPostsFragment extends Fragment {
 
+    /*
+     * Globals
+     */
     private SwipeRefreshLayout uploadedRepostedPostsSwipeRefreshLayout;
+    private LinearLayout userUploadedPostsLinearLayout;
 
     private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
+
 
     public static final UploadedRepostedPostsFragment newInstance() {
         UploadedRepostedPostsFragment uploadedRepostedPostsFragment = new UploadedRepostedPostsFragment();
@@ -44,6 +50,17 @@ public class UploadedRepostedPostsFragment extends Fragment {
         View view = inflater.inflate(R.layout.uploaded_reposted_posts_fragment_layout, container, false);
 
         uploadedRepostedPostsSwipeRefreshLayout = view.findViewById(R.id.uploaded_reposted_posts_swipe_refresh_layout);
+        userUploadedPostsLinearLayout = view.findViewById(R.id.current_user_uploaded_posts_linear_layout);
+
+        setupUIElements();
+
+        return view;
+    }
+
+    /**
+     *
+     */
+    private void setupUploadedRepostedSwipeRefreshLayout() {
         uploadedRepostedPostsSwipeRefreshLayout.setColorSchemeResources(swipeRefreshLayoutColors);
         uploadedRepostedPostsSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -51,8 +68,12 @@ public class UploadedRepostedPostsFragment extends Fragment {
                 uploadedRepostedPostsSwipeRefreshLayout.setRefreshing(false);
             }
         });
+    }
 
-        LinearLayout userUploadedPostsLinearLayout = view.findViewById(R.id.current_user_uploaded_posts_linear_layout);
+    /**
+     *
+     */
+    private void setupUploadedRepostedRecyclerViewColumns() {
         userUploadedPostsLinearLayout.removeAllViews();
         userUploadedPostsLinearLayout.setWeightSum((float) Default.USER_UPLOADED_POSTS_COLUMNS);
 
@@ -80,8 +101,14 @@ public class UploadedRepostedPostsFragment extends Fragment {
             recyclerViewLinearLayout.addView(currentUserUploadedPostsRecyclerView);
             userUploadedPostsLinearLayout.addView(recyclerViewLinearLayout);
         }
+    }
 
-        return view;
+    /**
+     * Setup all UI elements
+     */
+    private void setupUIElements() {
+        setupUploadedRepostedSwipeRefreshLayout();
+        setupUploadedRepostedRecyclerViewColumns();
     }
 
 }

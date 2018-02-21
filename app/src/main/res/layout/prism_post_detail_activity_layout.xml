@@ -20,10 +20,12 @@
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
             <RelativeLayout
+                android:id="@+id/prism_post_detail_relative_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="top|center_horizontal"
-                android:paddingTop="12dp">
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp">
 
                 <RelativeLayout
                     android:id="@+id/prism_post_detail_user_relative_layout"
@@ -174,7 +176,7 @@
                 android:id="@+id/collapsing_toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                app:layout_scrollFlags="snap|scroll|exitUntilCollapsed"
+                app:layout_scrollFlags="scroll|exitUntilCollapsed"
                 app:contentScrim="@android:color/transparent">
 
                 <ImageView

@@ -266,12 +266,12 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_gravity="center_horizontal"
+            android:elevation="5dp"
+            android:visibility="gone"
             app:tabMode="fixed"
             app:tabGravity="fill"
             app:tabTextColor="@android:color/white"
-            app:tabSelectedTextColor="@color/colorAccent"
-            android:elevation="5dp"
-            android:visibility="gone">
+            app:tabSelectedTextColor="@color/colorAccent">
 
         </android.support.design.widget.TabLayout>
 

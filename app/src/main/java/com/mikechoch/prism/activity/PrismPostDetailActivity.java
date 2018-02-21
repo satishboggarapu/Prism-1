@@ -17,6 +17,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -50,9 +51,10 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
 
     private PullBackLayout prismPostDetailPuller;
     private AppBarLayout appBarLayout;
-    private Toolbar toolbar;
     private CollapsingToolbarLayout collapsingToolbarLayout;
+    private Toolbar toolbar;
 
+    private RelativeLayout prismPostDetailsRelativeLayout;
     private ImageView likeActionButton;
     private TextView likeCountTextView;
     private ImageView repostActionButton;
@@ -109,6 +111,7 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
         toolbar = findViewById(R.id.toolbar);
         collapsingToolbarLayout = findViewById(R.id.collapsing_toolbar);
 
+        prismPostDetailsRelativeLayout = findViewById(R.id.prism_post_detail_relative_layout);
         likeActionButton = findViewById(R.id.image_like_button);
         likeCountTextView = findViewById(R.id.like_count);
         repostActionButton = findViewById(R.id.image_repost_button);
@@ -140,13 +143,13 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
 
     @Override
     public void onPull(float pullFloat) {
-        float viewAlpha = 1 - pullFloat;
-        prismPostDetailPuller.setAlpha(1 - viewAlpha);
+        float viewAlpha = Math.abs(1 - pullFloat);
+        prismPostDetailPuller.setAlpha(viewAlpha);
     }
 
     @Override
     public void onPullCancel() {
-
+        prismPostDetailPuller.setAlpha(1f);
     }
 
     @Override
@@ -216,11 +219,41 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
                         detailImageView.getLayoutParams().height = resource.getHeight();
                         appBarLayout.getLayoutParams().height = resource.getHeight();
 
+                        int userInfoHeight = (detailUserProfilePictureImageView.getHeight() +
+                                detailPrismPostDescriptionTextView.getHeight() +
+                                detailPrismPostTagsTextView.getHeight());
+
+                        System.out.println("Screen height: " + screenHeight);
+                        System.out.println("Image height: " + resource.getHeight());
+                        System.out.println("ImageView height: " + detailImageView.getHeight());
+                        System.out.println("User info height: " + userInfoHeight);
+
+//                        boolean isPortraitImage = resource.getHeight() > (screenHeight * 0.25);
+//                        if (isPortraitImage) {
+//                            toolbar.getLayoutParams().height = (int) (isPortraitImage ? (screenHeight * 0.25) : resource.getHeight());
+//                        }
+
                         boolean isLongPortraitImage = resource.getHeight() >= screenHeight;
                         detailImageView.setScaleType(isLongPortraitImage ? ImageView.ScaleType.CENTER_CROP : ImageView.ScaleType.FIT_START);
 
-                        boolean isPortraitImage = resource.getHeight() > (screenHeight * 0.25);
-                        toolbar.getLayoutParams().height = (int) (isPortraitImage ? (screenHeight * 0.25) : resource.getHeight());
+                        System.out.println("Screen height: " + screenHeight);
+                        System.out.println("Image height: " + resource.getHeight());
+                        System.out.println("ImageView height: " + detailImageView.getHeight());
+                        System.out.println("User info height: " + userInfoHeight);
+
+                        boolean isScrollImage = (resource.getHeight() + userInfoHeight) > screenHeight;
+                        if (isLongPortraitImage) {
+                            toolbar.getLayoutParams().height = resource.getHeight() - ((resource.getHeight() - screenHeight) + detailUserProfilePictureImageView.getHeight() +
+                                    detailPrismPostDescriptionTextView.getHeight() +
+                                    detailPrismPostTagsTextView.getHeight() + ((int) (70 * scale)));
+                        } else if (isScrollImage) {
+                            toolbar.getLayoutParams().height = resource.getHeight() - (detailUserProfilePictureImageView.getHeight() +
+                                    detailPrismPostDescriptionTextView.getHeight() +
+                                    detailPrismPostTagsTextView.getHeight());
+                        } else {
+                            toolbar.getLayoutParams().height = resource.getHeight();
+                        }
+                        System.out.println("Michael Dicioccio sucks lots of dick and is small. So is parth");
 
                         startPostponedEnterTransition();
                         return false;
