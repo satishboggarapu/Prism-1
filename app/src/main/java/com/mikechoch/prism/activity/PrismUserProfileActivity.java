@@ -188,14 +188,9 @@ public class PrismUserProfileActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    String userId = dataSnapshot.getKey();
-                    String fullName = (String) dataSnapshot.child(Key.USER_PROFILE_FULL_NAME).getValue();
-                    String username = (String) dataSnapshot.child(Key.USER_PROFILE_USERNAME).getValue();
-                    ProfilePicture profilePicture = new ProfilePicture((String) dataSnapshot.child(Key.USER_PROFILE_PIC).getValue());
-                    prismUser = new PrismUser(userId, username, fullName, profilePicture);
+                    prismUser = Helper.constructPrismUserObject(dataSnapshot);
                     HashMap<String, Long> prismUserUploadedPostIds = new HashMap<>();
                     prismUserUploadedPostIds.putAll((Map) dataSnapshot.child(Key.DB_REF_USER_UPLOADS).getValue());
-
                     pullUserUploadedPrismPosts(prismUserUploadedPostIds);
 
                 } else {

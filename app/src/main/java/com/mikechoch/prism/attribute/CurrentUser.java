@@ -259,13 +259,7 @@ public class CurrentUser {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    prismUser = new PrismUser();
-                    prismUser.setUid(firebaseUser.getUid());
-                    prismUser.setFullName((String) dataSnapshot.child(Key.USER_PROFILE_FULL_NAME).getValue());
-                    prismUser.setUsername((String) dataSnapshot.child(Key.USER_PROFILE_USERNAME).getValue());
-                    prismUser.setProfilePicture(new ProfilePicture((String)
-                            dataSnapshot.child(Key.USER_PROFILE_PIC).getValue()));
-
+                    prismUser = Helper.constructPrismUserObject(dataSnapshot);
                     updateUserProfilePageUI();
                 }
             }

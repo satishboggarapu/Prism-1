@@ -278,7 +278,7 @@ public class MainContentFragment extends Fragment {
                 if (dataSnapshot.exists()) {
                     for (PrismPost post : prismPostArrayList) {
                         DataSnapshot userSnapshot = dataSnapshot.child(post.getUid());
-                        PrismUser prismUser = constructPrismUser(userSnapshot);
+                        PrismUser prismUser = Helper.constructPrismUserObject(userSnapshot);
                         post.setPrismUser(prismUser);
                     }
                     mainContentSwipeRefreshLayout.setRefreshing(false);
@@ -298,22 +298,6 @@ public class MainContentFragment extends Fragment {
                 Log.e(Default.TAG_DB, Message.FETCH_USER_DETAILS_FAIL, databaseError.toException());
             }
         });
-    }
-
-    /**
-     * Takes in userSnapshot object and parses the firebaseUser details
-     * and creates a prismUser object
-     * @return PrismUser object
-     */
-    private PrismUser constructPrismUser(DataSnapshot userSnapshot) {
-        PrismUser prismUser = new PrismUser();
-        prismUser.setUsername((String) userSnapshot
-                .child(Key.USER_PROFILE_USERNAME).getValue());
-        prismUser.setFullName((String) userSnapshot
-                .child(Key.USER_PROFILE_FULL_NAME).getValue());
-        prismUser.setProfilePicture(new ProfilePicture((String) userSnapshot.child(Key.USER_PROFILE_PIC).getValue()));
-        prismUser.setUid(userSnapshot.getKey());
-        return prismUser;
     }
 
     /**
