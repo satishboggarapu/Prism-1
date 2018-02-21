@@ -183,14 +183,9 @@ public class PrismUserProfileActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-//                    String userId = dataSnapshot.getKey();
-//                    String fullName = (String) dataSnapshot.child(Key.USER_PROFILE_FULL_NAME).getValue();
-//                    String username = (String) dataSnapshot.child(Key.USER_PROFILE_USERNAME).getValue();
-//                    ProfilePicture profilePicture = new ProfilePicture((String) dataSnapshot.child(Key.USER_PROFILE_PIC).getValue());
-//                    prismUser = new PrismUser(userId, username, fullName, profilePicture);
+//                    prismUser = Helper.constructPrismUserObject(dataSnapshot);
                     HashMap<String, Long> prismUserUploadedPostIds = new HashMap<>();
                     prismUserUploadedPostIds.putAll((Map) dataSnapshot.child(Key.DB_REF_USER_UPLOADS).getValue());
-
                     pullUserUploadedPrismPosts(prismUserUploadedPostIds);
 
                 } else {
@@ -257,7 +252,8 @@ public class PrismUserProfileActivity extends AppCompatActivity {
     private void setupUserProfileUIElements(boolean isCurrentUser) {
         userFullNameTextView.setText(prismUser.getFullName());
         userUsernameTextView.setText(prismUser.getUsername());
-
+        followersCountTextView.setText(String.valueOf(prismUser.getFollowerCount()));
+        followingCountTextView.setText(String.valueOf(prismUser.getFollowingCount()));
         Glide.with(this)
                 .asBitmap()
                 .thumbnail(0.05f)
@@ -283,7 +279,7 @@ public class PrismUserProfileActivity extends AppCompatActivity {
 
         userProfilePicImageView.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onClick(View view) {
                 if (isCurrentUser) {
                     AlertDialog setProfilePictureAlertDialog = createSetProfilePictureAlertDialog();
                     setProfilePictureAlertDialog.show();

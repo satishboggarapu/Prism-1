@@ -9,6 +9,7 @@
 
 - Make sure post author/owner cannot repost the prismPost
 
+- Make method that takes in DataSnapshot object and parses it and creates PrismUser object
 
 ---------------------
 * BUGS TO FIX *

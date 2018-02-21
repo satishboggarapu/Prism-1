@@ -4,6 +4,8 @@ import android.text.format.DateFormat;
 
 import com.google.firebase.database.DataSnapshot;
 import com.mikechoch.prism.attribute.PrismPost;
+import com.mikechoch.prism.attribute.PrismUser;
+import com.mikechoch.prism.attribute.ProfilePicture;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.constants.MyTimeUnit;
 
@@ -29,6 +31,33 @@ public class Helper {
         prismPost.setReposts((int) postSnapshot.child(Key.DB_REF_POST_REPOSTED_USERS).getChildrenCount());
         return prismPost;
     }
+
+    /**
+     * Takes in userSnapshot object and parses the firebaseUser details
+     * and creates a prismUser object
+     * @return PrismUser object
+     */
+    public static PrismUser constructPrismUserObject(DataSnapshot userSnapshot) {
+        PrismUser prismUser = new PrismUser();
+        prismUser.setUid(userSnapshot.getKey());
+        prismUser.setUsername((String) userSnapshot.child(Key.USER_PROFILE_USERNAME).getValue());
+        prismUser.setFullName((String) userSnapshot.child(Key.USER_PROFILE_FULL_NAME).getValue());
+        prismUser.setProfilePicture(new ProfilePicture((String) userSnapshot.child(Key.USER_PROFILE_PIC).getValue()));
+
+        if (userSnapshot.hasChild(Key.DB_REF_USER_FOLLOWERS)) {
+            prismUser.setFollowerCount((int) userSnapshot.child(Key.DB_REF_USER_FOLLOWERS).getChildrenCount());
+        } else {
+            prismUser.setFollowerCount(0);
+        }
+        if (userSnapshot.hasChild(Key.DB_REF_USER_FOLLOWINGS)) {
+            prismUser.setFollowingCount((int) userSnapshot.child(Key.DB_REF_USER_FOLLOWINGS).getChildrenCount());
+        } else {
+            prismUser.setFollowingCount(0);
+        }
+        return prismUser;
+
+    }
+
 
     /**
      * Takes in the time of the post and creates a fancy string difference

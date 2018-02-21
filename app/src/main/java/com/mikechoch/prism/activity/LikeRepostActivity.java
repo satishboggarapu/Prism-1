@@ -27,6 +27,7 @@ import com.mikechoch.prism.attribute.PrismUser;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.adapter.LikeRepostUsersRecyclerViewAdapter;
 import com.mikechoch.prism.constants.Message;
+import com.mikechoch.prism.helper.Helper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -213,16 +214,10 @@ public class LikeRepostActivity extends AppCompatActivity {
                 if (dataSnapshot.exists()) {
                     for (Map.Entry<String, String> entry : mapOfUsers.entrySet()) {
                         String userId = entry.getValue();
-                        PrismUser prismUser = new PrismUser();
-                        prismUser.setUsername(entry.getKey());
-                        prismUser.setUid(userId);
                         if (dataSnapshot.hasChild(userId)) {
-                            DataSnapshot user = dataSnapshot.child(userId);
-                            prismUser.setFullName((String) user.child(Key.USER_PROFILE_FULL_NAME).getValue());
-                            prismUser.setProfilePicture(new ProfilePicture((String)
-                                    user.child(Key.USER_PROFILE_PIC).getValue()));
+                            PrismUser prismUser = Helper.constructPrismUserObject(dataSnapshot.child(userId));
+                            prismUserArrayList.add(prismUser);
                         }
-                        prismUserArrayList.add(prismUser);
                     }
                 } else {
                     Log.wtf(Default.TAG_DB, Message.NO_DATA);
