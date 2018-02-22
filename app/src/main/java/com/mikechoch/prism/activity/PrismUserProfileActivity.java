@@ -7,6 +7,7 @@ import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.TabLayout;
@@ -28,6 +29,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -523,59 +525,90 @@ public class PrismUserProfileActivity extends AppCompatActivity {
      *
      */
     private void setupFollowUserButton() {
+        boolean isFollowing = CurrentUser.followings.containsKey(prismUser.getUsername());
+        changeFollowButtons(isFollowing);
+
         followUserButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                boolean performFollow = !(CurrentUser.followings.containsKey(prismUser.getUsername()));
+                toggleFollowUser();
+            }
+        });
 
-                usersReference.child(prismUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.exists()) {
-                            if (performFollow) {
-                                usersReference.child(prismUser.getUid())
-                                        .child(Key.DB_REF_USER_FOLLOWERS)
-                                        .child(CurrentUser.prismUser.getUsername())
-                                        .setValue(CurrentUser.prismUser.getUid());
 
-                                usersReference.child(CurrentUser.prismUser.getUid())
-                                        .child(Key.DB_REF_USER_FOLLOWINGS)
-                                        .child(prismUser.getUsername())
-                                        .setValue(prismUser.getUid());
+        toolbarFollowButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toggleFollowUser();
+            }
+        });
+    }
 
-                                // Add prismUser to local followers HashMap
-                                CurrentUser.followings.put(prismUser.getUsername(), prismUser.getUid());
-                                toast("Following " + prismUser.getUsername());
-                                // TODO @Mike show FOLLOWING button
-                            } else {
-                                usersReference.child(prismUser.getUid())
-                                        .child(Key.DB_REF_USER_FOLLOWERS)
-                                        .child(CurrentUser.prismUser.getUsername())
-                                        .removeValue();
+    /**
+     *
+     */
+    private void changeFollowButtons(boolean isFollowing) {
+        int buttonWidth = (int) (scale * (isFollowing ? 80 : 60));
+        String followButtonString = isFollowing ? "Following" : "Follow";
+        int followButtonInt = isFollowing ? R.drawable.button_selector_selected : R.drawable.button_selector;
+        Drawable followingButtonDrawable = getResources().getDrawable(followButtonInt);
 
-                                usersReference.child(CurrentUser.prismUser.getUid())
-                                        .child(Key.DB_REF_USER_FOLLOWINGS)
-                                        .child(prismUser.getUsername())
-                                        .removeValue();
+        followUserButton.setText(followButtonString);
+        followUserButton.setBackground(followingButtonDrawable);
 
-                                // Add prismUser to local followers HashMap
-                                CurrentUser.followings.remove(prismUser.getUsername());
-                                toast("Unfollowed " + prismUser.getUsername());
-                                // TODO @Mike show FOLLOW button cuz user unfollowed the guy
-                            }
-                        } else {
-                            Log.e(Default.TAG_DB, Message.FETCH_USER_DETAILS_FAIL);
-                        }
+        toolbarFollowButton.getLayoutParams().width = buttonWidth;
+        toolbarFollowButton.setText(followButtonString);
+        toolbarFollowButton.setBackground(followingButtonDrawable);
+        toolbarFollowButton.requestLayout();
+    }
+
+    /**
+     *
+     */
+    private void toggleFollowUser() {
+        boolean performFollow = !(CurrentUser.followings.containsKey(prismUser.getUsername()));
+        usersReference.child(prismUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    if (performFollow) {
+                        usersReference.child(prismUser.getUid())
+                                .child(Key.DB_REF_USER_FOLLOWERS)
+                                .child(CurrentUser.prismUser.getUsername())
+                                .setValue(CurrentUser.prismUser.getUid());
+
+                        usersReference.child(CurrentUser.prismUser.getUid())
+                                .child(Key.DB_REF_USER_FOLLOWINGS)
+                                .child(prismUser.getUsername())
+                                .setValue(prismUser.getUid());
+
+                        // Add prismUser to local followers HashMap
+                        CurrentUser.followings.put(prismUser.getUsername(), prismUser.getUid());
+                        toast("Following " + prismUser.getUsername());
+                    } else {
+                        usersReference.child(prismUser.getUid())
+                                .child(Key.DB_REF_USER_FOLLOWERS)
+                                .child(CurrentUser.prismUser.getUsername())
+                                .removeValue();
+
+                        usersReference.child(CurrentUser.prismUser.getUid())
+                                .child(Key.DB_REF_USER_FOLLOWINGS)
+                                .child(prismUser.getUsername())
+                                .removeValue();
+
+                        // Add prismUser to local followers HashMap
+                        CurrentUser.followings.remove(prismUser.getUsername());
+                        toast("Unfollowed " + prismUser.getUsername());
                     }
+                    changeFollowButtons(performFollow);
+                } else {
+                    Log.e(Default.TAG_DB, Message.FETCH_USER_DETAILS_FAIL);
+                }
+            }
 
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        Log.wtf(Default.TAG_DB, databaseError.getMessage(), databaseError.toException());
-                    }
-                });
-
-
-
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.wtf(Default.TAG_DB, databaseError.getMessage(), databaseError.toException());
             }
         });
     }

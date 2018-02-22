@@ -86,7 +86,7 @@
                 android:layout_marginEnd="16dp"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="24dp"
-                android:text="SAVE"
+                android:text="LOGIN"
                 android:textSize="19sp"
                 android:clickable="true"
                 android:textColor="@android:color/white"

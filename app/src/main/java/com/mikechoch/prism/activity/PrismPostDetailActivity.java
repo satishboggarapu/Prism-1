@@ -43,6 +43,9 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
     /*
      * Globals
      */
+    private int scrollFlags = AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL|AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED;
+    private int noScrollFlags = AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL|AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED;
+
     private float scale;
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
@@ -127,6 +130,8 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
         Bundle extras = getIntent().getExtras();
         prismPost = extras.getParcelable("PrismPostDetail");
 
+        System.out.println(prismPost.getPostId());
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             String imageTransitionName = extras.getString("PrismPostDetailTransitionName");
             detailImageView.setTransitionName(imageTransitionName);
@@ -175,6 +180,20 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
     }
 
     /**
+     * A method to find height of the status bar
+     */
+    private int getBottomNavigationBarHeight() {
+        int result = 0;
+        int resourceId = getResources().getIdentifier("navigation_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = getResources().getDimensionPixelSize(resourceId);
+        }
+        return result;
+    }
+
+
+
+    /**
      *
      */
     private void setupStatusBar() {
@@ -216,44 +235,33 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
 
                     @Override
                     public boolean onResourceReady(Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
-                        detailImageView.getLayoutParams().height = resource.getHeight();
-                        appBarLayout.getLayoutParams().height = resource.getHeight();
-
-                        int userInfoHeight = (detailUserProfilePictureImageView.getHeight() +
+                        // Calculate the PrismPost info window height
+                        int userInfoHeight = detailUserProfilePictureImageView.getHeight() +
                                 detailPrismPostDescriptionTextView.getHeight() +
-                                detailPrismPostTagsTextView.getHeight());
+                                detailPrismPostTagsTextView.getHeight() +
+                                prismPostDetailsRelativeLayout.getPaddingBottom();
 
-                        System.out.println("Screen height: " + screenHeight);
-                        System.out.println("Image height: " + resource.getHeight());
-                        System.out.println("ImageView height: " + detailImageView.getHeight());
-                        System.out.println("User info height: " + userInfoHeight);
+                        // Set the height of the appBarLayout, detailImageView, and toolbar
+                        // This ensures proper UI response when scrolling the image and info window
+                        appBarLayout.getLayoutParams().height = resource.getHeight();
+                        detailImageView.getLayoutParams().height = resource.getHeight();
+                        toolbar.getLayoutParams().height = screenHeight - getBottomNavigationBarHeight() - userInfoHeight;
 
-//                        boolean isPortraitImage = resource.getHeight() > (screenHeight * 0.25);
-//                        if (isPortraitImage) {
-//                            toolbar.getLayoutParams().height = (int) (isPortraitImage ? (screenHeight * 0.25) : resource.getHeight());
-//                        }
-
+                        // Check that the image height is larger or equal to actual screen height
+                        // If so, set ScaleType to CENTER_CROP
+                        // Otherwise, set ScaleType to FIT_START
                         boolean isLongPortraitImage = resource.getHeight() >= screenHeight;
                         detailImageView.setScaleType(isLongPortraitImage ? ImageView.ScaleType.CENTER_CROP : ImageView.ScaleType.FIT_START);
 
-                        System.out.println("Screen height: " + screenHeight);
-                        System.out.println("Image height: " + resource.getHeight());
-                        System.out.println("ImageView height: " + detailImageView.getHeight());
-                        System.out.println("User info height: " + userInfoHeight);
+                        // Check that the image and info window height is larger or equal to actual screen height
+                        // If so, enable collapsing toolbar using scroll flags
+                        // Otherwise, disable collapsing toolbar using scroll flags
+                        boolean isScrollImage = (resource.getHeight() + userInfoHeight) >= screenHeight;
 
-                        boolean isScrollImage = (resource.getHeight() + userInfoHeight) > screenHeight;
-                        if (isLongPortraitImage) {
-                            toolbar.getLayoutParams().height = resource.getHeight() - ((resource.getHeight() - screenHeight) + detailUserProfilePictureImageView.getHeight() +
-                                    detailPrismPostDescriptionTextView.getHeight() +
-                                    detailPrismPostTagsTextView.getHeight() + ((int) (70 * scale)));
-                        } else if (isScrollImage) {
-                            toolbar.getLayoutParams().height = resource.getHeight() - (detailUserProfilePictureImageView.getHeight() +
-                                    detailPrismPostDescriptionTextView.getHeight() +
-                                    detailPrismPostTagsTextView.getHeight());
-                        } else {
-                            toolbar.getLayoutParams().height = resource.getHeight();
-                        }
-                        System.out.println("Michael Dicioccio sucks lots of dick and is small. So is parth");
+                        // Set scroll flags for collapsingToolbarLayout containing the PrismPost image
+                        AppBarLayout.LayoutParams collapsingToolbarLayoutLayoutParams = (AppBarLayout.LayoutParams) collapsingToolbarLayout.getLayoutParams();
+                        collapsingToolbarLayoutLayoutParams.setScrollFlags(isScrollImage ? scrollFlags : noScrollFlags);
+                        collapsingToolbarLayout.setLayoutParams(collapsingToolbarLayoutLayoutParams);
 
                         startPostponedEnterTransition();
                         return false;

@@ -279,6 +279,7 @@ public class CurrentUser {
         ImageView userProfileImageView = ((Activity) context).findViewById(R.id.profile_fragment_user_profile_image_view);
         TextView userProfileTextView = ((Activity) context).findViewById(R.id.profile_fragment_user_full_name_text_view);
 
+        //TODO: Crash on fullname using tablet
         userProfileTextView.setText(prismUser.getFullName());
         Glide.with(context)
                 .asBitmap()
