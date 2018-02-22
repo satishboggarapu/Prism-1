@@ -552,13 +552,14 @@ public class PrismUserProfileActivity extends AppCompatActivity {
         String followButtonString = isFollowing ? "Following" : "Follow";
         int followButtonInt = isFollowing ? R.drawable.button_selector_selected : R.drawable.button_selector;
         Drawable followingButtonDrawable = getResources().getDrawable(followButtonInt);
+        Drawable followingToolbarButtonDrawable = getResources().getDrawable(followButtonInt);
 
         followUserButton.setText(followButtonString);
         followUserButton.setBackground(followingButtonDrawable);
 
         toolbarFollowButton.getLayoutParams().width = buttonWidth;
         toolbarFollowButton.setText(followButtonString);
-        toolbarFollowButton.setBackground(followingButtonDrawable);
+        toolbarFollowButton.setBackground(followingToolbarButtonDrawable);
         toolbarFollowButton.requestLayout();
     }
 
