@@ -58,6 +58,10 @@ public class Helper {
 
     }
 
+    public static String getSingularOrPluralText(String string, int count) {
+        return count == 1 ? string : string + "s";
+    }
+
 
     /**
      * Takes in the time of the post and creates a fancy string difference
