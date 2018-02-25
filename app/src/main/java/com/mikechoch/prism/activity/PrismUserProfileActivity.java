@@ -552,7 +552,7 @@ public class PrismUserProfileActivity extends AppCompatActivity {
      *
      */
     private void setupFollowUserButton() {
-        boolean isFollowing = CurrentUser.followings.containsKey(prismUser.getUsername());
+        boolean isFollowing = CurrentUser.followings.containsKey(prismUser.getUid());
         changeFollowButtons(isFollowing);
 
         followUserButton.setOnClickListener(new View.OnClickListener() {
@@ -574,10 +574,10 @@ public class PrismUserProfileActivity extends AppCompatActivity {
     /**
      *
      */
-    private void changeFollowButtons(boolean isFollowing) {
-        int buttonWidth = (int) (scale * (isFollowing ? 80 : 60));
-        String followButtonString = isFollowing ? "Following" : "Follow";
-        int followButtonInt = isFollowing ? R.drawable.button_selector_selected : R.drawable.button_selector;
+    private void changeFollowButtons(boolean showFollowing) {
+        int buttonWidth = (int) (scale * (showFollowing ? 80 : 60));
+        String followButtonString = showFollowing ? "Following" : "Follow";
+        int followButtonInt = showFollowing ? R.drawable.button_selector_selected : R.drawable.button_selector;
         Drawable followingButtonDrawable = getResources().getDrawable(followButtonInt);
         Drawable followingToolbarButtonDrawable = getResources().getDrawable(followButtonInt);
 
@@ -594,7 +594,7 @@ public class PrismUserProfileActivity extends AppCompatActivity {
      *
      */
     private void toggleFollowUser() {
-        boolean performFollow = !(CurrentUser.followings.containsKey(prismUser.getUsername()));
+        boolean performFollow = !(CurrentUser.followings.containsKey(prismUser.getUid()));
         usersReference.child(prismUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -602,30 +602,30 @@ public class PrismUserProfileActivity extends AppCompatActivity {
                     if (performFollow) {
                         usersReference.child(prismUser.getUid())
                                 .child(Key.DB_REF_USER_FOLLOWERS)
-                                .child(CurrentUser.prismUser.getUsername())
-                                .setValue(CurrentUser.prismUser.getUid());
+                                .child(CurrentUser.prismUser.getUid())
+                                .setValue(CurrentUser.prismUser.getUsername());
 
                         usersReference.child(CurrentUser.prismUser.getUid())
                                 .child(Key.DB_REF_USER_FOLLOWINGS)
-                                .child(prismUser.getUsername())
-                                .setValue(prismUser.getUid());
+                                .child(prismUser.getUid())
+                                .setValue(prismUser.getUsername());
 
                         // Add prismUser to local followers HashMap
-                        CurrentUser.followings.put(prismUser.getUsername(), prismUser.getUid());
+                        CurrentUser.followings.put(prismUser.getUid(), prismUser.getUsername());
                         toast("Following " + prismUser.getUsername());
                     } else {
                         usersReference.child(prismUser.getUid())
                                 .child(Key.DB_REF_USER_FOLLOWERS)
-                                .child(CurrentUser.prismUser.getUsername())
+                                .child(CurrentUser.prismUser.getUid())
                                 .removeValue();
 
                         usersReference.child(CurrentUser.prismUser.getUid())
                                 .child(Key.DB_REF_USER_FOLLOWINGS)
-                                .child(prismUser.getUsername())
+                                .child(prismUser.getUid())
                                 .removeValue();
 
                         // Add prismUser to local followers HashMap
-                        CurrentUser.followings.remove(prismUser.getUsername());
+                        CurrentUser.followings.remove(prismUser.getUid());
                         toast("Unfollowed " + prismUser.getUsername());
                     }
                     changeFollowButtons(performFollow);
