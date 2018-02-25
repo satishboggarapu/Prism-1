@@ -3,22 +3,32 @@ package com.mikechoch.prism.adapter;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
+import com.mikechoch.prism.attribute.CurrentUser;
 import com.mikechoch.prism.attribute.PrismUser;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.constants.Default;
+import com.mikechoch.prism.constants.Key;
+import com.mikechoch.prism.constants.Message;
+import com.mikechoch.prism.helper.Helper;
 
 import java.util.ArrayList;
 
@@ -26,7 +36,7 @@ import java.util.ArrayList;
  * Created by mikechoch on 1/21/18.
  */
 
-public class UsersRecyclerViewAdapter extends RecyclerView.Adapter<UsersRecyclerViewAdapter.ViewHolder> {
+public class DisplayUsersRecyclerViewAdapter extends RecyclerView.Adapter<DisplayUsersRecyclerViewAdapter.ViewHolder> {
 
     /*
      * Global variables
@@ -39,7 +49,7 @@ public class UsersRecyclerViewAdapter extends RecyclerView.Adapter<UsersRecycler
     private Typeface sourceSansProBold;
 
 
-    public UsersRecyclerViewAdapter(Context context, ArrayList<PrismUser> prismUserArrayList) {
+    public DisplayUsersRecyclerViewAdapter(Context context, ArrayList<PrismUser> prismUserArrayList) {
         this.context = context;
         this.prismUserArrayList = prismUserArrayList;
 
@@ -76,18 +86,21 @@ public class UsersRecyclerViewAdapter extends RecyclerView.Adapter<UsersRecycler
         private ImageView userProfilePicture;
         private TextView usernameTextView;
         private TextView userFullNameText;
+        private Button userFollowButton;
+
 
         public ViewHolder(View itemView) {
             super(itemView);
 
             // Cloud database initializations
             auth = FirebaseAuth.getInstance();
-            userReference = Default.USERS_REFERENCE.child(auth.getCurrentUser().getUid());
+            userReference = Default.USERS_REFERENCE;
 
             // Initialize all UI elements
             userProfilePicture = itemView.findViewById(R.id.user_profile_picture_image_view);
             usernameTextView = itemView.findViewById(R.id.username_text_view);
             userFullNameText = itemView.findViewById(R.id.full_name_text_view);
+            userFollowButton = itemView.findViewById(R.id.small_follow_user_button);
         }
 
         /**
@@ -96,6 +109,93 @@ public class UsersRecyclerViewAdapter extends RecyclerView.Adapter<UsersRecycler
         public void setData(PrismUser prismUser) {
             this.prismUser = prismUser;
             setupUIElements();
+        }
+
+        /**
+         *
+         */
+        private void setupUserFollowButton() {
+            if (!Helper.isCurrentUser(prismUser.getUid())) {
+                userFollowButton.setVisibility(View.VISIBLE);
+
+                boolean isFollowing = CurrentUser.followings.containsKey(prismUser.getUsername());
+                changeFollowButtons(isFollowing);
+
+                userFollowButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        toggleFollowUser();
+                    }
+                });
+            }
+        }
+
+        /**
+         *
+         */
+        private void changeFollowButtons(boolean isFollowing) {
+            int buttonWidth = (int) (scale * (isFollowing ? 80 : 60));
+            String followButtonString = isFollowing ? "Following" : "Follow";
+            int followButtonInt = isFollowing ? R.drawable.button_selector_selected : R.drawable.button_selector;
+            Drawable followingButtonDrawable = context.getResources().getDrawable(followButtonInt);
+            Drawable followingToolbarButtonDrawable = context.getResources().getDrawable(followButtonInt);
+
+            userFollowButton.setText(followButtonString);
+            userFollowButton.setBackground(followingButtonDrawable);
+
+            userFollowButton.getLayoutParams().width = buttonWidth;
+            userFollowButton.setText(followButtonString);
+            userFollowButton.setBackground(followingToolbarButtonDrawable);
+            userFollowButton.requestLayout();
+        }
+
+        /**
+         *
+         */
+        private void toggleFollowUser() {
+            boolean performFollow = !(CurrentUser.followings.containsKey(prismUser.getUsername()));
+            userReference.child(prismUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.exists()) {
+                        if (performFollow) {
+                            userReference.child(prismUser.getUid())
+                                    .child(Key.DB_REF_USER_FOLLOWERS)
+                                    .child(CurrentUser.prismUser.getUsername())
+                                    .setValue(CurrentUser.prismUser.getUid());
+
+                            userReference.child(CurrentUser.prismUser.getUid())
+                                    .child(Key.DB_REF_USER_FOLLOWINGS)
+                                    .child(prismUser.getUsername())
+                                    .setValue(prismUser.getUid());
+
+                            // Add prismUser to local followers HashMap
+                            CurrentUser.followings.put(prismUser.getUsername(), prismUser.getUid());
+                        } else {
+                            userReference.child(prismUser.getUid())
+                                    .child(Key.DB_REF_USER_FOLLOWERS)
+                                    .child(CurrentUser.prismUser.getUsername())
+                                    .removeValue();
+
+                            userReference.child(CurrentUser.prismUser.getUid())
+                                    .child(Key.DB_REF_USER_FOLLOWINGS)
+                                    .child(prismUser.getUsername())
+                                    .removeValue();
+
+                            // Add prismUser to local followers HashMap
+                            CurrentUser.followings.remove(prismUser.getUsername());
+                        }
+                        changeFollowButtons(performFollow);
+                    } else {
+                        Log.e(Default.TAG_DB, Message.FETCH_USER_DETAILS_FAIL);
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    Log.wtf(Default.TAG_DB, databaseError.getMessage(), databaseError.toException());
+                }
+            });
         }
 
         /**
@@ -142,9 +242,11 @@ public class UsersRecyclerViewAdapter extends RecyclerView.Adapter<UsersRecycler
             // Setup Typefaces for all text based UI elements
             usernameTextView.setTypeface(sourceSansProBold);
             userFullNameText.setTypeface(sourceSansProLight);
+            userFollowButton.setTypeface(sourceSansProLight);
 
             setupUserProfilePicImageView();
             setupUsernameAndFullNameTextView();
+            setupUserFollowButton();
         }
     }
 }

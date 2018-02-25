@@ -263,7 +263,7 @@ public class PrismUserProfileActivity extends AppCompatActivity {
         followersRelativeLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent userFollowersIntent = new Intent(PrismUserProfileActivity.this, UsersActivity.class);
+                Intent userFollowersIntent = new Intent(PrismUserProfileActivity.this, DisplayUsersActivity.class);
                 userFollowersIntent.putExtra("UsersInt", 2);
                 userFollowersIntent.putExtra("UsersDataId", prismUser.getUid());
                 startActivity(userFollowersIntent);
@@ -275,7 +275,7 @@ public class PrismUserProfileActivity extends AppCompatActivity {
         followingRelativeLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent userFollowingIntent = new Intent(PrismUserProfileActivity.this, UsersActivity.class);
+                Intent userFollowingIntent = new Intent(PrismUserProfileActivity.this, DisplayUsersActivity.class);
                 userFollowingIntent.putExtra("UsersInt", 3);
                 userFollowingIntent.putExtra("UsersDataId", prismUser.getUid());
                 startActivity(userFollowingIntent);

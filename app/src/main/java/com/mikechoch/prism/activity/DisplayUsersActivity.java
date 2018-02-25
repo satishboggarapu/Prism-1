@@ -20,10 +20,10 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
+import com.mikechoch.prism.adapter.DisplayUsersRecyclerViewAdapter;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.attribute.PrismUser;
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.adapter.UsersRecyclerViewAdapter;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.constants.Message;
 import com.mikechoch.prism.helper.Helper;
@@ -36,7 +36,7 @@ import java.util.Map;
  * Created by mikechoch on 1/30/18.
  */
 
-public class UsersActivity extends AppCompatActivity {
+public class DisplayUsersActivity extends AppCompatActivity {
 
     /*
      * Global variables
@@ -51,7 +51,7 @@ public class UsersActivity extends AppCompatActivity {
     private ProgressBar likeRepostProgressBar;
     private RecyclerView usersRecyclerView;
 
-    private UsersRecyclerViewAdapter usersRecyclerViewAdapter;
+    private DisplayUsersRecyclerViewAdapter displayUsersRecyclerViewAdapter;
 
     private int activityCode;
     private String usersDataId;
@@ -161,9 +161,9 @@ public class UsersActivity extends AppCompatActivity {
         dividerItemDecoration.setDrawable(this.getResources().getDrawable(R.drawable.recycler_view_divider));
         usersRecyclerView.addItemDecoration(dividerItemDecoration);
 
-        // Setup the usersRecyclerViewAdapter and set it to the usersRecyclerView
-        usersRecyclerViewAdapter = new UsersRecyclerViewAdapter(this, prismUserArrayList);
-        usersRecyclerView.setAdapter(usersRecyclerViewAdapter);
+        // Setup the displayUsersRecyclerViewAdapter and set it to the usersRecyclerView
+        displayUsersRecyclerViewAdapter = new DisplayUsersRecyclerViewAdapter(this, prismUserArrayList);
+        usersRecyclerView.setAdapter(displayUsersRecyclerViewAdapter);
     }
 
     /**
@@ -232,7 +232,7 @@ public class UsersActivity extends AppCompatActivity {
                 } else {
                     Log.wtf(Default.TAG_DB, Message.NO_DATA);
                 }
-                usersRecyclerViewAdapter.notifyDataSetChanged();
+                displayUsersRecyclerViewAdapter.notifyDataSetChanged();
                 hideProgressBar();
 
                 // Once data is populated set title to the number likes or reposts
