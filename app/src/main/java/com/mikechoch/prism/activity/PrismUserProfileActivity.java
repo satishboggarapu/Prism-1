@@ -3,7 +3,6 @@ package com.mikechoch.prism.activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -46,7 +45,6 @@ import com.mikechoch.prism.adapter.UserPostsColumnRecyclerViewAdapter;
 import com.mikechoch.prism.attribute.CurrentUser;
 import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.attribute.PrismUser;
-import com.mikechoch.prism.attribute.ProfilePicture;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.constants.Message;
@@ -86,10 +84,12 @@ public class PrismUserProfileActivity extends AppCompatActivity {
     private NestedScrollView profileNestedScrollView;
     private ImageView userProfilePicImageView;
     private Button followUserButton;
+    private RelativeLayout followersRelativeLayout;
     private TextView followersCountTextView;
     private TextView followersLabelTextView;
     private TextView postsCountTextView;
     private TextView postsLabelTextView;
+    private RelativeLayout followingRelativeLayout;
     private TextView followingCountTextView;
     private TextView followingLabelTextView;
     private TextView userUsernameTextView;
@@ -149,10 +149,12 @@ public class PrismUserProfileActivity extends AppCompatActivity {
         profileNestedScrollView = findViewById(R.id.profile_scroll_view);
         userProfilePicImageView = findViewById(R.id.user_profile_profile_picture_image_view);
         followUserButton = findViewById(R.id.follow_user_button);
+        followersRelativeLayout = findViewById(R.id.followers_relative_layout);
         followersCountTextView = findViewById(R.id.followers_count_text_view);
         followersLabelTextView = findViewById(R.id.followers_label_text_view);
         postsCountTextView = findViewById(R.id.posts_count_text_view);
         postsLabelTextView = findViewById(R.id.posts_label_text_view);
+        followingRelativeLayout = findViewById(R.id.following_relative_layout);
         followingCountTextView = findViewById(R.id.following_count_text_view);
         followingLabelTextView = findViewById(R.id.following_label_text_view);
         userUsernameTextView = findViewById(R.id.user_profile_username_text_view);
@@ -187,7 +189,10 @@ public class PrismUserProfileActivity extends AppCompatActivity {
                 if (dataSnapshot.exists()) {
 //                    prismUser = Helper.constructPrismUserObject(dataSnapshot);
                     HashMap<String, Long> prismUserUploadedPostIds = new HashMap<>();
-                    prismUserUploadedPostIds.putAll((Map) dataSnapshot.child(Key.DB_REF_USER_UPLOADS).getValue());
+                    Object data = dataSnapshot.child(Key.DB_REF_USER_UPLOADS).getValue();
+                    if (data != null) {
+                        prismUserUploadedPostIds.putAll((Map) data);
+                    }
                     pullUserUploadedPrismPosts(prismUserUploadedPostIds);
 
                 } else {
@@ -255,7 +260,29 @@ public class PrismUserProfileActivity extends AppCompatActivity {
         userFullNameTextView.setText(prismUser.getFullName());
         userUsernameTextView.setText(prismUser.getUsername());
         followersCountTextView.setText(String.valueOf(prismUser.getFollowerCount()));
+        followersRelativeLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent userFollowersIntent = new Intent(PrismUserProfileActivity.this, UsersActivity.class);
+                userFollowersIntent.putExtra("UsersInt", 2);
+                userFollowersIntent.putExtra("UsersDataId", prismUser.getUid());
+                startActivity(userFollowersIntent);
+                overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+            }
+        });
+
         followingCountTextView.setText(String.valueOf(prismUser.getFollowingCount()));
+        followingRelativeLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent userFollowingIntent = new Intent(PrismUserProfileActivity.this, UsersActivity.class);
+                userFollowingIntent.putExtra("UsersInt", 3);
+                userFollowingIntent.putExtra("UsersDataId", prismUser.getUid());
+                startActivity(userFollowingIntent);
+                overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+            }
+        });
+
         Glide.with(this)
                 .asBitmap()
                 .thumbnail(0.05f)
@@ -434,7 +461,7 @@ public class PrismUserProfileActivity extends AppCompatActivity {
         TextView postsTabTextView = new TextView(this);
         postsTabTextView.setText(tabTitle);
         postsTabTextView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        postsTabTextView.setTextSize((int) (6 * scale));
+        postsTabTextView.setTextSize(16);
         postsTabTextView.setTextColor(Color.WHITE);
         postsTabTextView.setTypeface(sourceSansProBold);
         return postsTabTextView;

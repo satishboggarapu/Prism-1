@@ -69,8 +69,7 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true"
-                        android:layout_marginStart="8dp" />
+                        android:layout_centerVertical="true" />
 
                     <TextView
                         android:id="@+id/uploading_image_text_view"
@@ -128,6 +127,15 @@
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
     </android.support.v4.view.ViewPager>
+
+    <ProgressBar
+        android:id="@+id/main_activity_progress_bar"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_gravity="center"
+        android:indeterminate="true"
+        android:indeterminateDrawable="@drawable/circle_progress_foreground"
+        android:visibility="visible" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/upload_image_fab"

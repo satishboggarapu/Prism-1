@@ -26,7 +26,7 @@ import java.util.ArrayList;
  * Created by mikechoch on 1/21/18.
  */
 
-public class LikeRepostUsersRecyclerViewAdapter extends RecyclerView.Adapter<LikeRepostUsersRecyclerViewAdapter.ViewHolder> {
+public class UsersRecyclerViewAdapter extends RecyclerView.Adapter<UsersRecyclerViewAdapter.ViewHolder> {
 
     /*
      * Global variables
@@ -39,7 +39,7 @@ public class LikeRepostUsersRecyclerViewAdapter extends RecyclerView.Adapter<Lik
     private Typeface sourceSansProBold;
 
 
-    public LikeRepostUsersRecyclerViewAdapter(Context context, ArrayList<PrismUser> prismUserArrayList) {
+    public UsersRecyclerViewAdapter(Context context, ArrayList<PrismUser> prismUserArrayList) {
         this.context = context;
         this.prismUserArrayList = prismUserArrayList;
 
@@ -54,7 +54,7 @@ public class LikeRepostUsersRecyclerViewAdapter extends RecyclerView.Adapter<Lik
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(
-                R.layout.like_repost_users_recycler_view_item_layout, parent, false));
+                R.layout.users_recycler_view_item_layout, parent, false));
     }
 
     @Override

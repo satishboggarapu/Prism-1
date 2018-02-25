@@ -13,7 +13,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.widget.RecyclerView;
-import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
@@ -52,18 +51,15 @@ import com.mikechoch.prism.helper.AnimationBounceInterpolator;
 import com.mikechoch.prism.attribute.CurrentUser;
 import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.activity.LikeRepostActivity;
+import com.mikechoch.prism.activity.UsersActivity;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
-import com.mikechoch.prism.constants.MyTimeUnit;
 import com.mikechoch.prism.helper.Helper;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by mikechoch on 1/21/18.
@@ -474,9 +470,9 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             likesCountTextView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent userLikesIntent = new Intent(context, LikeRepostActivity.class);
-                    userLikesIntent.putExtra("LikeRepostBoolean", 1); // Like = 1, Repost = 0
-                    userLikesIntent.putExtra("LikeRepostPostId", postId);
+                    Intent userLikesIntent = new Intent(context, UsersActivity.class);
+                    userLikesIntent.putExtra("UsersInt", 0);
+                    userLikesIntent.putExtra("UsersDataId", postId);
                     context.startActivity(userLikesIntent);
                     ((Activity) context).overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
                 }
@@ -518,9 +514,9 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             repostsCountTextView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent userRepostsIntent = new Intent(context, LikeRepostActivity.class);
-                    userRepostsIntent.putExtra("LikeRepostBoolean", 0); // Like = 1, Repost = 0
-                    userRepostsIntent.putExtra("LikeRepostPostId", postId);
+                    Intent userRepostsIntent = new Intent(context, UsersActivity.class);
+                    userRepostsIntent.putExtra("UsersInt", 1);
+                    userRepostsIntent.putExtra("UsersDataId", postId);
                     context.startActivity(userRepostsIntent);
                     ((Activity) context).overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
                 }

@@ -20,12 +20,11 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
-import com.mikechoch.prism.attribute.ProfilePicture;
 import com.mikechoch.prism.constants.Default;
-import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.attribute.PrismUser;
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.adapter.LikeRepostUsersRecyclerViewAdapter;
+import com.mikechoch.prism.adapter.UsersRecyclerViewAdapter;
+import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.constants.Message;
 import com.mikechoch.prism.helper.Helper;
 
@@ -37,7 +36,7 @@ import java.util.Map;
  * Created by mikechoch on 1/30/18.
  */
 
-public class LikeRepostActivity extends AppCompatActivity {
+public class UsersActivity extends AppCompatActivity {
 
     /*
      * Global variables
@@ -52,8 +51,11 @@ public class LikeRepostActivity extends AppCompatActivity {
     private ProgressBar likeRepostProgressBar;
     private RecyclerView usersRecyclerView;
 
-    private LikeRepostUsersRecyclerViewAdapter usersRecyclerViewAdapter;
+    private UsersRecyclerViewAdapter usersRecyclerViewAdapter;
 
+    private int activityCode;
+    private String usersDataId;
+    private String toolbarTitle;
     private ArrayList<PrismUser> prismUserArrayList;
 
 
@@ -79,8 +81,7 @@ public class LikeRepostActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.like_repost_activity_layout);
-        databaseReference = Default.ALL_POSTS_REFERENCE;
+        setContentView(R.layout.users_activity_layout);
 
         // Create two typefaces
         sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
@@ -95,6 +96,14 @@ public class LikeRepostActivity extends AppCompatActivity {
         // Setup data structure to be populated with users who liked/reposted the post
         prismUserArrayList = new ArrayList<>();
 
+        // getIntent and grab the String to populate the Toolbar title
+        // This will be "Likes" or "Reposts"
+        // Default being "Error"
+        Intent intent = getIntent();
+        activityCode = intent.getIntExtra("UsersInt", -1);
+        usersDataId = intent.getStringExtra("UsersDataId");
+        databaseReference = activityCode < 2 ? Default.ALL_POSTS_REFERENCE : Default.USERS_REFERENCE;
+
         setupUIElements();
     }
 
@@ -104,23 +113,25 @@ public class LikeRepostActivity extends AppCompatActivity {
      * Setup the toolbar and back button to return to MainActivity
      */
     private void setupToolbar() {
-        // getIntent and grab the String to populate the Toolbar title
-        // This will be "Likes" or "Reposts"
-        // Default being "Error"
-        Intent intent = getIntent();
-        int activityCode = intent.getIntExtra("LikeRepostBoolean", -1);
-        String postId = intent.getStringExtra("LikeRepostPostId");
-        String toolbarTitle;
-
         switch (activityCode) {
-            case 1: {
-                toolbarTitle = "Likes";
-                getListOfUsers(Key.DB_REF_POST_LIKED_USERS, postId);
+            case 0: {
+                toolbarTitle = "Like";
+                getListOfUsers(Key.DB_REF_POST_LIKED_USERS, usersDataId);
                 break;
             }
-            case 0: {
-                toolbarTitle = "Reposts";
-                getListOfUsers(Key.DB_REF_POST_REPOSTED_USERS, postId);
+            case 1: {
+                toolbarTitle = "Repost";
+                getListOfUsers(Key.DB_REF_POST_REPOSTED_USERS, usersDataId);
+                break;
+            }
+            case 2: {
+                toolbarTitle = "Follower";
+                getListOfUsers(Key.DB_REF_USER_FOLLOWERS, usersDataId);
+                break;
+            }
+            case 3: {
+                toolbarTitle = "Following";
+                getListOfUsers(Key.DB_REF_USER_FOLLOWINGS, usersDataId);
                 break;
             }
             default: {
@@ -129,7 +140,6 @@ public class LikeRepostActivity extends AppCompatActivity {
             }
         }
 
-        toolbar.setTitle(toolbarTitle);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
@@ -152,7 +162,7 @@ public class LikeRepostActivity extends AppCompatActivity {
         usersRecyclerView.addItemDecoration(dividerItemDecoration);
 
         // Setup the usersRecyclerViewAdapter and set it to the usersRecyclerView
-        usersRecyclerViewAdapter = new LikeRepostUsersRecyclerViewAdapter(this, prismUserArrayList);
+        usersRecyclerViewAdapter = new UsersRecyclerViewAdapter(this, prismUserArrayList);
         usersRecyclerView.setAdapter(usersRecyclerViewAdapter);
     }
 
@@ -172,10 +182,10 @@ public class LikeRepostActivity extends AppCompatActivity {
      * Goes to the post in database and pulls list of users who have "liked" or "reposted"
      * the post and then calls getUserDetails to get further details for all those users
      * @param DB_REF_POST_GET_USERS_KEY: will be either LIKED_USERS or REPOSTED_USERS
-     * @param postId: postId for which information needs to be pulled
+     * @param usersDataId: usersDataId for which information needs to be pulled
      */
-    private void getListOfUsers(String DB_REF_POST_GET_USERS_KEY, String postId) {
-        databaseReference.child(postId).child(DB_REF_POST_GET_USERS_KEY)
+    private void getListOfUsers(String DB_REF_POST_GET_USERS_KEY, String usersDataId) {
+        databaseReference.child(usersDataId).child(DB_REF_POST_GET_USERS_KEY)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -188,8 +198,8 @@ public class LikeRepostActivity extends AppCompatActivity {
                             hideProgressBar();
 
                             // Once data is populated set title to the number likes or reposts
-                            String toolbarTitle = "0 " + toolbar.getTitle();
-                            toolbar.setTitle(toolbarTitle);
+                            toolbarTitle = "0 " + toolbarTitle + (toolbarTitle.equals("Following") ? "" : "s");
+                            toolbarTextView.setText(toolbarTitle);
                         }
                     }
 
@@ -226,8 +236,10 @@ public class LikeRepostActivity extends AppCompatActivity {
                 hideProgressBar();
 
                 // Once data is populated set title to the number likes or reposts
-                String toolbarTitle = prismUserArrayList.size() + " " + toolbar.getTitle();
-                toolbar.setTitle(toolbarTitle);
+                toolbarTitle = prismUserArrayList.size() + " " + toolbarTitle +
+                        (toolbarTitle.equals("Following") ? "" :
+                                (prismUserArrayList.size() == 1 ? "" : "s"));
+                toolbarTextView.setText(toolbarTitle);
             }
 
             @Override

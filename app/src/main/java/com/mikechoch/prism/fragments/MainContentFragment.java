@@ -25,7 +25,6 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.attribute.CurrentUser;
 import com.mikechoch.prism.attribute.PrismUser;
-import com.mikechoch.prism.attribute.ProfilePicture;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.attribute.PrismPost;
@@ -49,7 +48,7 @@ public class MainContentFragment extends Fragment {
     private TextView noMainPostsTextView;
     private RecyclerView mainContentRecyclerView;
     private PrismPostRecyclerViewAdapter mainContentRecyclerViewAdapter;
-    private ProgressBar mainContentProgress;
+    private ProgressBar mainProgressBar;
 
     private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
     private SwipeRefreshLayout mainContentSwipeRefreshLayout;
@@ -90,7 +89,7 @@ public class MainContentFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.main_content_fragment_layout, container, false);
 
-        mainContentProgress = view.findViewById(R.id.main_content_progress_bar);
+        mainProgressBar = getActivity().findViewById(R.id.main_activity_progress_bar);
         noMainPostsRelativeLayout = view.findViewById(R.id.no_main_posts_relative_layout);
         noMainPostsTextView = view.findViewById(R.id.no_main_posts_text_view);
         noMainPostsTextView.setTypeface(sourceSansProLight);
@@ -208,7 +207,7 @@ public class MainContentFragment extends Fragment {
                     Log.i(Default.TAG_DB, Message.NO_DATA);
                     noMainPostsRelativeLayout.setVisibility(View.VISIBLE);
                     mainContentSwipeRefreshLayout.setRefreshing(false);
-                    mainContentProgress.setVisibility(View.GONE);
+                    mainProgressBar.setVisibility(View.GONE);
                 }
             }
 
@@ -285,7 +284,7 @@ public class MainContentFragment extends Fragment {
 
                     // gets called inside refreshData()
                     if (updateRecyclerViewAdapter) {
-                        mainContentProgress.setVisibility(View.GONE);
+                        mainProgressBar.setVisibility(View.GONE);
                         mainContentRecyclerViewAdapter.notifyDataSetChanged();
                     }
                 } else {
