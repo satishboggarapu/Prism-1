@@ -3,6 +3,8 @@ package com.mikechoch.prism.attribute;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.mikechoch.prism.constants.Default;
+
 /**
  * Created by mikechoch on 1/30/18.
  */
@@ -32,7 +34,7 @@ public class PrismUser implements Parcelable {
     }
 
     public String getUsername() {
-        return username;
+        return username.replace(Default.USERNAME_PERIOD_REPLACE, Default.USERNAME_PERIOD);
     }
 
     public String getFullName() {

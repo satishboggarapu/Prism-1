@@ -1,6 +1,5 @@
 package com.mikechoch.prism.activity;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -11,7 +10,6 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,8 +21,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.R;
+import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.helper.ExifUtil;
 import com.mikechoch.prism.helper.FileChooser;
 

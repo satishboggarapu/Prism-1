@@ -38,6 +38,7 @@ import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.constants.Message;
+import com.mikechoch.prism.helper.Helper;
 
 import java.util.Random;
 import java.util.regex.Pattern;
@@ -241,20 +242,21 @@ public class RegisterActivity extends AppCompatActivity {
             public void onClick(View v) {
                 toggleProgressBar(true);
                 final String fullName = getFormattedFullName();
-                final String userName = getFormattedUsername();
+                final String inputUsername = getFormattedUsername();
+                final String username = Helper.getFirebaseEncodedUsername(inputUsername);
                 final String email = getFormattedEmail();
                 final String password = getFormattedPassword();
 
-                if (!areInputsValid(fullName, userName, email, password)) {
+                if (!areInputsValid(fullName, inputUsername, email, password)) {
                     toggleProgressBar(false);
                     return;
                 }
 
                 DatabaseReference accountReference = Default.ACCOUNT_REFERENCE;
                 accountReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
+                        @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.hasChild(userName)) {
+                        if (dataSnapshot.hasChild(username)) {
                             usernameTextInputLayout.setError("Username is taken. Try again");
                             toggleProgressBar(false);
                             return;
@@ -266,17 +268,17 @@ public class RegisterActivity extends AppCompatActivity {
                                 if (task.isSuccessful()) {
                                     FirebaseUser user = auth.getCurrentUser();
                                     if (user != null) {
-                                        UserProfileChangeRequest profile = new UserProfileChangeRequest.Builder().setDisplayName(userName).build();
+                                        UserProfileChangeRequest profile = new UserProfileChangeRequest.Builder().setDisplayName(username).build();
                                         user.updateProfile(profile);
                                         String uid = user.getUid();
                                         String email = user.getEmail();
 
                                         DatabaseReference profileReference = usersDatabaseRef.child(uid);
                                         profileReference.child(Key.USER_PROFILE_FULL_NAME).setValue(fullName);
-                                        profileReference.child(Key.USER_PROFILE_USERNAME).setValue(userName);
+                                        profileReference.child(Key.USER_PROFILE_USERNAME).setValue(username);
                                         profileReference.child(Key.USER_PROFILE_PIC).setValue(generateDefaultProfilePic());
 
-                                        DatabaseReference accountReference = Default.ACCOUNT_REFERENCE.child(userName);
+                                        DatabaseReference accountReference = Default.ACCOUNT_REFERENCE.child(username);
                                         accountReference.setValue(email);
 
                                         intentToMainActivity();
@@ -511,6 +513,7 @@ public class RegisterActivity extends AppCompatActivity {
     public String getFormattedUsername() {
         return usernameEditText.getText().toString().trim().toLowerCase();
     }
+
 
     /**
      * Cleans the email entered and returns the clean version

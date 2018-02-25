@@ -6,6 +6,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.attribute.PrismUser;
 import com.mikechoch.prism.attribute.ProfilePicture;
+import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.constants.MyTimeUnit;
 
@@ -108,5 +109,17 @@ public class Helper {
             fancyDateString = DateFormat.format("MMM dd", calendar).toString();
         }
         return fancyDateString;
+    }
+
+    /**
+     * Takes the user inputted formatted usernmae and removes the
+     * period `.` character with a dash `-` so that it can be saved in firebase
+     */
+    public static String getFirebaseEncodedUsername(String inputUsername) {
+        return inputUsername.replace(Default.USERNAME_PERIOD, Default.USERNAME_PERIOD_REPLACE);
+    }
+
+    public static String getFirebaseDecodedUsername(String encodedUsername) {
+        return encodedUsername.replace(Default.USERNAME_PERIOD_REPLACE, Default.USERNAME_PERIOD);
     }
 }

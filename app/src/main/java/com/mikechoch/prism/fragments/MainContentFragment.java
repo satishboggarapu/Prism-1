@@ -25,7 +25,6 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.attribute.CurrentUser;
 import com.mikechoch.prism.attribute.PrismUser;
-import com.mikechoch.prism.attribute.ProfilePicture;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.attribute.PrismPost;
@@ -113,8 +112,8 @@ public class MainContentFragment extends Fragment {
 
         /*
          * The OnScrollListener is handling the toggling of the isLoading boolean
-         * Bottom of the RecyclerView will set isLoading to true and fetchOldData() will be called
-         * Otherwise a threshold is set to call fetchOldData() again and isLoading will become false
+         * Bottom of the RecyclerView will set isLoading to true and fetchMorePosts() will be called
+         * Otherwise a threshold is set to call fetchMorePosts() again and isLoading will become false
          * As new data is pulled this threshold is met
          * This avoids conflicts with swipe refreshing while pulling old data
          */
@@ -126,7 +125,7 @@ public class MainContentFragment extends Fragment {
                 int lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
                 if (!isLoading && (totalItemCount - Default.IMAGE_LOAD_THRESHOLD == lastVisibleItem)) {
                     isLoading = true;
-                    fetchOldData();
+                    fetchMorePosts();
                 } else if (totalItemCount > lastVisibleItem + Default.IMAGE_LOAD_THRESHOLD) {
                     isLoading = false;
                 }
@@ -226,7 +225,7 @@ public class MainContentFragment extends Fragment {
      *  the list and then queries more images starting from that last timestamp and
      *  appends them back to the end of the arrayList and the HashMap
      */
-    private void fetchOldData() {
+    private void fetchMorePosts() {
         long lastPostTimestamp = prismPostArrayList.get(prismPostArrayList.size() - 1).getTimestamp();
         //toast("Fetching more pics");
         databaseReferenceAllPosts

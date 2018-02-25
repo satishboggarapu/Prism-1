@@ -550,13 +550,13 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             AlertDialog.Builder repostConfirmationAlertDialogBuilder = new AlertDialog.Builder(context);
             repostConfirmationAlertDialogBuilder.setTitle("This post will be shown on your profile, do you want to repost?");
             repostConfirmationAlertDialogBuilder
-                    .setPositiveButton("REPOST", new DialogInterface.OnClickListener() {
+                    .setPositiveButton(Default.BUTTON_REPOST, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             dialogInterface.dismiss();
                             handleRepostButtonClick(true);
                         }
-                    }).setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+                    }).setNegativeButton(Default.BUTTON_CANCEL, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     dialogInterface.cancel();
@@ -603,14 +603,14 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         private AlertDialog createDeleteConfirmationAlertDialog() {
             AlertDialog.Builder exitAlertDialogBuilder = new AlertDialog.Builder(context);
             exitAlertDialogBuilder.setTitle("Are you sure you want to delete this post?");
-            exitAlertDialogBuilder.setPositiveButton("DELETE", new DialogInterface.OnClickListener() {
+            exitAlertDialogBuilder.setPositiveButton(Default.BUTTON_DELETE, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     dialogInterface.dismiss();
                     handleDeletionOfPost();
 
                 }
-            }).setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+            }).setNegativeButton(Default.BUTTON_CANCEL, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     dialogInterface.cancel();
@@ -635,6 +635,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                                     HashMap<String, String> likedUsers = new HashMap<>();
                                     HashMap<String, String> repostedUsers = new HashMap<>();
                                     DatabaseReference usersReference = Default.USERS_REFERENCE;
+
                                     // Removes postId from all user's USER_LIKES section
                                     if (dataSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount() > 0) {
                                         likedUsers.putAll((Map) dataSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getValue());
@@ -643,7 +644,6 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                                                     .child(Key.DB_REF_USER_LIKES)
                                                     .child(postId).removeValue();
                                         }
-                                        Toast.makeText(context, "Removed Liked Users", Toast.LENGTH_SHORT).show();
                                     }
 
                                     // Removes postId from all users's USER_REPOSTS section
@@ -654,18 +654,15 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                                                     .child(Key.DB_REF_USER_REPOSTS)
                                                     .child(postId).removeValue();
                                         }
-                                        Toast.makeText(context, "Removed Reposted Users", Toast.LENGTH_SHORT).show();
                                     }
 
                                     // Removes postId from author user's USER_UPLOADS section
                                     postAuthorUserReference
                                             .child(Key.DB_REF_USER_UPLOADS)
                                             .child(postId).removeValue();
-                                    Toast.makeText(context, "Removed author of post", Toast.LENGTH_SHORT).show();
 
                                     // Removes the entire post from ALL_POSTS section
                                     allPostsReference.child(postId).removeValue();
-                                    Toast.makeText(context, "Removed Post From ALL_POSTS", Toast.LENGTH_SHORT).show();
 
                                     // Remove post from local hashMap
                                     prismPostArrayList.remove(prismPost);
