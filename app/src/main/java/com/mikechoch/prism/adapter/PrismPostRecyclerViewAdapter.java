@@ -51,7 +51,7 @@ import com.mikechoch.prism.helper.AnimationBounceInterpolator;
 import com.mikechoch.prism.attribute.CurrentUser;
 import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.activity.LikeRepostActivity;
+import com.mikechoch.prism.activity.DisplayUsersActivity;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.helper.Helper;
@@ -424,23 +424,26 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             setupMoreActionButton();
         }
 
+        /**
+         *
+         */
         private void setupMoreActionButton() {
-    /*
-     * More action button
-     */
             moreButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     moreButton.startAnimation(moreButtonBounceAnimation);
                     // TODO: Show more menu
                     // TODO: Decide what goes in more
-                    boolean isCurrentUserThePostCreator =  CurrentUser.firebaseUser.getUid().equals(prismPost.getPrismUser().getUid());
+                    boolean isCurrentUserThePostCreator = CurrentUser.firebaseUser.getUid().equals(prismPost.getPrismUser().getUid());
                     AlertDialog morePrismPostAlertDialog = createMorePrismPostAlertDialog(isCurrentUserThePostCreator);
                     morePrismPostAlertDialog.show();
                 }
             });
         }
 
+        /**
+         *
+         */
         private void setupRepostActionButton() {
             Drawable repostDrawable = createRepostDrawable(isPostReposted);
             repostButton.setImageDrawable(repostDrawable);
@@ -464,15 +467,18 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             repostsCountTextView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent userRepostsIntent = new Intent(context, LikeRepostActivity.class);
-                    userRepostsIntent.putExtra("LikeRepostBoolean", 0); // Like = 1, Repost = 0
-                    userRepostsIntent.putExtra("LikeRepostPostId", postId);
+                    Intent userRepostsIntent = new Intent(context, DisplayUsersActivity.class);
+                    userRepostsIntent.putExtra("UsersInt", 1);
+                    userRepostsIntent.putExtra("UsersDataId", postId);
                     context.startActivity(userRepostsIntent);
                     ((Activity) context).overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
                 }
             });
         }
 
+        /**
+         *
+         */
         private void setupLikeActionButton() {
             Drawable heartButtonDrawable = createLikeDrawable(isPostLiked);
             likeButton.setImageDrawable(heartButtonDrawable);
@@ -494,9 +500,9 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             likesCountTextView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent userLikesIntent = new Intent(context, LikeRepostActivity.class);
-                    userLikesIntent.putExtra("LikeRepostBoolean", 1); // Like = 1, Repost = 0
-                    userLikesIntent.putExtra("LikeRepostPostId", postId);
+                    Intent userLikesIntent = new Intent(context, DisplayUsersActivity.class);
+                    userLikesIntent.putExtra("UsersInt", 0);
+                    userLikesIntent.putExtra("UsersDataId", postId);
                     context.startActivity(userLikesIntent);
                     ((Activity) context).overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
                 }

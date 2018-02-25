@@ -43,8 +43,8 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
     /*
      * Globals
      */
-    private int scrollFlags = AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL|AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED;
-    private int noScrollFlags = AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL|AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED;
+    private int scrollFlags = AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL | AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED;
+    private int noScrollFlags = 0;
 
     private float scale;
     private Typeface sourceSansProLight;
@@ -130,8 +130,6 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
         Bundle extras = getIntent().getExtras();
         prismPost = extras.getParcelable("PrismPostDetail");
 
-        System.out.println(prismPost.getPostId());
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             String imageTransitionName = extras.getString("PrismPostDetailTransitionName");
             detailImageView.setTransitionName(imageTransitionName);
@@ -191,8 +189,6 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
         return result;
     }
 
-
-
     /**
      *
      */
@@ -245,7 +241,6 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
                         // This ensures proper UI response when scrolling the image and info window
                         appBarLayout.getLayoutParams().height = resource.getHeight();
                         detailImageView.getLayoutParams().height = resource.getHeight();
-                        toolbar.getLayoutParams().height = screenHeight - getBottomNavigationBarHeight() - userInfoHeight;
 
                         // Check that the image height is larger or equal to actual screen height
                         // If so, set ScaleType to CENTER_CROP
@@ -257,6 +252,8 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
                         // If so, enable collapsing toolbar using scroll flags
                         // Otherwise, disable collapsing toolbar using scroll flags
                         boolean isScrollImage = (resource.getHeight() + userInfoHeight) >= screenHeight;
+                        int toolbarHeight = isScrollImage ? screenHeight - getBottomNavigationBarHeight() - userInfoHeight : resource.getHeight();
+                        toolbar.getLayoutParams().height = toolbarHeight;
 
                         // Set scroll flags for collapsingToolbarLayout containing the PrismPost image
                         AppBarLayout.LayoutParams collapsingToolbarLayoutLayoutParams = (AppBarLayout.LayoutParams) collapsingToolbarLayout.getLayoutParams();

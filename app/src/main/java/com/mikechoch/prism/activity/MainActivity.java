@@ -390,6 +390,7 @@ public class MainActivity extends FragmentActivity {
 
         TabLayout.Tab currentTab = prismTabLayout.getTabAt(prismViewPager.getCurrentItem());
         currentTab.select();
+
     }
 
     /**

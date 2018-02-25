@@ -3,6 +3,7 @@ package com.mikechoch.prism.helper;
 import android.text.format.DateFormat;
 
 import com.google.firebase.database.DataSnapshot;
+import com.mikechoch.prism.attribute.CurrentUser;
 import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.attribute.PrismUser;
 import com.mikechoch.prism.attribute.ProfilePicture;
@@ -56,13 +57,21 @@ public class Helper {
             prismUser.setFollowingCount(0);
         }
         return prismUser;
-
     }
 
+    /**
+     *
+     */
+    public static boolean isCurrentUser(String uid) {
+        return CurrentUser.prismUser.getUid().equals(uid);
+    }
+
+    /**
+     *
+     */
     public static String getSingularOrPluralText(String string, int count) {
         return count == 1 ? string : string + "s";
     }
-
 
     /**
      * Takes in the time of the post and creates a fancy string difference
