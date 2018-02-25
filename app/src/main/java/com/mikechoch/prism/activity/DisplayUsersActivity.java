@@ -41,6 +41,11 @@ public class DisplayUsersActivity extends AppCompatActivity {
     /*
      * Global variables
      */
+    final private int LIKE_USERS = 0;
+    final private int REPOST_USERS = 1;
+    final private int FOLLOWER_USERS = 2;
+    final private int FOLLOWING_USERS = 3;
+
     private DatabaseReference databaseReference;
 
     private Typeface sourceSansProLight;
@@ -107,6 +112,12 @@ public class DisplayUsersActivity extends AppCompatActivity {
         setupUIElements();
     }
 
+    @Override
+    public void onBackPressed() {
+        finish();
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+    }
+
     /**
      * Use Intent to getData passed from PrismPost
      * Decide if it was a likes or reposts click and set number of
@@ -114,28 +125,27 @@ public class DisplayUsersActivity extends AppCompatActivity {
      */
     private void setupToolbar() {
         switch (activityCode) {
-            case 0: {
+            case LIKE_USERS: {
                 toolbarTitle = "Like";
                 getListOfUsers(Key.DB_REF_POST_LIKED_USERS, usersDataId);
                 break;
             }
-            case 1: {
+            case REPOST_USERS: {
                 toolbarTitle = "Repost";
                 getListOfUsers(Key.DB_REF_POST_REPOSTED_USERS, usersDataId);
                 break;
             }
-            case 2: {
+            case FOLLOWER_USERS: {
                 toolbarTitle = "Follower";
                 getListOfUsers(Key.DB_REF_USER_FOLLOWERS, usersDataId);
                 break;
             }
-            case 3: {
+            case FOLLOWING_USERS: {
                 toolbarTitle = "Following";
                 getListOfUsers(Key.DB_REF_USER_FOLLOWINGS, usersDataId);
                 break;
             }
             default: {
-                toolbarTitle = "Error";
                 break;
             }
         }
@@ -256,12 +266,6 @@ public class DisplayUsersActivity extends AppCompatActivity {
     private void hideProgressBar() {
         usersRecyclerView.setVisibility(View.VISIBLE);
         likeRepostProgressBar.setVisibility(View.GONE);
-    }
-
-    @Override
-    public void onBackPressed() {
-        finish();
-        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
     }
 
 }

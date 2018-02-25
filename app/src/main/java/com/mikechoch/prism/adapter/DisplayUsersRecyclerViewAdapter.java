@@ -1,6 +1,8 @@
 package com.mikechoch.prism.adapter;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -13,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -22,6 +25,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
+import com.mikechoch.prism.activity.PrismUserProfileActivity;
 import com.mikechoch.prism.attribute.CurrentUser;
 import com.mikechoch.prism.attribute.PrismUser;
 import com.mikechoch.prism.R;
@@ -83,6 +87,7 @@ public class DisplayUsersRecyclerViewAdapter extends RecyclerView.Adapter<Displa
         private DatabaseReference userReference;
 
         private PrismUser prismUser;
+        private RelativeLayout userRelativeLayout;
         private ImageView userProfilePicture;
         private TextView usernameTextView;
         private TextView userFullNameText;
@@ -97,6 +102,7 @@ public class DisplayUsersRecyclerViewAdapter extends RecyclerView.Adapter<Displa
             userReference = Default.USERS_REFERENCE;
 
             // Initialize all UI elements
+            userRelativeLayout = itemView.findViewById(R.id.display_user_relative_layout);
             userProfilePicture = itemView.findViewById(R.id.user_profile_picture_image_view);
             usernameTextView = itemView.findViewById(R.id.username_text_view);
             userFullNameText = itemView.findViewById(R.id.full_name_text_view);
@@ -109,6 +115,28 @@ public class DisplayUsersRecyclerViewAdapter extends RecyclerView.Adapter<Displa
         public void setData(PrismUser prismUser) {
             this.prismUser = prismUser;
             setupUIElements();
+        }
+
+        /**
+         *
+         */
+        private void setupUserRelativeLayout() {
+            userRelativeLayout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    intentToUserProfileActivity();
+                }
+            });
+        }
+
+        /**
+         * Intent from the current clicked PrismPost user to their PrismUserProfileActivity
+         */
+        private void intentToUserProfileActivity() {
+            Intent prismUserProfileIntent = new Intent(context, PrismUserProfileActivity.class);
+            prismUserProfileIntent.putExtra("PrismUser", prismUser);
+            context.startActivity(prismUserProfileIntent);
+            ((Activity) context).overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
         }
 
         /**
@@ -247,6 +275,7 @@ public class DisplayUsersRecyclerViewAdapter extends RecyclerView.Adapter<Displa
             setupUserProfilePicImageView();
             setupUsernameAndFullNameTextView();
             setupUserFollowButton();
+            setupUserRelativeLayout();
         }
     }
 }
