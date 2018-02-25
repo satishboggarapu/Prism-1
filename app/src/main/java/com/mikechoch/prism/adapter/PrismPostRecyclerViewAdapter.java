@@ -556,13 +556,13 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             AlertDialog.Builder repostConfirmationAlertDialogBuilder = new AlertDialog.Builder(context);
             repostConfirmationAlertDialogBuilder.setTitle("This post will be shown on your profile, do you want to repost?");
             repostConfirmationAlertDialogBuilder
-                    .setPositiveButton("REPOST", new DialogInterface.OnClickListener() {
+                    .setPositiveButton(Default.BUTTON_REPOST, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             dialogInterface.dismiss();
                             handleRepostButtonClick(true);
                         }
-                    }).setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+                    }).setNegativeButton(Default.BUTTON_CANCEL, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     dialogInterface.cancel();
@@ -609,14 +609,14 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         private AlertDialog createDeleteConfirmationAlertDialog() {
             AlertDialog.Builder exitAlertDialogBuilder = new AlertDialog.Builder(context);
             exitAlertDialogBuilder.setTitle("Are you sure you want to delete this post?");
-            exitAlertDialogBuilder.setPositiveButton("DELETE", new DialogInterface.OnClickListener() {
+            exitAlertDialogBuilder.setPositiveButton(Default.BUTTON_DELETE, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     dialogInterface.dismiss();
                     handleDeletionOfPost();
 
                 }
-            }).setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+            }).setNegativeButton(Default.BUTTON_CANCEL, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     dialogInterface.cancel();
@@ -641,37 +641,34 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                                     HashMap<String, String> likedUsers = new HashMap<>();
                                     HashMap<String, String> repostedUsers = new HashMap<>();
                                     DatabaseReference usersReference = Default.USERS_REFERENCE;
+
                                     // Removes postId from all user's USER_LIKES section
                                     if (dataSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount() > 0) {
                                         likedUsers.putAll((Map) dataSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getValue());
-                                        for (String userId : likedUsers.values()) {
+                                        for (String userId : likedUsers.keySet()) {
                                             usersReference.child(userId)
                                                     .child(Key.DB_REF_USER_LIKES)
                                                     .child(postId).removeValue();
                                         }
-                                        Toast.makeText(context, "Removed Liked Users", Toast.LENGTH_SHORT).show();
                                     }
 
                                     // Removes postId from all users's USER_REPOSTS section
                                     if (dataSnapshot.child(Key.DB_REF_POST_REPOSTED_USERS).getChildrenCount() > 0) {
                                         repostedUsers.putAll((Map) dataSnapshot.child(Key.DB_REF_POST_REPOSTED_USERS).getValue());
-                                        for (String userId : repostedUsers.values()) {
+                                        for (String userId : repostedUsers.keySet()) {
                                             usersReference.child(userId)
                                                     .child(Key.DB_REF_USER_REPOSTS)
                                                     .child(postId).removeValue();
                                         }
-                                        Toast.makeText(context, "Removed Reposted Users", Toast.LENGTH_SHORT).show();
                                     }
 
                                     // Removes postId from author user's USER_UPLOADS section
                                     postAuthorUserReference
                                             .child(Key.DB_REF_USER_UPLOADS)
                                             .child(postId).removeValue();
-                                    Toast.makeText(context, "Removed author of post", Toast.LENGTH_SHORT).show();
 
                                     // Removes the entire post from ALL_POSTS section
                                     allPostsReference.child(postId).removeValue();
-                                    Toast.makeText(context, "Removed Post From ALL_POSTS", Toast.LENGTH_SHORT).show();
 
                                     // Remove post from local hashMap
                                     prismPostArrayList.remove(prismPost);
@@ -739,23 +736,24 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         private void performDatabaseActivitiesForLike(boolean performLike, String postId, long timestamp, DatabaseReference postReference) {
             if (performLike) {
 
-                // Add the firebaseUser to LIKED_USERS list for this post
+                // Add the prismUser to LIKED_USERS list for this post
                 postReference.child(Key.DB_REF_POST_LIKED_USERS)
-                        .child(CurrentUser.firebaseUser.getDisplayName())
-                        .setValue(CurrentUser.firebaseUser.getUid());
+                        .child(CurrentUser.prismUser.getUid())
+                        .setValue(CurrentUser.prismUser.getUsername());
 
-                // Add postId to firebaseUser's liked section
+                // Add postId to prismUser's liked section
                 postAuthorUserReference.child(Key.DB_REF_USER_LIKES)
                         .child(postId).setValue(timestamp);
 
                 // Add postId and timestamp to liked_posts_map hashMap
+                CurrentUser.liked_posts.add(prismPost);
                 CurrentUser.liked_posts_map.put(postId, timestamp);
 
             } else {
 
-                // Remove the firebaseUser from LIKED_USERS list for this post
+                // Remove the prismUser from LIKED_USERS list for this post
                 postReference.child(Key.DB_REF_POST_LIKED_USERS)
-                        .child(CurrentUser.firebaseUser.getDisplayName())
+                        .child(CurrentUser.prismUser.getUid())
                         .removeValue();
 
                 // Remove postId from firebaseUser's liked section
@@ -763,6 +761,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                         .child(postId).removeValue();
 
                 // Remove the postId and timestamp from liked_posts_map hashMap
+                CurrentUser.liked_posts.remove(prismPost);
                 CurrentUser.liked_posts_map.remove(postId);
             }
         }
@@ -844,8 +843,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
                 // Add the firebaseUser to REPOSTED_USERS list for this post
                 postReference.child(Key.DB_REF_POST_REPOSTED_USERS)
-                        .child(CurrentUser.firebaseUser.getDisplayName())
-                        .setValue(CurrentUser.firebaseUser.getUid());
+                        .child(CurrentUser.prismUser.getUid())
+                        .setValue(CurrentUser.prismUser.getUsername());
 
             } else {
 
@@ -859,7 +858,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
                 // Remove the firebaseUser from REPOSTED_USERS list for this post
                 postReference.child(Key.DB_REF_POST_REPOSTED_USERS)
-                        .child(CurrentUser.firebaseUser.getDisplayName())
+                        .child(CurrentUser.prismUser.getUid())
                         .removeValue();
             }
         }

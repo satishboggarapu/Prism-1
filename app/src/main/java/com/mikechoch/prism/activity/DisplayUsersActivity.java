@@ -232,8 +232,7 @@ public class DisplayUsersActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    for (Map.Entry<String, String> entry : mapOfUsers.entrySet()) {
-                        String userId = entry.getValue();
+                    for (String userId : mapOfUsers.keySet()) {
                         if (dataSnapshot.hasChild(userId)) {
                             PrismUser prismUser = Helper.constructPrismUserObject(dataSnapshot.child(userId));
                             prismUserArrayList.add(prismUser);

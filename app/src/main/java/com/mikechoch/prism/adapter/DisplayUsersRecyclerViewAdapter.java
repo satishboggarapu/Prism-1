@@ -146,7 +146,7 @@ public class DisplayUsersRecyclerViewAdapter extends RecyclerView.Adapter<Displa
             if (!Helper.isCurrentUser(prismUser.getUid())) {
                 userFollowButton.setVisibility(View.VISIBLE);
 
-                boolean isFollowing = CurrentUser.followings.containsKey(prismUser.getUsername());
+                boolean isFollowing = CurrentUser.followings.containsKey(prismUser.getUid());
                 changeFollowButtons(isFollowing);
 
                 userFollowButton.setOnClickListener(new View.OnClickListener() {
@@ -181,7 +181,7 @@ public class DisplayUsersRecyclerViewAdapter extends RecyclerView.Adapter<Displa
          *
          */
         private void toggleFollowUser() {
-            boolean performFollow = !(CurrentUser.followings.containsKey(prismUser.getUsername()));
+            boolean performFollow = !(CurrentUser.followings.containsKey(prismUser.getUid()));
             userReference.child(prismUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
