@@ -47,6 +47,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.mikechoch.prism.InterfaceAction;
 import com.mikechoch.prism.attribute.CurrentUser;
 import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.R;
@@ -100,8 +101,6 @@ public class MainActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity_layout);
 
-        // Generates current firebaseUser's details
-        new CurrentUser(this);
         auth = FirebaseAuth.getInstance();
         storageReference = Default.STORAGE_REFERENCE;
         databaseReference = Default.ALL_POSTS_REFERENCE;
@@ -149,6 +148,10 @@ public class MainActivity extends FragmentActivity {
         imageUploadProgressBar = findViewById(R.id.image_upload_progress_bar);
 
         setupUIElements();
+
+        // Generates current firebaseUser's details
+        new CurrentUser(this);
+        new InterfaceAction(this);
     }
 
     @Override

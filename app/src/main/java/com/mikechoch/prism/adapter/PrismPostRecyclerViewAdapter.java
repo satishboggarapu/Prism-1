@@ -45,6 +45,7 @@ import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.mikechoch.prism.InterfaceAction;
 import com.mikechoch.prism.activity.PrismUserProfileActivity;
 import com.mikechoch.prism.constants.Message;
 import com.mikechoch.prism.helper.AnimationBounceInterpolator;
@@ -82,8 +83,6 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
     private Typeface sourceSansProBold;
     private int screenWidth;
     private int screenHeight;
-    private String[] morePostOptionsCurrentUser = {"Report post", "Share", "Delete"};
-    private String[] morePostOptions = {"Report post", "Share"};
 
 
     public PrismPostRecyclerViewAdapter(Context context, ArrayList<PrismPost> prismPostArrayList, int[] screenDimens) {
@@ -133,14 +132,6 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         private StorageReference storageReference;
         private DatabaseReference allPostsReference;
 
-        private Animation likeHeartBounceAnimation;
-        private Animation repostIrisBounceAnimation;
-        private Animation unrepostIrisBounceAnimation;
-        private Animation likeButtonBounceAnimation;
-        private Animation shareButtonBounceAnimation;
-        private Animation moreButtonBounceAnimation;
-        private AnimationBounceInterpolator interpolator;
-
         private ImageView userProfilePicImageView;
         private RelativeLayout postInformationRelativeLayout;
         private TextView prismUserTextView;
@@ -172,14 +163,6 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             postAuthorUserReference = Default.USERS_REFERENCE.child(auth.getCurrentUser().getUid());
             storageReference = Default.STORAGE_REFERENCE.child(Key.STORAGE_POST_IMAGES_REF);
             allPostsReference = Default.ALL_POSTS_REFERENCE;
-
-            // Animation initializations
-            likeHeartBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.like_animation);
-            repostIrisBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.repost_animation);
-            unrepostIrisBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.unrepost_animation);
-            likeButtonBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.button_bounce_animation);
-            shareButtonBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.button_bounce_animation);
-            moreButtonBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.button_bounce_animation);
 
             // Image initializations
             progressBar = itemView.findViewById(R.id.image_progress_bar);
@@ -358,61 +341,6 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         }
 
         /**
-         * Setup animations for actionButtons below prismPostImageView and like/repost ImageView
-         */
-        private void setupUIAnimations() {
-            /*
-             * Use bounce interpolator with amplitude 0.2 and frequency 20
-             * Gives the bounce affect on buttons
-             */
-            interpolator = new AnimationBounceInterpolator(0.2, 20);
-            likeButtonBounceAnimation.setInterpolator(interpolator);
-            shareButtonBounceAnimation.setInterpolator(interpolator);
-            moreButtonBounceAnimation.setInterpolator(interpolator);
-
-            /*
-             * Setup animation for liking and reposting a PrismPost
-             * The animations take place inside the same environment as the prismPostImageView
-             */
-            likeHeartAnimationImageView.setVisibility(View.INVISIBLE);
-            likeHeartBounceAnimation.setInterpolator(interpolator);
-            likeHeartBounceAnimation.setAnimationListener(new Animation.AnimationListener() {
-                @Override
-                public void onAnimationStart(Animation animation) {
-                    likeHeartAnimationImageView.setVisibility(View.VISIBLE);
-                }
-
-                @Override
-                public void onAnimationEnd(Animation animation) {
-                    likeHeartAnimationImageView.setVisibility(View.INVISIBLE);
-                }
-
-                @Override
-                public void onAnimationRepeat(Animation animation) {
-
-                }
-            });
-
-            repostIrisAnimationImageView.setVisibility(View.INVISIBLE);
-            repostIrisBounceAnimation.setAnimationListener(new Animation.AnimationListener() {
-                @Override
-                public void onAnimationStart(Animation animation) {
-                    repostIrisAnimationImageView.setVisibility(View.VISIBLE);
-                }
-
-                @Override
-                public void onAnimationEnd(Animation animation) {
-                    repostIrisAnimationImageView.setVisibility(View.INVISIBLE);
-                }
-
-                @Override
-                public void onAnimationRepeat(Animation animation) {
-
-                }
-            });
-        }
-
-        /**
          * Three action buttons are shown for each PrismPost
          * Like button likes the PrismPost
          * Repost button reposts the PrismPost to the users profile
@@ -431,11 +359,11 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             moreButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    moreButton.startAnimation(moreButtonBounceAnimation);
+                    InterfaceAction.startMoreActionButtonAnimation(moreButton);
                     // TODO: Show more menu
                     // TODO: Decide what goes in more
                     boolean isCurrentUserThePostCreator = CurrentUser.firebaseUser.getUid().equals(prismPost.getPrismUser().getUid());
-                    AlertDialog morePrismPostAlertDialog = createMorePrismPostAlertDialog(isCurrentUserThePostCreator);
+                    AlertDialog morePrismPostAlertDialog = InterfaceAction.createMorePrismPostAlertDialog(context, isCurrentUserThePostCreator);
                     morePrismPostAlertDialog.show();
                 }
             });
@@ -445,8 +373,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
          *
          */
         private void setupRepostActionButton() {
-            Drawable repostDrawable = createRepostDrawable(isPostReposted);
-            repostButton.setImageDrawable(repostDrawable);
+            InterfaceAction.setupRepostActionButton(context, repostButton, isPostReposted);
+
             String repostStringTail = Helper.getSingularOrPluralText(" repost", repostCount);
             repostsCountTextView.setText(repostCount + repostStringTail);
 
@@ -456,7 +384,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                     boolean performRepost = !CurrentUser.reposted_posts_map.containsKey(prismPost.getPostId());
                     if (performRepost) {
                         repostIrisAnimationImageView.setVisibility(View.INVISIBLE);
-                        AlertDialog repostConfirmationAlertDialog = createRepostConfirmationAlertDialog();
+                        AlertDialog repostConfirmationAlertDialog = InterfaceAction.createRepostConfirmationAlertDialog(context);
                         repostConfirmationAlertDialog.show();
                     } else {
                         handleRepostButtonClick(false);
@@ -480,11 +408,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
          *
          */
         private void setupLikeActionButton() {
-            Drawable heartButtonDrawable = createLikeDrawable(isPostLiked);
-            likeButton.setImageDrawable(heartButtonDrawable);
-            Drawable heartDrawable = context.getResources().getDrawable(
-                    isPostLiked ?  R.drawable.unlike_heart : R.drawable.like_heart);
-            likeHeartAnimationImageView.setImageDrawable(heartDrawable);
+            InterfaceAction.setupLikeActionButton(context, likeHeartAnimationImageView, likeButton, isPostLiked);
 
             String likeStringTail = Helper.getSingularOrPluralText(" like", likeCount);
             likesCountTextView.setText(likeCount + likeStringTail);
@@ -521,108 +445,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
             setupPostUserUIElements();
             setupPostImageView();
-            setupUIAnimations();
             setupActionButtons();
-        }
-
-        /**
-         * Pass in a boolean that toggles the icon and color of the like button
-         */
-        private Drawable createLikeDrawable(boolean performLike) {
-            int heart = performLike ? R.drawable.ic_heart_black_36dp : R.drawable.ic_heart_outline_black_36dp;
-            int color = performLike ? R.color.colorAccent : android.R.color.white;
-            Drawable heartDrawable = context.getResources().getDrawable(heart);
-            int heartColor = context.getResources().getColor(color);
-            heartDrawable.setTint(heartColor);
-            return heartDrawable;
-        }
-
-        /**
-         * Pass in a boolean that toggles the color of the repost button
-         */
-        private Drawable createRepostDrawable(boolean performRepost) {
-            int repost = R.drawable.ic_camera_iris_black_36dp;
-            Drawable repostDrawable = context.getResources().getDrawable(repost);
-            int color = performRepost ? R.color.colorAccent : android.R.color.white;
-            int repostColor = context.getResources().getColor(color);
-            repostDrawable.setTint(repostColor);
-            return repostDrawable;
-        }
-
-        /**
-         * AlertDialog to confirm the repost of a post
-         */
-        private AlertDialog createRepostConfirmationAlertDialog() {
-            AlertDialog.Builder repostConfirmationAlertDialogBuilder = new AlertDialog.Builder(context);
-            repostConfirmationAlertDialogBuilder.setTitle("This post will be shown on your profile, do you want to repost?");
-            repostConfirmationAlertDialogBuilder
-                    .setPositiveButton(Default.BUTTON_REPOST, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            dialogInterface.dismiss();
-                            handleRepostButtonClick(true);
-                        }
-                    }).setNegativeButton(Default.BUTTON_CANCEL, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.cancel();
-                }
-            });
-            return repostConfirmationAlertDialogBuilder.create();
-        }
-
-        /**
-         * AlertDialog that shows several options to the user when the moreActionButton is clicked
-         * Report and SHare will show for all users
-         * Delete will only show for user who posted the post
-         */
-        private AlertDialog createMorePrismPostAlertDialog(boolean isCurrentUser) {
-            AlertDialog.Builder profilePictureAlertDialog = new AlertDialog.Builder(context);
-            profilePictureAlertDialog.setItems(isCurrentUser ? morePostOptionsCurrentUser : morePostOptions, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                    switch (which) {
-                        case 0:
-                            // Report post
-                            break;
-                        case 1:
-                            // Share
-
-                            break;
-                        case 2:
-                            // Delete
-                            AlertDialog deleteConfirmationAlertDialog = createDeleteConfirmationAlertDialog();
-                            deleteConfirmationAlertDialog.show();
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            });
-            return profilePictureAlertDialog.create();
-        }
-
-        /**
-         * AlertDialog to confirm the deletion of a post
-         */
-        private AlertDialog createDeleteConfirmationAlertDialog() {
-            AlertDialog.Builder exitAlertDialogBuilder = new AlertDialog.Builder(context);
-            exitAlertDialogBuilder.setTitle("Are you sure you want to delete this post?");
-            exitAlertDialogBuilder.setPositiveButton(Default.BUTTON_DELETE, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.dismiss();
-                    handleDeletionOfPost();
-
-                }
-            }).setNegativeButton(Default.BUTTON_CANCEL, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.cancel();
-                }
-            });
-            return exitAlertDialogBuilder.create();
         }
 
         private void handleDeletionOfPost() {
@@ -767,18 +590,13 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         }
 
         private void performUIActivitiesForLike(boolean performLike) {
-            Drawable buttonDrawable = createLikeDrawable(performLike);
-            Drawable drawable = context.getResources().getDrawable(
-                    performLike ? R.drawable.like_heart : R.drawable.unlike_heart);
             likeCount = performLike ? likeCount + 1 : likeCount - 1;
             String likeStringTail = Helper.getSingularOrPluralText(" like", likeCount);
 
-            likeButton.setImageDrawable(buttonDrawable);
-            likeHeartAnimationImageView.setImageDrawable(drawable);
-            likeButton.startAnimation(likeButtonBounceAnimation);
-            likeHeartAnimationImageView.startAnimation(likeHeartBounceAnimation);
-            likesCountTextView.setText(likeCount + likeStringTail);
+            InterfaceAction.startLikeActionButtonAnimation(context, likeButton, performLike);
+            InterfaceAction.startLikeActionAnimation(context, likeHeartAnimationImageView, performLike);
 
+            likesCountTextView.setText(likeCount + likeStringTail);
         }
 
 
@@ -818,16 +636,13 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         }
 
         private void performUIActivitiesForRepost(boolean performRepost) {
-            Drawable drawable = createRepostDrawable(performRepost);
-            Animation animation = performRepost ? repostIrisBounceAnimation : unrepostIrisBounceAnimation;
             repostCount = performRepost ? repostCount + 1 : repostCount - 1;
             String repostStringTail = Helper.getSingularOrPluralText(" repost", repostCount);
 
-            repostButton.setImageDrawable(drawable);
-            repostButton.startAnimation(shareButtonBounceAnimation);
-            repostIrisAnimationImageView.startAnimation(animation);
-            repostsCountTextView.setText(repostCount + repostStringTail);
+            InterfaceAction.startRepostActionButtonAnimation(context, repostButton, performRepost);
+            InterfaceAction.startRepostActionAnimation(repostIrisAnimationImageView, performRepost);
 
+            repostsCountTextView.setText(repostCount + repostStringTail);
         }
 
         private void performDatabaseActivitiesForRepost(boolean performRepost, String postId, long timestamp, DatabaseReference postReference) {

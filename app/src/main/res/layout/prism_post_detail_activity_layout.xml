@@ -1,19 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ooo.oxo.library.widget.PullBackLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/prism_post_detail_puller"
+    android:id="@+id/prism_post_detail_coordinate_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/backgroundColor"
+    android:fitsSystemWindows="false">
 
-    <android.support.design.widget.CoordinatorLayout
+    <android.support.design.widget.AppBarLayout
+        android:id="@+id/prism_post_detail_app_bar_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/backgroundColor"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:fitsSystemWindows="false">
+        android:minHeight="?attr/actionBarSize"
+        android:background="@null"
+        android:theme="@style/AppTheme.AppBarOverlay">
 
-        <android.support.v4.widget.NestedScrollView
+        <android.support.design.widget.CollapsingToolbarLayout
+            android:id="@+id/collapsing_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:minHeight="?attr/actionBarSize"
+            app:titleEnabled="false"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed"
+            app:contentScrim="@android:color/transparent">
+
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:gravity="start|top"
+                android:layout_gravity="start|top"
+                app:popupTheme="@style/AppTheme.PopupOverlay"
+                app:layout_collapseMode="pin">
+
+                <com.mikechoch.prism.ToolbarPullDownLayout
+                    android:id="@+id/pull_down_relative_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="start|top"
+                    android:background="@null">
+
+                </com.mikechoch.prism.ToolbarPullDownLayout>
+
+            </android.support.v7.widget.Toolbar>
+
+            <LinearLayout
+                android:id="@+id/prism_post_detail_image_linear_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layout_collapseMode="parallax">
+
+                <ImageView
+                    android:id="@+id/prism_post_detail_image_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentTop="true"
+                    android:layout_centerHorizontal="true"
+                    app:layout_collapseMode="parallax"/>
+
+            </LinearLayout>
+
+        </android.support.design.widget.CollapsingToolbarLayout>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <android.support.v4.widget.NestedScrollView
+        android:id="@+id/prism_post_detail_nested_scroll_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentTop="true"
+        android:paddingTop="12dp"
+        android:paddingBottom="4dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:scrollbars="none"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <ScrollView
+            android:id="@+id/prism_post_detail_scroll_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_centerHorizontal="true"
@@ -21,29 +86,23 @@
             android:scrollbars="none"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-            <ScrollView
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_centerHorizontal="true"
-                android:layout_alignParentTop="true"
-                android:fillViewport="true"
-                android:scrollbars="none"
-                app:layout_behavior="@string/appbar_scrolling_view_behavior">
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
                 <RelativeLayout
                     android:id="@+id/prism_post_detail_relative_layout"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="top|center_horizontal"
-                    android:paddingTop="12dp"
-                    android:paddingBottom="12dp">
+                    android:layout_height="match_parent"
+                    android:layout_gravity="top|center_horizontal">
 
                     <RelativeLayout
                         android:id="@+id/prism_post_detail_user_relative_layout"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:layout_alignParentTop="true">
+                        android:layout_alignParentTop="true"
+                        android:layout_alignParentStart="true">
 
                         <ImageView
                             android:id="@+id/prism_post_detail_user_profile_picture_image_view"
@@ -77,76 +136,74 @@
                             android:textSize="12sp"
                             android:textColor="@android:color/white"/>
 
-                        <TableRow
-                            android:id="@+id/action_button_table_row"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_centerVertical="true"
-                            android:layout_alignParentEnd="true"
-                            android:layout_marginEnd="8dp"
-                            android:gravity="center"
-                            android:clipChildren="false"
-                            android:clipToPadding="false">
-
-                            <RelativeLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content">
-
-                                <ImageView
-                                    android:id="@+id/image_like_button"
-                                    android:layout_width="30dp"
-                                    android:layout_height="30dp"
-                                    android:layout_marginStart="8dp"
-                                    android:layout_marginEnd="8dp"
-                                    android:clipChildren="false"
-                                    android:clipToPadding="false"
-                                    android:src="@drawable/ic_heart_outline_black_36dp"
-                                    android:tint="@android:color/white"/>
-
-                                <TextView
-                                    android:id="@+id/like_count"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_centerHorizontal="true"
-                                    android:layout_below="@id/image_like_button"
-                                    android:text="127"
-                                    android:textColor="@android:color/white"
-                                    android:clipChildren="false"
-                                    android:clipToPadding="false"/>
-
-                            </RelativeLayout>
-
-                            <RelativeLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content">
-
-                                <ImageView
-                                    android:id="@+id/image_repost_button"
-                                    android:layout_width="30dp"
-                                    android:layout_height="30dp"
-                                    android:layout_marginStart="8dp"
-                                    android:layout_marginEnd="8dp"
-                                    android:clipChildren="false"
-                                    android:clipToPadding="false"
-                                    android:src="@drawable/ic_camera_iris_black_36dp"
-                                    android:tint="@android:color/white" />
-
-                                <TextView
-                                    android:id="@+id/repost_count"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_centerHorizontal="true"
-                                    android:layout_below="@id/image_repost_button"
-                                    android:text="11"
-                                    android:textColor="@android:color/white"
-                                    android:clipChildren="false"
-                                    android:clipToPadding="false"/>
-
-                            </RelativeLayout>
-
-                        </TableRow>
-
                     </RelativeLayout>
+
+                    <TableRow
+                        android:id="@+id/action_button_table_row"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_alignParentEnd="true"
+                        android:layout_marginEnd="8dp"
+                        android:gravity="center"
+                        android:clipChildren="false"
+                        android:clipToPadding="false">
+
+                        <RelativeLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content">
+
+                            <ImageView
+                                android:id="@+id/image_like_button"
+                                android:layout_width="30dp"
+                                android:layout_height="30dp"
+                                android:layout_marginStart="8dp"
+                                android:layout_marginEnd="8dp"
+                                android:clipChildren="false"
+                                android:clipToPadding="false"
+                                android:src="@drawable/ic_heart_outline_black_36dp"
+                                android:tint="@android:color/white"/>
+
+                            <TextView
+                                android:id="@+id/like_count"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_centerHorizontal="true"
+                                android:layout_below="@id/image_like_button"
+                                android:textColor="@android:color/white"
+                                android:clipChildren="false"
+                                android:clipToPadding="false"/>
+
+                        </RelativeLayout>
+
+                        <RelativeLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content">
+
+                            <ImageView
+                                android:id="@+id/image_repost_button"
+                                android:layout_width="30dp"
+                                android:layout_height="30dp"
+                                android:layout_marginStart="8dp"
+                                android:layout_marginEnd="8dp"
+                                android:clipChildren="false"
+                                android:clipToPadding="false"
+                                android:src="@drawable/ic_camera_iris_black_36dp"
+                                android:tint="@android:color/white" />
+
+                            <TextView
+                                android:id="@+id/repost_count"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_centerHorizontal="true"
+                                android:layout_below="@id/image_repost_button"
+                                android:textColor="@android:color/white"
+                                android:clipChildren="false"
+                                android:clipToPadding="false"/>
+
+                        </RelativeLayout>
+
+                    </TableRow>
 
                     <TextView
                         android:id="@+id/prism_post_description"
@@ -167,6 +224,7 @@
                         android:layout_alignParentStart="true"
                         android:layout_below="@id/prism_post_description"
                         android:layout_marginTop="8dp"
+                        android:layout_marginBottom="8dp"
                         android:layout_marginStart="12dp"
                         android:layout_marginEnd="12dp"
                         android:textSize="15sp"
@@ -174,47 +232,10 @@
 
                 </RelativeLayout>
 
-            </ScrollView>
+            </LinearLayout>
 
-        </android.support.v4.widget.NestedScrollView>
+        </ScrollView>
 
-        <android.support.design.widget.AppBarLayout
-            android:id="@+id/prism_post_detail_app_bar_layout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@null"
-            android:theme="@style/AppTheme.AppBarOverlay">
+    </android.support.v4.widget.NestedScrollView>
 
-            <android.support.design.widget.CollapsingToolbarLayout
-                android:id="@+id/collapsing_toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:layout_scrollFlags="scroll|exitUntilCollapsed"
-                app:contentScrim="@android:color/transparent">
-
-                <ImageView
-                    android:id="@+id/prism_post_detail_image_view"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_alignParentTop="true"
-                    android:layout_centerHorizontal="true"
-                    android:adjustViewBounds="true"
-                    app:layout_collapseMode="parallax"/>
-
-                <android.support.v7.widget.Toolbar
-                    android:id="@+id/toolbar"
-                    android:layout_width="match_parent"
-                    android:layout_height="?attr/actionBarSize"
-                    app:popupTheme="@style/AppTheme.PopupOverlay"
-                    app:layout_collapseMode="pin"
-                    app:layout_scrollFlags="enterAlways">
-
-                </android.support.v7.widget.Toolbar>
-
-            </android.support.design.widget.CollapsingToolbarLayout>
-
-        </android.support.design.widget.AppBarLayout>
-
-    </android.support.design.widget.CoordinatorLayout>
-
-</ooo.oxo.library.widget.PullBackLayout>
+</android.support.design.widget.CoordinatorLayout>

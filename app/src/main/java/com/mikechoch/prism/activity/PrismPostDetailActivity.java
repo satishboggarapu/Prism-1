@@ -1,6 +1,9 @@
 package com.mikechoch.prism.activity;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -12,8 +15,10 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
+import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
@@ -21,8 +26,10 @@ import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -32,18 +39,20 @@ import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.bumptech.glide.request.target.Target;
+import com.mikechoch.prism.InterfaceAction;
+import com.mikechoch.prism.ToolbarPullDownLayout;
 import com.mikechoch.prism.R;
+import com.mikechoch.prism.attribute.CurrentUser;
 import com.mikechoch.prism.attribute.PrismPost;
+import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.helper.Helper;
-
-import ooo.oxo.library.widget.PullBackLayout;
 
 
 /**
  * Created by mikechoch on 2/19/18.
  */
 
-public class PrismPostDetailActivity extends AppCompatActivity implements PullBackLayout.Callback {
+public class PrismPostDetailActivity extends AppCompatActivity {
 
     /*
      * Globals
@@ -51,21 +60,34 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
     private int scrollFlags = AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL | AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED;
     private int noScrollFlags = 0;
 
+    private String[] morePostOptionsCurrentUser = {"Report post", "Share", "Delete"};
+    private String[] morePostOptions = {"Report post", "Share"};
+
     private float scale;
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
     private int screenWidth;
     private int screenHeight;
 
-    private PullBackLayout prismPostDetailPuller;
+//    private float viewTouchDownX;
+//    private float viewTouchDownY;
+//    private float viewMovingX;
+//    private float viewMovingY;
+//    private float viewAlpha;
+//    private float viewScale;
+//    private VelocityTracker velocityTracker = null;
+
     private AppBarLayout appBarLayout;
     private CollapsingToolbarLayout collapsingToolbarLayout;
     private Toolbar toolbar;
-    private Menu menu;
 
+    private ToolbarPullDownLayout toolbarPullDownLayout;
+    private CoordinatorLayout prismPostDetailCoordinateLayout;
+    private NestedScrollView prismPostDetailNestedScrollView;
+    private ScrollView prismPostDetailScrollView;
     private RelativeLayout prismPostDetailsRelativeLayout;
     private ImageView likeActionButton;
-    private TextView likeCountTextView;
+    private TextView likesCountTextView;
     private ImageView repostActionButton;
     private TextView repostCountTextView;
     private ImageView detailImageView;
@@ -82,10 +104,8 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.prism_post_detail_menu, menu);
-        this.menu = menu;
         for (int i = 0; i < menu.size(); i++) {
             MenuItem menuItem = menu.getItem(i);
-//            menuItem.setVisible(false);
             Drawable drawable = menuItem.getIcon();
             if (drawable != null) {
                 drawable.mutate();
@@ -103,7 +123,9 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
                 super.onBackPressed();
                 break;
             case R.id.prism_post_detail_action_more:
-
+                boolean isCurrentUserThePostCreator = CurrentUser.firebaseUser.getUid().equals(prismPost.getPrismUser().getUid());
+                AlertDialog morePrismPostAlertDialog = InterfaceAction.createMorePrismPostAlertDialog(this, isCurrentUserThePostCreator);
+                morePrismPostAlertDialog.show();
                 break;
             default:
                 break;
@@ -128,14 +150,17 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
         screenHeight = getWindowManager().getDefaultDisplay().getHeight();
 
         // Initialize all UI elements
-        prismPostDetailPuller = findViewById(R.id.prism_post_detail_puller);
         appBarLayout = findViewById(R.id.prism_post_detail_app_bar_layout);
         toolbar = findViewById(R.id.toolbar);
         collapsingToolbarLayout = findViewById(R.id.collapsing_toolbar);
 
+        toolbarPullDownLayout = findViewById(R.id.pull_down_relative_layout);
+        prismPostDetailCoordinateLayout = findViewById(R.id.prism_post_detail_coordinate_layout);
+        prismPostDetailNestedScrollView = findViewById(R.id.prism_post_detail_nested_scroll_view);
+        prismPostDetailScrollView = findViewById(R.id.prism_post_detail_scroll_view);
         prismPostDetailsRelativeLayout = findViewById(R.id.prism_post_detail_relative_layout);
         likeActionButton = findViewById(R.id.image_like_button);
-        likeCountTextView = findViewById(R.id.like_count);
+        likesCountTextView = findViewById(R.id.like_count);
         repostActionButton = findViewById(R.id.image_repost_button);
         repostCountTextView = findViewById(R.id.repost_count);
         detailImageView = findViewById(R.id.prism_post_detail_image_view);
@@ -149,34 +174,13 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
         Bundle extras = getIntent().getExtras();
         prismPost = extras.getParcelable("PrismPostDetail");
 
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             String imageTransitionName = extras.getString("PrismPostDetailTransitionName");
             detailImageView.setTransitionName(imageTransitionName);
         }
 
         setupUIElements();
-        prismPostDetailPuller.setCallback(this);
-    }
-
-    @Override
-    public void onPullStart() {
-
-    }
-
-    @Override
-    public void onPull(float pullFloat) {
-        float viewAlpha = Math.abs(1 - pullFloat);
-        prismPostDetailPuller.setAlpha(viewAlpha);
-    }
-
-    @Override
-    public void onPullCancel() {
-        prismPostDetailPuller.setAlpha(1f);
-    }
-
-    @Override
-    public void onPullComplete() {
-        supportFinishAfterTransition();
     }
 
     @Override
@@ -234,9 +238,21 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
      */
     private void setupToolbar() {
         toolbar.setTitle("");
+        toolbar.bringToFront();
 
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
+
+    /**
+     * Make the height of the ToolbarPullDownLayout the height of the action bar
+     * Give the ToolbarPullDownLayout the parent view and all children scroll views
+     */
+    private void setupToolbarPullDownLayout() {
+        toolbarPullDownLayout.getLayoutParams().height = getActionBarHeight();
+        toolbarPullDownLayout.addParentView(this, prismPostDetailCoordinateLayout);
+        ViewGroup[] scrollViews = {prismPostDetailNestedScrollView, prismPostDetailScrollView};
+        toolbarPullDownLayout.addScrollViews(scrollViews);
     }
 
     /**
@@ -258,16 +274,17 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
 
                     @Override
                     public boolean onResourceReady(Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
-                        // Calculate the PrismPost info window height
-                        int userInfoHeight = detailUserProfilePictureImageView.getHeight() +
-                                detailPrismPostDescriptionTextView.getHeight() +
-                                detailPrismPostTagsTextView.getHeight() +
-                                prismPostDetailsRelativeLayout.getPaddingBottom();
-
                         // Set the height of the appBarLayout, detailImageView, and toolbar
                         // This ensures proper UI response when scrolling the image and info window
                         appBarLayout.getLayoutParams().height = resource.getHeight();
                         detailImageView.getLayoutParams().height = resource.getHeight();
+
+                        // Calculate the PrismPost info window height
+                        int userInfoHeight = detailUserProfilePictureImageView.getHeight() +
+                                detailPrismPostDescriptionTextView.getHeight() +
+                                detailPrismPostTagsTextView.getHeight() +
+                                prismPostDetailNestedScrollView.getPaddingTop() +
+                                prismPostDetailNestedScrollView.getPaddingBottom();
 
                         // Check that the image height is larger or equal to actual screen height
                         // If so, set ScaleType to CENTER_CROP
@@ -280,8 +297,8 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
                         // Otherwise, disable collapsing toolbar using scroll flags
                         boolean isScrollImage = (resource.getHeight() + userInfoHeight) >= screenHeight;
                         int toolbarHeight = isScrollImage ? (screenHeight - getBottomNavigationBarHeight() - userInfoHeight) : resource.getHeight();
-                        boolean isToolbarHeightNegative = toolbarHeight <= getActionBarHeight() + getStatusBarHeight();
-                        toolbar.getLayoutParams().height = isToolbarHeightNegative ? getActionBarHeight(): toolbarHeight;
+                        boolean isToolbarHeightNegative = toolbarHeight <= getActionBarHeight();
+                        toolbar.getLayoutParams().height = isToolbarHeightNegative ? getActionBarHeight() : toolbarHeight;
 
                         if (isScrollImage) {
                             CollapsingToolbarLayout.LayoutParams params = (CollapsingToolbarLayout.LayoutParams) toolbar.getLayoutParams();
@@ -295,11 +312,6 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
                         AppBarLayout.LayoutParams collapsingToolbarLayoutLayoutParams = (AppBarLayout.LayoutParams) collapsingToolbarLayout.getLayoutParams();
                         collapsingToolbarLayoutLayoutParams.setScrollFlags(isScrollImage ? scrollFlags : noScrollFlags);
                         collapsingToolbarLayout.setLayoutParams(collapsingToolbarLayoutLayoutParams);
-                        
-//                        for (int i = 0; i < menu.size(); i++) {
-//                            MenuItem menuItem = menu.getItem(i);
-//                            menuItem.setVisible(true);
-//                        }
 
                         startPostponedEnterTransition();
                         return false;
@@ -344,6 +356,14 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
         detailUsernameTextView.setText(prismPost.getPrismUser().getUsername());
         detailPrismPostDateTextView.setText(Helper.getFancyDateDifferenceString(prismPost.getTimestamp() * -1));
         detailPrismPostDescriptionTextView.setText(prismPost.getCaption());
+        detailPrismPostTagsTextView.setText(Html.fromHtml(
+                "<u>#burger</u> " +
+                        "<u>#delicous</u> " +
+                        "<u>#foodporn</u> " +
+                        "<u>#inandout</u> " +
+                        "<u>#fries</u> " +
+                        "<u>#carkeys</u> " +
+                        "<u>#amazing</u>"));
     }
 
     /**
@@ -357,30 +377,70 @@ public class PrismPostDetailActivity extends AppCompatActivity implements PullBa
     }
 
     /**
+     *
+     */
+    private void setupLikeActionButton() {
+        likesCountTextView.setText(prismPost.getLikes().toString());
+        likesCountTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent userLikesIntent = new Intent(PrismPostDetailActivity.this, DisplayUsersActivity.class);
+                userLikesIntent.putExtra("UsersInt", 0);
+                userLikesIntent.putExtra("UsersDataId", prismPost.getPostId());
+                startActivity(userLikesIntent);
+                overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+            }
+        });
+    }
+
+    /**
+     *
+     */
+    private void setupRepostActionButton() {
+        repostCountTextView.setText(prismPost.getReposts().toString());
+        repostCountTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent userLikesIntent = new Intent(PrismPostDetailActivity.this, DisplayUsersActivity.class);
+                userLikesIntent.putExtra("UsersInt", 1);
+                userLikesIntent.putExtra("UsersDataId", prismPost.getPostId());
+                startActivity(userLikesIntent);
+                overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+            }
+        });
+    }
+
+    /**
+     * Three action buttons are shown for each PrismPost
+     * Like button likes the PrismPost
+     * Repost button reposts the PrismPost to the users profile
+     * More button offers a few options
+     */
+    private void setupActionButtons() {
+        setupLikeActionButton();
+        setupRepostActionButton();
+    }
+
+    /**
      * Setup all UI elements
      */
+    @SuppressLint("ClickableViewAccessibility")
     private void setupUIElements() {
         setupToolbar();
         setupStatusBar();
 
         // Setup Typefaces for all text based UI elements
-        likeCountTextView.setTypeface(sourceSansProLight);
+        likesCountTextView.setTypeface(sourceSansProLight);
         repostCountTextView.setTypeface(sourceSansProLight);
         detailUsernameTextView.setTypeface(sourceSansProBold);
         detailPrismPostDateTextView.setTypeface(sourceSansProLight);
         detailPrismPostDescriptionTextView.setTypeface(sourceSansProLight);
         detailPrismPostTagsTextView.setTypeface(sourceSansProLight);
 
-        detailPrismPostTagsTextView.setText(Html.fromHtml(
-                "<u>#burger</u> " +
-                        "<u>#delicous</u> " +
-                        "<u>#foodporn</u> " +
-                        "<u>#inandout</u> " +
-                        "<u>#fries</u> " +
-                        "<u>#carkeys</u> " +
-                        "<u>#amazing</u>"));
-
+        setupToolbarPullDownLayout();
         setupPrismPostUserInfo();
         setupPrismPostImageView();
+        setupActionButtons();
     }
+
 }

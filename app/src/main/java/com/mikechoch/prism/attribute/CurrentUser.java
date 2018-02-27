@@ -92,6 +92,9 @@ public class CurrentUser {
         refreshUserFollowersAndFollowings();
     }
 
+    /**
+     *
+     */
     private static void refreshUserFollowersAndFollowings() {
         followers = new HashMap<String, String>();
         followings = new HashMap<String, String>();
@@ -138,6 +141,7 @@ public class CurrentUser {
                                     DataSnapshot postSnapshot = dataSnapshot.child(postId);
                                     if (postSnapshot.exists()) {
                                         PrismPost prismPost = Helper.constructPrismPostObject(postSnapshot);
+                                        //TODO: Pull user info for the given liked PrismPost
                                         prismPost.setPrismUser(CurrentUser.prismUser);
                                         liked_posts.add(prismPost);
                                     }
@@ -181,6 +185,7 @@ public class CurrentUser {
                                     DataSnapshot postSnapshot = dataSnapshot.child(postId);
                                     if (postSnapshot.exists()) {
                                         PrismPost prismPost = Helper.constructPrismPostObject(postSnapshot);
+                                        //TODO: Pull user info for the given reposted PrismPost
                                         prismPost.setPrismUser(CurrentUser.prismUser);
                                         reposted_posts.add(prismPost);
                                     }
