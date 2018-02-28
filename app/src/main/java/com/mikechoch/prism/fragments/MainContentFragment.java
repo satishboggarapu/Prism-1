@@ -23,7 +23,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-import com.mikechoch.prism.attribute.CurrentUser;
+import com.mikechoch.prism.fire.CurrentUser;
 import com.mikechoch.prism.attribute.PrismUser;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
@@ -47,7 +47,7 @@ public class MainContentFragment extends Fragment {
     private RelativeLayout noMainPostsRelativeLayout;
     private TextView noMainPostsTextView;
     private RecyclerView mainContentRecyclerView;
-    private PrismPostRecyclerViewAdapter mainContentRecyclerViewAdapter;
+    public static PrismPostRecyclerViewAdapter mainContentRecyclerViewAdapter;
     private ProgressBar mainProgressBar;
 
     private int[] swipeRefreshLayoutColors = {R.color.colorAccent};

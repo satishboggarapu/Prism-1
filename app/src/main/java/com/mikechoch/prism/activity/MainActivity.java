@@ -47,7 +47,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.mikechoch.prism.attribute.CurrentUser;
+import com.mikechoch.prism.fire.CurrentUser;
 import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.adapter.MainViewPagerAdapter;

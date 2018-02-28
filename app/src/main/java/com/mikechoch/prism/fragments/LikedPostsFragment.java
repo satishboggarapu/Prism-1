@@ -1,6 +1,5 @@
 package com.mikechoch.prism.fragments;
 
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -14,12 +13,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.adapter.UserPostsColumnRecyclerViewAdapter;
-import com.mikechoch.prism.attribute.CurrentUser;
+import com.mikechoch.prism.fire.CurrentUser;
 import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.constants.Default;
 
@@ -90,16 +88,16 @@ public class LikedPostsFragment extends Fragment {
     private void setupLikedRecyclerViewColumns() {
         userLikedPostsLinearLayout.removeAllViews();
         userLikedPostsLinearLayout.setWeightSum((float) Default.USER_UPLOADED_POSTS_COLUMNS);
-
-        if (CurrentUser.liked_posts.size() > 0) {
+        ArrayList<PrismPost> userLikedPosts = CurrentUser.getUserLikes();
+        if (userLikedPosts.size() > 0) {
 //        ArrayList<ArrayList<PrismPost>> userLikedPostsArrayLists = new ArrayList<>(Collections.nCopies(userUploadedColumns, new ArrayList<>()));
             // TODO: figure out how to initialize an ArrayList of ArrayLists without using while loop inside of populating for-loop
             ArrayList<ArrayList<PrismPost>> userLikedPostsArrayLists = new ArrayList<>();
-            for (int i = 0; i < CurrentUser.liked_posts.size(); i++) {
+            for (int i = 0; i < userLikedPosts.size(); i++) {
                 while (userLikedPostsArrayLists.size() != Default.USER_UPLOADED_POSTS_COLUMNS) {
                     userLikedPostsArrayLists.add(new ArrayList<>());
                 }
-                userLikedPostsArrayLists.get((i % Default.USER_UPLOADED_POSTS_COLUMNS)).add(CurrentUser.liked_posts.get(i));
+                userLikedPostsArrayLists.get((i % Default.USER_UPLOADED_POSTS_COLUMNS)).add(userLikedPosts.get(i));
             }
 
             for (int i = 0; i < Default.USER_UPLOADED_POSTS_COLUMNS; i++) {

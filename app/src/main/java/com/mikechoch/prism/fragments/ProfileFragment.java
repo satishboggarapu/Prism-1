@@ -1,6 +1,5 @@
 package com.mikechoch.prism.fragments;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -17,7 +16,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.mikechoch.prism.activity.PrismUserProfileActivity;
 import com.mikechoch.prism.adapter.SettingsOptionRecyclerViewAdapter;
-import com.mikechoch.prism.attribute.CurrentUser;
+import com.mikechoch.prism.fire.CurrentUser;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.R;
 

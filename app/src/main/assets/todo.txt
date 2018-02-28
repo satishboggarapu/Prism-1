@@ -11,6 +11,12 @@
 
 - Make method that takes in DataSnapshot object and parses it and creates PrismUser object
 
+- Make new class in CurrentUser package and make some attributes package-private and put the code
+    for performing Like/Unlike, Upload/Delete, Repost/Unrepost, Follow/Unfollow
+  - And create another class that handles refresh
+  - CurrentUser should only have getters/setters
+
+
 ---------------------
 * BUGS TO FIX *
 ---------------------

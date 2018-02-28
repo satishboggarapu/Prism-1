@@ -1,12 +1,10 @@
 package com.mikechoch.prism.fragments;
 
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.widget.LinearLayoutCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -18,7 +16,7 @@ import android.widget.TextView;
 
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.adapter.UserPostsColumnRecyclerViewAdapter;
-import com.mikechoch.prism.attribute.CurrentUser;
+import com.mikechoch.prism.fire.CurrentUser;
 import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.constants.Default;
 
@@ -88,16 +86,17 @@ public class UploadedRepostedPostsFragment extends Fragment {
     private void setupUploadedRepostedRecyclerViewColumns() {
         userUploadedPostsLinearLayout.removeAllViews();
         userUploadedPostsLinearLayout.setWeightSum((float) Default.USER_UPLOADED_POSTS_COLUMNS);
-
-        if (CurrentUser.uploaded_posts.size() > 0) {
+        ArrayList<PrismPost> userUploadedPosts = CurrentUser.getUserUploads();
+        if (userUploadedPosts.size() > 0) {
 //        ArrayList<ArrayList<PrismPost>> userUploadedPostsArrayLists = new ArrayList<>(Collections.nCopies(userUploadedColumns, new ArrayList<>()));
             // TODO: figure out how to initialize an ArrayList of ArrayLists without using while loop inside of populating for-loop
+            // TODO: sexify this
             ArrayList<ArrayList<PrismPost>> userUploadedPostsArrayLists = new ArrayList<>();
-            for (int i = 0; i < CurrentUser.uploaded_posts.size(); i++) {
+            for (int i = 0; i < userUploadedPosts.size(); i++) {
                 while (userUploadedPostsArrayLists.size() != Default.USER_UPLOADED_POSTS_COLUMNS) {
                     userUploadedPostsArrayLists.add(new ArrayList<>());
                 }
-                userUploadedPostsArrayLists.get((i % Default.USER_UPLOADED_POSTS_COLUMNS)).add(CurrentUser.uploaded_posts.get(i));
+                userUploadedPostsArrayLists.get((i % Default.USER_UPLOADED_POSTS_COLUMNS)).add(userUploadedPosts.get(i));
             }
 
             for (int i = 0; i < Default.USER_UPLOADED_POSTS_COLUMNS; i++) {

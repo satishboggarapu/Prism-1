@@ -26,12 +26,13 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.activity.PrismUserProfileActivity;
-import com.mikechoch.prism.attribute.CurrentUser;
+import com.mikechoch.prism.fire.CurrentUser;
 import com.mikechoch.prism.attribute.PrismUser;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.constants.Message;
+import com.mikechoch.prism.fire.DatabaseAction;
 import com.mikechoch.prism.helper.Helper;
 
 import java.util.ArrayList;
@@ -143,16 +144,16 @@ public class DisplayUsersRecyclerViewAdapter extends RecyclerView.Adapter<Displa
          *
          */
         private void setupUserFollowButton() {
-            if (!Helper.isCurrentUser(prismUser.getUid())) {
+            if (!Helper.isPrismUserCurrentUser(prismUser)) {
                 userFollowButton.setVisibility(View.VISIBLE);
 
-                boolean isFollowing = CurrentUser.followings.containsKey(prismUser.getUid());
-                changeFollowButtons(isFollowing);
+                toggleFollowButtons(CurrentUser.isFollowingPrismUser(prismUser));
 
                 userFollowButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        toggleFollowUser();
+                        boolean performFollow = !CurrentUser.isFollowingPrismUser(prismUser);
+                        handleFollowButtonClick(performFollow);
                     }
                 });
             }
@@ -161,10 +162,10 @@ public class DisplayUsersRecyclerViewAdapter extends RecyclerView.Adapter<Displa
         /**
          *
          */
-        private void changeFollowButtons(boolean isFollowing) {
-            int buttonWidth = (int) (scale * (isFollowing ? 80 : 60));
-            String followButtonString = isFollowing ? "Following" : "Follow";
-            int followButtonInt = isFollowing ? R.drawable.button_selector_selected : R.drawable.button_selector;
+        private void toggleFollowButtons(boolean showFollowing) {
+            int buttonWidth = (int) (scale * (showFollowing ? 80 : 60));
+            String followButtonString = showFollowing ? "Following" : "Follow";
+            int followButtonInt = showFollowing ? R.drawable.button_selector_selected : R.drawable.button_selector;
             Drawable followingButtonDrawable = context.getResources().getDrawable(followButtonInt);
             Drawable followingToolbarButtonDrawable = context.getResources().getDrawable(followButtonInt);
 
@@ -179,51 +180,16 @@ public class DisplayUsersRecyclerViewAdapter extends RecyclerView.Adapter<Displa
 
         /**
          *
+         * @param performFollow
          */
-        private void toggleFollowUser() {
-            boolean performFollow = !(CurrentUser.followings.containsKey(prismUser.getUid()));
-            userReference.child(prismUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.exists()) {
-                        if (performFollow) {
-                            userReference.child(prismUser.getUid())
-                                    .child(Key.DB_REF_USER_FOLLOWERS)
-                                    .child(CurrentUser.prismUser.getUsername())
-                                    .setValue(CurrentUser.prismUser.getUid());
-
-                            userReference.child(CurrentUser.prismUser.getUid())
-                                    .child(Key.DB_REF_USER_FOLLOWINGS)
-                                    .child(prismUser.getUsername())
-                                    .setValue(prismUser.getUid());
-
-                            // Add prismUser to local followers HashMap
-                            CurrentUser.followings.put(prismUser.getUsername(), prismUser.getUid());
-                        } else {
-                            userReference.child(prismUser.getUid())
-                                    .child(Key.DB_REF_USER_FOLLOWERS)
-                                    .child(CurrentUser.prismUser.getUsername())
-                                    .removeValue();
-
-                            userReference.child(CurrentUser.prismUser.getUid())
-                                    .child(Key.DB_REF_USER_FOLLOWINGS)
-                                    .child(prismUser.getUsername())
-                                    .removeValue();
-
-                            // Add prismUser to local followers HashMap
-                            CurrentUser.followings.remove(prismUser.getUsername());
-                        }
-                        changeFollowButtons(performFollow);
-                    } else {
-                        Log.e(Default.TAG_DB, Message.FETCH_USER_DETAILS_FAIL);
-                    }
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                    Log.wtf(Default.TAG_DB, databaseError.getMessage(), databaseError.toException());
-                }
-            });
+        private void handleFollowButtonClick(boolean performFollow) {
+            if (performFollow) {
+                toggleFollowButtons(true);
+                DatabaseAction.followUser(prismUser);
+            } else {
+                toggleFollowButtons(false);
+                DatabaseAction.unfollowUser(prismUser);
+            }
         }
 
         /**

@@ -1,4 +1,4 @@
-package com.mikechoch.prism.attribute;
+package com.mikechoch.prism.fire;
 
 import android.app.Activity;
 import android.content.Context;
@@ -19,6 +19,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.R;
+import com.mikechoch.prism.attribute.PrismPost;
+import com.mikechoch.prism.attribute.PrismUser;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.constants.Message;
@@ -49,21 +51,21 @@ public class CurrentUser {
      * Key: String postId
      * Value: long timestamp
     **/
-    public static HashMap liked_posts_map;
-    public static HashMap reposted_posts_map;
+    private static HashMap liked_posts_map;
+    private static HashMap reposted_posts_map;
     private static HashMap uploaded_posts_map;
 
     /* ArrayList of PrismPost object for above structures */
-    public static ArrayList<PrismPost> liked_posts;
-    public static ArrayList<PrismPost> reposted_posts;
-    public static ArrayList<PrismPost> uploaded_posts;
+    private static ArrayList<PrismPost> liked_posts;
+    private static ArrayList<PrismPost> reposted_posts;
+    private static ArrayList<PrismPost> uploaded_posts;
 
     /**
-     * Key: String username
-     * Value: String uid
+     * Key: String uid
+     * Value: String username
      */
-    public static HashMap followers;
-    public static HashMap followings;
+    private static HashMap followers;
+    private static HashMap followings;
 
     public static PrismUser prismUser;
 
@@ -79,6 +81,87 @@ public class CurrentUser {
         refreshUserRelatedEverything();
         getUserProfileDetails();
     }
+
+    /**
+     * Returns True if CurrentUser is following given PrismUser
+     */
+    public static boolean isFollowingPrismUser(PrismUser prismUser) {
+        return followings.containsKey(prismUser.getUid());
+    }
+
+    /**
+     * Adds given prismUser to CurrentUser's followings HashMap
+     */
+    static void followUser(PrismUser prismUser) {
+        followings.put(prismUser.getUid(), prismUser.getUsername());
+    }
+
+    /**
+     * Removes given PrismUser from CurrentUser's followings HashMap
+     */
+    static void unfollowUser(PrismUser prismUser) {
+        if (followings.containsKey(prismUser.getUid())) {
+            followings.remove(prismUser.getUid());
+        }
+    }
+
+    /**
+     * Returns True if given PrismUser is a follower of CurrentUser
+     */
+    public static boolean isPrismUserFollower(PrismUser prismUser) {
+        return followers.containsKey(prismUser.getUid());
+    }
+
+
+    /**
+     * Returns True if CurrentUser has liked given prismPost
+     */
+    public static boolean hasLiked(PrismPost prismPost) {
+        return liked_posts_map.containsKey(prismPost.getPostId());
+    }
+
+    /**
+     * Adds prismPost to Current User's liked_posts list and hashmap
+     */
+    static void likePost(PrismPost prismPost) {
+        liked_posts.add(prismPost);
+        liked_posts_map.put(prismPost.getPostId(), prismPost);
+    }
+
+    /**
+     * Removes prismPost from Current User's liked_posts list and hashmap
+     */
+    static void unlikePost(PrismPost prismPost) {
+        liked_posts.remove(prismPost);
+        liked_posts_map.remove(prismPost.getPostId());
+    }
+
+    /**
+     * Returns True if CurrentUser has reposted given prismPost
+     */
+    public static boolean hasReposted(PrismPost prismPost) {
+        return reposted_posts_map.containsKey(prismPost.getPostId());
+    }
+
+    /**
+     * Adds prismPost to Current User's reposted_posts list and hashmap
+     */
+    static void repostPost(PrismPost prismPost) {
+        reposted_posts.add(prismPost);
+        reposted_posts_map.put(prismPost.getPostId(), prismPost);
+    }
+
+    /**
+     * Removes prismPost from Current User's repost_posts list and hashmap
+     */
+    static void unrepostPost(PrismPost prismPost) {
+        reposted_posts.remove(prismPost);
+        reposted_posts_map.remove(prismPost.getPostId());
+    }
+
+
+
+
 
     /**
      * Refreshes list of liked, reposted and uploaded posts by current firebaseUser
@@ -206,7 +289,7 @@ public class CurrentUser {
     }
 
     /**
-     * TODO: convert items to PrismPost or something for User Profile Page
+     *
      */
     public static void refreshUserUploadedPosts() {
         uploaded_posts = new ArrayList<>();
@@ -248,6 +331,20 @@ public class CurrentUser {
             }
         });
     }
+
+    /**
+     *
+     * @return
+     */
+    public static ArrayList<PrismPost> getUserUploads() {
+        return uploaded_posts;
+    }
+
+    public static ArrayList<PrismPost> getUserLikes() {
+        return liked_posts;
+    }
+
+
 
 
     /**

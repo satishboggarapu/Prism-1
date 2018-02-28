@@ -3,7 +3,7 @@ package com.mikechoch.prism.helper;
 import android.text.format.DateFormat;
 
 import com.google.firebase.database.DataSnapshot;
-import com.mikechoch.prism.attribute.CurrentUser;
+import com.mikechoch.prism.fire.CurrentUser;
 import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.attribute.PrismUser;
 import com.mikechoch.prism.attribute.ProfilePicture;
@@ -62,8 +62,8 @@ public class Helper {
     /**
      *
      */
-    public static boolean isCurrentUser(String uid) {
-        return CurrentUser.prismUser.getUid().equals(uid);
+    public static boolean isPrismUserCurrentUser(PrismUser prismUser) {
+        return CurrentUser.prismUser.equals(prismUser);
     }
 
     /**

@@ -226,7 +226,7 @@ public class RegisterActivity extends AppCompatActivity {
      * Generate a random Default profile picture
      */
     private String generateDefaultProfilePic() {
-        // TODO @mike this '10' should be replaced with DefaultProfilePictures.values().length right?
+        // TODO @mike this '10' should be replaced with DefaultProfilePictures.values().length right?c
         return String.valueOf(new Random().nextInt(10));
     }
 
