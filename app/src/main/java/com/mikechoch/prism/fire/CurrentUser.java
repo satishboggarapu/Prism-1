@@ -118,7 +118,7 @@ public class CurrentUser {
     }
 
     /**
-     * Adds prismPost to Current User's liked_posts list and hashmap
+     * Adds prismPost to CurrentUser's liked_posts list and hashMap
      */
     static void likePost(PrismPost prismPost) {
         liked_posts.add(prismPost);
@@ -126,9 +126,7 @@ public class CurrentUser {
     }
 
     /**
-     *
-     * @param likedPosts
-     * @param likePostsMap
+     * Adds list of liked prismPosts to CurrentUser's liked_posts list and hashMap
      */
     static void likePosts(ArrayList<PrismPost> likedPosts, HashMap<String, Long> likePostsMap) {
         liked_posts.addAll(likedPosts);
@@ -136,7 +134,7 @@ public class CurrentUser {
     }
 
     /**
-     * Removes prismPost from Current User's liked_posts list and hashmap
+     * Removes prismPost from CurrentUser's liked_posts list and hashMap
      */
     static void unlikePost(PrismPost prismPost) {
         liked_posts.remove(prismPost);
@@ -151,7 +149,7 @@ public class CurrentUser {
     }
 
     /**
-     * Adds prismPost to Current User's reposted_posts list and hashmap
+     * Adds prismPost to CurrentUser's reposted_posts list and hashMap
      */
     static void repostPost(PrismPost prismPost) {
         reposted_posts.add(prismPost);
@@ -159,9 +157,7 @@ public class CurrentUser {
     }
 
     /**
-     *
-     * @param repostedPosts
-     * @param repostedPostsMap
+     * Adds the list of reposted prismPosts to CurrentUser's reposted_posts list and hashMap
      */
     static void repostPosts(ArrayList<PrismPost> repostedPosts, HashMap<String, Long> repostedPostsMap) {
         reposted_posts.addAll(repostedPosts);
@@ -169,7 +165,7 @@ public class CurrentUser {
     }
 
     /**
-     * Removes prismPost from Current User's repost_posts list and hashmap
+     * Removes prismPost from CurrentUser's repost_posts list and hashMap
      */
     static void unrepostPost(PrismPost prismPost) {
         reposted_posts.remove(prismPost);
@@ -178,7 +174,7 @@ public class CurrentUser {
 
     /**
      *
-     * @param prismPost
+     * Adds prismPost to CurrentUser's uploaded_posts list and hashMap
      */
     static void uploadPost(PrismPost prismPost) {
         uploaded_posts.add(prismPost);
@@ -186,22 +182,27 @@ public class CurrentUser {
     }
 
     /**
-     *
-     * @param uploadedPosts
-     * @param uploadedPostsMap
+     * Adds the list of uploaded prismPosts to CurrentUser's uploaded_posts list and hashMap
      */
     static void uploadPosts(ArrayList<PrismPost> uploadedPosts, HashMap<String, Long> uploadedPostsMap) {
         uploaded_posts.addAll(uploadedPosts);
         uploaded_posts_map.putAll(uploadedPostsMap);
     }
 
-
+    /**
+     * Removes prismPost from CurrentUser's uploaded_posts list and hashMap
+     * @param prismPost
+     */
+    static void deletePost(PrismPost prismPost) {
+        uploaded_posts.remove(prismPost);
+        uploaded_posts_map.remove(prismPost.getPostId());
+    }
 
 
     /**
-     * Refreshes list of liked, reposted and uploaded posts by current firebaseUser
-     * TODO: need a better function name lol
-     *
+     * Creates prismUser for CurrentUser and refreshes/updates the
+     * list of posts uploaded, liked, and reposted by CurrentUser.
+     * Also fetches user's followers and followings.
      */
     public static void refreshUserProfile() {
         liked_posts = new ArrayList<>();
@@ -219,17 +220,25 @@ public class CurrentUser {
     }
 
     /**
-     *
-     * @return
+     * Returns list of CurrentUser.uploaded_posts
      */
     public static ArrayList<PrismPost> getUserUploads() {
         return uploaded_posts;
     }
 
+    /**
+     * Returns list of CurrentUser.liked_posts
+     */
     public static ArrayList<PrismPost> getUserLikes() {
         return liked_posts;
     }
 
+    /**
+     * Returns list of CurrentUser.reposted_posts
+     */
+    public static ArrayList<PrismPost> getUserReposts() {
+        return reposted_posts;
+    }
 
     /**
      * TODO Mike: Can we we put this function inside InterfaceAction?

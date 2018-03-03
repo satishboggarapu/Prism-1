@@ -184,6 +184,7 @@ public class InterfaceAction {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         dialogInterface.dismiss();
+                        // TODO @Mike how can we call this method without making it static?
                         //handleRepostButtonClick(true);
                     }
                 }).setNegativeButton(Default.BUTTON_CANCEL, new DialogInterface.OnClickListener() {
