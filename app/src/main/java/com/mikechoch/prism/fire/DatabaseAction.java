@@ -17,7 +17,9 @@ import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.constants.Message;
 import com.mikechoch.prism.fragments.MainContentFragment;
+import com.mikechoch.prism.helper.Helper;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,8 +31,9 @@ import java.util.Map;
 
 public class DatabaseAction {
 
-    private static String currentUserId = CurrentUser.prismUser.getUid();
-    private static String currentUsername = CurrentUser.prismUser.getUsername();
+    // using firebaseUser here instead of prismUser because CurrentUser.prismUser might not be created
+    private static String currentUserId = CurrentUser.firebaseUser.getUid();
+    private static String currentUsername = CurrentUser.firebaseUser.getDisplayName();
     private static DatabaseReference currentUserReference = Default.USERS_REFERENCE.child(currentUserId);
     private static DatabaseReference allPostsReference = Default.ALL_POSTS_REFERENCE;
     private static DatabaseReference usersReference = Default.USERS_REFERENCE;
@@ -225,11 +228,101 @@ public class DatabaseAction {
         });
     }
 
+    /**
+     *
+     */
+    static void fetchUserProfile() {
+        HashMap<String, Long> liked_posts_map = new HashMap<>();
+        HashMap<String, Long> reposted_posts_map = new HashMap<>();
+        HashMap<String, Long> uploaded_posts_map = new HashMap<>();
+
+        usersReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot usersSnapshot) {
+                if (usersSnapshot.exists()) {
+                    CurrentUser.prismUser = Helper.constructPrismUserObject(usersSnapshot
+                            .child(CurrentUser.firebaseUser.getUid()));
+
+                    DataSnapshot currentUserSnapshot = usersSnapshot
+                            .child(CurrentUser.prismUser.getUid());
+
+                    if (currentUserSnapshot.hasChild(Key.DB_REF_USER_LIKES)) {
+                        liked_posts_map.putAll((Map) currentUserSnapshot.child(Key.DB_REF_USER_LIKES).getValue());
+                    }
+                    if (currentUserSnapshot.hasChild(Key.DB_REF_USER_REPOSTS)) {
+                        reposted_posts_map.putAll((Map) currentUserSnapshot.child(Key.DB_REF_USER_REPOSTS).getValue());
+                    }
+                    if (currentUserSnapshot.hasChild(Key.DB_REF_USER_UPLOADS)) {
+                        uploaded_posts_map.putAll((Map) currentUserSnapshot.child(Key.DB_REF_USER_UPLOADS).getValue());
+                    }
+                    if (currentUserSnapshot.hasChild(Key.DB_REF_USER_FOLLOWERS)) {
+                        CurrentUser.followers.putAll((Map) currentUserSnapshot.child(Key.DB_REF_USER_FOLLOWERS).getValue());
+                    }
+                    if (currentUserSnapshot.hasChild(Key.DB_REF_USER_FOLLOWINGS)) {
+                        CurrentUser.followings.putAll((Map) currentUserSnapshot.child(Key.DB_REF_USER_FOLLOWINGS).getValue());
+                    }
+
+                    allPostsReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            ArrayList<PrismPost> userLikes = getPostDetails(dataSnapshot, usersSnapshot, liked_posts_map);
+                            ArrayList<PrismPost> userReposts = getPostDetails(dataSnapshot, usersSnapshot, reposted_posts_map);
+                            ArrayList<PrismPost> userUploads = getPostDetails(dataSnapshot, usersSnapshot, uploaded_posts_map);
+
+                            CurrentUser.likePosts(userLikes, liked_posts_map);
+                            CurrentUser.repostPosts(userReposts, reposted_posts_map);
+                            CurrentUser.uploadPosts(userUploads, uploaded_posts_map);
+
+                            CurrentUser.updateUserProfilePageUI();
+                            notifyDataSetChanged();
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            Log.e(Default.TAG_DB, Message.FETCH_POST_INFO_FAIL, databaseError.toException());
+                        }
+                    });
+
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e(Default.TAG_DB, databaseError.getMessage(), databaseError.toException());
+            }
+        });
+    }
+
+    /**
+     *
+     * @param allPostsRefSnapshot
+     * @param usersSnapshot
+     * @param mapOfPostIds
+     * @return
+     */
+    private static ArrayList<PrismPost> getPostDetails(DataSnapshot allPostsRefSnapshot,
+                                                       DataSnapshot usersSnapshot,
+                                                       HashMap<String, Long> mapOfPostIds) {
+        ArrayList<PrismPost> listOfPrismPosts = new ArrayList<>();
+        for (Object key : mapOfPostIds.keySet()) {
+            String postId = (String) key;
+            DataSnapshot postSnapshot = allPostsRefSnapshot.child(postId);
+
+            if (postSnapshot.exists()) {
+                PrismPost prismPost = Helper.constructPrismPostObject(postSnapshot);
+                DataSnapshot userSnapshot = usersSnapshot.child(prismPost.getUid());
+                PrismUser prismUser = Helper.constructPrismUserObject(userSnapshot);
+                prismPost.setPrismUser(prismUser);
+
+                listOfPrismPosts.add(prismPost);
+            }
+        }
+        return listOfPrismPosts;
+    }
 
     /**
      *
      */
-    private static void notifyDataSetChanged() {
+    static void notifyDataSetChanged() {
         MainContentFragment.mainContentRecyclerViewAdapter.notifyDataSetChanged();
     }
 

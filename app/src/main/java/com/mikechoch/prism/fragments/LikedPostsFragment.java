@@ -89,7 +89,7 @@ public class LikedPostsFragment extends Fragment {
         userLikedPostsLinearLayout.removeAllViews();
         userLikedPostsLinearLayout.setWeightSum((float) Default.USER_UPLOADED_POSTS_COLUMNS);
         ArrayList<PrismPost> userLikedPosts = CurrentUser.getUserLikes();
-        if (userLikedPosts.size() > 0) {
+        if (userLikedPosts != null) {
 //        ArrayList<ArrayList<PrismPost>> userLikedPostsArrayLists = new ArrayList<>(Collections.nCopies(userUploadedColumns, new ArrayList<>()));
             // TODO: figure out how to initialize an ArrayList of ArrayLists without using while loop inside of populating for-loop
             ArrayList<ArrayList<PrismPost>> userLikedPostsArrayLists = new ArrayList<>();
