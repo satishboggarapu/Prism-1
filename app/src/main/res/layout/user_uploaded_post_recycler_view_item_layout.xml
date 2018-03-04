@@ -18,11 +18,45 @@
         android:indeterminateDrawable="@drawable/circle_progress_foreground"
         android:visibility="visible"/>
 
-    <ImageView
-        android:id="@+id/user_post_image_view"
-        android:layout_width="match_parent"
+    <RelativeLayout
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:scaleType="centerCrop"
-        android:adjustViewBounds="true" />
+        android:background="@color/colorPrimaryDark">
+
+        <ImageView
+            android:id="@+id/user_post_image_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scaleType="centerCrop"
+            android:adjustViewBounds="true" />
+
+        <TableRow
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/user_post_image_view"
+            android:layout_marginEnd="8dp">
+
+            <ImageView
+                android:id="@+id/user_post_like_action_button"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:src="@drawable/ic_heart_outline_black_36dp"
+                android:tint="@android:color/white"/>
+
+            <ImageView
+                android:id="@+id/user_post_repost_action_button"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:src="@drawable/ic_camera_iris_black_36dp"
+                android:tint="@android:color/white"/>
+
+        </TableRow>
+
+    </RelativeLayout>
 
 </RelativeLayout>

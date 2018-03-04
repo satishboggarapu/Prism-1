@@ -108,6 +108,7 @@ public class LikedPostsFragment extends Fragment {
                 RecyclerView currentUserLikedPostsRecyclerView = (RecyclerView) LayoutInflater.from(getActivity()).inflate(R.layout.user_uploaded_posts_recycler_view_layout, null);
                 LinearLayoutManager recyclerViewLinearLayoutManager = new LinearLayoutManager(getActivity());
                 currentUserLikedPostsRecyclerView.setLayoutManager(recyclerViewLinearLayoutManager);
+                // TODO app crashes here if user hasn't liked any pics (userLikedPostsArrayLists.size() == 0)
                 UserPostsColumnRecyclerViewAdapter recyclerViewAdapter = new UserPostsColumnRecyclerViewAdapter(getActivity(), userLikedPostsArrayLists.get(i));
                 currentUserLikedPostsRecyclerView.setAdapter(recyclerViewAdapter);
 

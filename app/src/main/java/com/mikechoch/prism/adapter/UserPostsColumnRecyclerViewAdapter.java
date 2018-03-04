@@ -102,14 +102,13 @@ public class UserPostsColumnRecyclerViewAdapter extends RecyclerView.Adapter<Use
                     .listener(new RequestListener<Bitmap>() {
                         @Override
                         public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
-                            // TODO: @Mike we should hide progressBar here as well and display a toast or something
+                            // TODO: @Mike should we display a toast or something here?
                             progressBar.setVisibility(View.GONE);
                             return false;
                         }
 
                         @Override
                         public boolean onResourceReady(Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
-                            // TODO: @Mike we should hide progressBar here as well and display a toast or something
                             progressBar.setVisibility(View.GONE);
                             return false;
                         }

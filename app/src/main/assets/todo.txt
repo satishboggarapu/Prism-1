@@ -12,6 +12,7 @@
 - Update/CleanUp `DisplayUsersActivity.getListOfUsers()`
 
 - Python Script --> make sure CurrentUser can't follow self
+
 ---------------------
 * BUGS TO FIX *
 ---------------------
@@ -24,5 +25,4 @@
 ---------------------
 - Image title/caption on main page
 - Tags
--
 
