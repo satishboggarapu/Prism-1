@@ -9,18 +9,13 @@
 
 - Make sure post author/owner cannot repost the prismPost
 
-- Make method that takes in DataSnapshot object and parses it and creates PrismUser object
+- Update/CleanUp `DisplayUsersActivity.getListOfUsers()`
 
-- Make new class in CurrentUser package and make some attributes package-private and put the code
-    for performing Like/Unlike, Upload/Delete, Repost/Unrepost, Follow/Unfollow
-  - And create another class that handles refresh
-  - CurrentUser should only have getters/setters
-
-
+- Python Script --> make sure CurrentUser can't follow self
 ---------------------
 * BUGS TO FIX *
 ---------------------
-- Repost UI glitch
+-
 
 
 
@@ -29,4 +24,5 @@
 ---------------------
 - Image title/caption on main page
 - Tags
+-
 

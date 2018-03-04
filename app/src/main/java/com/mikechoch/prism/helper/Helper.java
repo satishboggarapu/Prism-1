@@ -64,7 +64,7 @@ public class Helper {
      *
      */
     public static boolean isPrismUserCurrentUser(PrismUser prismUser) {
-        return CurrentUser.prismUser.equals(prismUser);
+        return CurrentUser.prismUser.getUid().equals(prismUser.getUid());
     }
 
     /**

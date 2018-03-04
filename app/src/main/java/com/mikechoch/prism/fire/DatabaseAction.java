@@ -184,12 +184,12 @@ public class DatabaseAction {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     userReference.child(Key.DB_REF_USER_FOLLOWERS)
-                            .child(CurrentUser.prismUser.getUsername())
-                            .setValue(CurrentUser.prismUser.getUid());
+                            .child(CurrentUser.prismUser.getUid())
+                            .setValue(CurrentUser.prismUser.getUsername());
 
-                    userReference.child(Key.DB_REF_USER_FOLLOWINGS)
-                            .child(prismUser.getUsername())
-                            .setValue(prismUser.getUid());
+                    currentUserReference.child(Key.DB_REF_USER_FOLLOWINGS)
+                            .child(prismUser.getUid())
+                            .setValue(prismUser.getUsername());
 
                     CurrentUser.followUser(prismUser);
 
@@ -216,11 +216,11 @@ public class DatabaseAction {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     userReference.child(Key.DB_REF_USER_FOLLOWERS)
-                            .child(CurrentUser.prismUser.getUsername())
+                            .child(CurrentUser.prismUser.getUid())
                             .removeValue();
 
-                    userReference.child(Key.DB_REF_USER_FOLLOWINGS)
-                            .child(prismUser.getUsername())
+                    currentUserReference.child(Key.DB_REF_USER_FOLLOWINGS)
+                            .child(prismUser.getUid())
                             .removeValue();
 
                     CurrentUser.unfollowUser(prismUser);
