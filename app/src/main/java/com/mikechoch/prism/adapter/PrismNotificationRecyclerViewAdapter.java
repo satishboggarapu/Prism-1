@@ -3,30 +3,22 @@ package com.mikechoch.prism.adapter;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BlurMaskFilter;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
@@ -35,47 +27,34 @@ import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.bumptech.glide.request.target.Target;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.mikechoch.prism.InterfaceAction;
-import com.mikechoch.prism.activity.PrismUserProfileActivity;
-import com.mikechoch.prism.constants.Message;
-import com.mikechoch.prism.fire.DatabaseAction;
-import com.mikechoch.prism.helper.AnimationBounceInterpolator;
-import com.mikechoch.prism.fire.CurrentUser;
-import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.activity.DisplayUsersActivity;
+import com.mikechoch.prism.activity.PrismUserProfileActivity;
+import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
+import com.mikechoch.prism.fire.CurrentUser;
+import com.mikechoch.prism.fire.DatabaseAction;
 import com.mikechoch.prism.helper.Helper;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by mikechoch on 1/21/18.
  */
 
-public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPostRecyclerViewAdapter.ViewHolder> {
+public class PrismNotificationRecyclerViewAdapter extends RecyclerView.Adapter<PrismNotificationRecyclerViewAdapter.ViewHolder> {
 
     /*
      * Global variables
      */
-    private final int PROGRESS_BAR_VIEW_TYPE = 0;
-    private final int PRISM_POST_VIEW_TYPE = 1;
-
     private Context context;
-    private PrismPost prismPost;
-    public static ArrayList<PrismPost> prismPostArrayList;
+//    private Notification notification;
+    public static ArrayList<PrismPost> notificationArrayList;
 
     private float scale;
     private Typeface sourceSansProLight;
@@ -84,9 +63,9 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
     private int screenHeight;
 
 
-    public PrismPostRecyclerViewAdapter(Context context, ArrayList<PrismPost> prismPostArrayList, int[] screenDimens) {
+    public PrismNotificationRecyclerViewAdapter(Context context, ArrayList<PrismPost> notificationArrayList, int[] screenDimens) {
         this.context = context;
-        this.prismPostArrayList = prismPostArrayList;
+        this.notificationArrayList = notificationArrayList;
         this.screenWidth = screenDimens[0];
         this.screenHeight = screenDimens[1];
 
@@ -99,29 +78,23 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
     @Override
     public int getItemViewType(int position) {
-        return PRISM_POST_VIEW_TYPE;
+        return 0;
     }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        ViewHolder viewHolder = null;
-        switch (viewType) {
-            case PRISM_POST_VIEW_TYPE:
-                viewHolder =  new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(
-                        R.layout.prism_post_recycler_view_item_layout, parent, false));
-                break;
-        }
-        return viewHolder;
+        return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(
+                R.layout.prism_post_recycler_view_item_layout, parent, false));
     }
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.setData(prismPostArrayList.get(position));
+        holder.setData(notificationArrayList.get(position));
     }
 
     @Override
     public int getItemCount() {
-        return prismPostArrayList.size();
+        return notificationArrayList.size();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -146,12 +119,6 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         private ProgressBar progressBar;
 
         private PrismPost prismPost;
-        private String postId;
-        private String postDate;
-        private Integer likeCount;
-        private Integer repostCount;
-        private boolean isPostLiked;
-        private boolean isPostReposted;
 
 
         public ViewHolder(View itemView) {
@@ -163,24 +130,6 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             storageReference = Default.STORAGE_REFERENCE.child(Key.STORAGE_POST_IMAGES_REF);
             allPostsReference = Default.ALL_POSTS_REFERENCE;
 
-            // Image initializations
-            progressBar = itemView.findViewById(R.id.image_progress_bar);
-            userProfilePicImageView = itemView.findViewById(R.id.recycler_view_profile_pic_image_view);
-            postInformationRelativeLayout = itemView.findViewById(R.id.recycler_view_post_info_relative_layout);
-            prismUserTextView = itemView.findViewById(R.id.recycler_view_user_text_view);
-            prismPostDateTextView = itemView.findViewById(R.id.recycler_view_date_text_view);
-            prismPostImageView = itemView.findViewById(R.id.recycler_view_image_image_view);
-            likeHeartAnimationImageView = itemView.findViewById(R.id.recycler_view_like_heart);
-            repostIrisAnimationImageView = itemView.findViewById(R.id.recycler_view_repost_iris);
-
-            // Image action button initializations
-            likeButton = itemView.findViewById(R.id.image_like_button);
-            repostButton = itemView.findViewById(R.id.image_repost_button);
-            moreButton = itemView.findViewById(R.id.image_more_button);
-
-            // Image like/repost count initializations
-            likesCountTextView = itemView.findViewById(R.id.likes_count_text_view);
-            repostsCountTextView = itemView.findViewById(R.id.shares_count_text_view);
         }
 
         /**
@@ -188,15 +137,6 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
          */
         public void setData(PrismPost prismPostObject) {
             this.prismPost = prismPostObject;
-            postId = this.prismPost.getPostId();
-            postDate = Helper.getFancyDateDifferenceString(prismPost.getTimestamp() * -1);
-            likeCount = this.prismPost.getLikes();
-            repostCount = this.prismPost.getReposts();
-            isPostLiked = CurrentUser.hasLiked(prismPost);
-            isPostReposted = CurrentUser.hasReposted(prismPost);
-
-            if (likeCount == null) likeCount = 0;
-            if (repostCount == null) repostCount = 0;
             populateUIElements();
         }
 

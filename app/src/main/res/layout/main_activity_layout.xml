@@ -128,15 +128,6 @@
 
     </android.support.v4.view.ViewPager>
 
-    <ProgressBar
-        android:id="@+id/main_activity_progress_bar"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_gravity="center"
-        android:indeterminate="true"
-        android:indeterminateDrawable="@drawable/circle_progress_foreground"
-        android:visibility="visible" />
-
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/upload_image_fab"
         android:layout_width="wrap_content"

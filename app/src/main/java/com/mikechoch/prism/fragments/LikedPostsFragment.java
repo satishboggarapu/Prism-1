@@ -105,7 +105,7 @@ public class LikedPostsFragment extends Fragment {
                 LinearLayout.LayoutParams linearLayoutLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
                 recyclerViewLinearLayout.setLayoutParams(linearLayoutLayoutParams);
 
-                RecyclerView currentUserLikedPostsRecyclerView = (RecyclerView) LayoutInflater.from(getActivity()).inflate(R.layout.user_uploaded_posts_recycler_view_layout, null);
+                RecyclerView currentUserLikedPostsRecyclerView = (RecyclerView) LayoutInflater.from(getActivity()).inflate(R.layout.user_posts_column_recycler_view, null);
                 LinearLayoutManager recyclerViewLinearLayoutManager = new LinearLayoutManager(getActivity());
                 currentUserLikedPostsRecyclerView.setLayoutManager(recyclerViewLinearLayoutManager);
                 UserPostsColumnRecyclerViewAdapter recyclerViewAdapter = new UserPostsColumnRecyclerViewAdapter(getActivity(), userLikedPostsArrayLists.get(i));

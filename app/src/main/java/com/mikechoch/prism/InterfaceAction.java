@@ -1,15 +1,21 @@
 package com.mikechoch.prism;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.drawable.Drawable;
+import android.text.TextUtils;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
+import android.widget.TextView;
 
+import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.constants.Default;
+import com.mikechoch.prism.fire.DatabaseAction;
 import com.mikechoch.prism.helper.AnimationBounceInterpolator;
 
 /**
@@ -49,7 +55,7 @@ public class InterfaceAction {
         this.shareButtonBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.button_bounce_animation);
         this.moreButtonBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.button_bounce_animation);
 
-        // Set all
+        //
         this.likeButtonBounceAnimation.setInterpolator(buttonAnimationBounceInterpolator);
         this.shareButtonBounceAnimation.setInterpolator(buttonAnimationBounceInterpolator);
         this.moreButtonBounceAnimation.setInterpolator(buttonAnimationBounceInterpolator);
@@ -111,7 +117,10 @@ public class InterfaceAction {
         likeActionButton.setImageDrawable(heartButtonDrawable);
         Drawable heartDrawable = context.getResources().getDrawable(
                 isPostLiked ?  R.drawable.unlike_heart : R.drawable.like_heart);
-        likeActionImageView.setImageDrawable(heartDrawable);
+
+        if (likeActionImageView != null) {
+            likeActionImageView.setImageDrawable(heartDrawable);
+        }
     }
 
     /**
@@ -176,7 +185,7 @@ public class InterfaceAction {
     /**
      * AlertDialog to confirm the repost of a post
      */
-    public static AlertDialog createRepostConfirmationAlertDialog(Context context) {
+    public static AlertDialog createRepostConfirmationAlertDialog(Context context, PrismPost prismPost, ImageView repostActionButton, TextView repostCountTextView) {
         AlertDialog.Builder repostConfirmationAlertDialogBuilder = new AlertDialog.Builder(context);
         repostConfirmationAlertDialogBuilder.setTitle("This post will be shown on your profile, do you want to repost?");
         repostConfirmationAlertDialogBuilder
@@ -184,7 +193,18 @@ public class InterfaceAction {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         dialogInterface.dismiss();
-                        //handleRepostButtonClick(true);
+
+                        startRepostActionButtonAnimation(context, repostActionButton, true);
+
+                        String repostsText = repostCountTextView.getText().toString();
+                        String[] repostsTextArray = repostsText.split(" ");
+                        int repostsCount = Integer.parseInt(repostsTextArray[0]) + 1;
+                        repostsTextArray[0] = String.valueOf(repostsCount);
+                        repostsText = TextUtils.join(" ", repostsTextArray);
+                        repostCountTextView.setText(repostsText);
+                        prismPost.setReposts(repostsCount);
+
+                        DatabaseAction.performRepost(prismPost);
                     }
                 }).setNegativeButton(Default.BUTTON_CANCEL, new DialogInterface.OnClickListener() {
                     @Override
@@ -200,7 +220,7 @@ public class InterfaceAction {
      * Report and SHare will show for all users
      * Delete will only show for user who posted the post
      */
-    public static AlertDialog createMorePrismPostAlertDialog(Context context, boolean isCurrentUser) {
+    public static AlertDialog createMorePrismPostAlertDialog(Context context, PrismPost prismPost, boolean isCurrentUser) {
         AlertDialog.Builder profilePictureAlertDialog = new AlertDialog.Builder(context);
         profilePictureAlertDialog.setItems(isCurrentUser ? morePostOptionsCurrentUser : morePostOptions, new DialogInterface.OnClickListener() {
             @Override
@@ -216,7 +236,7 @@ public class InterfaceAction {
                         break;
                     case 2:
                         // Delete
-                        AlertDialog deleteConfirmationAlertDialog = createDeleteConfirmationAlertDialog(context);
+                        AlertDialog deleteConfirmationAlertDialog = createDeleteConfirmationAlertDialog(context, prismPost);
                         deleteConfirmationAlertDialog.show();
                         break;
                     default:
@@ -230,14 +250,14 @@ public class InterfaceAction {
     /**
      * AlertDialog to confirm the deletion of a post
      */
-    private static AlertDialog createDeleteConfirmationAlertDialog(Context context) {
+    private static AlertDialog createDeleteConfirmationAlertDialog(Context context, PrismPost prismPost) {
         AlertDialog.Builder exitAlertDialogBuilder = new AlertDialog.Builder(context);
         exitAlertDialogBuilder.setTitle("Are you sure you want to delete this post?");
         exitAlertDialogBuilder.setPositiveButton(Default.BUTTON_DELETE, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 dialogInterface.dismiss();
-                //handleDeletionOfPost();
+                DatabaseAction.deletePost(prismPost);
             }
         }).setNegativeButton(Default.BUTTON_CANCEL, new DialogInterface.OnClickListener() {
             @Override

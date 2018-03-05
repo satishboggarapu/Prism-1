@@ -1,9 +1,7 @@
 package com.mikechoch.prism.activity;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -27,10 +25,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
@@ -44,7 +44,7 @@ import com.mikechoch.prism.ToolbarPullDownLayout;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.fire.CurrentUser;
 import com.mikechoch.prism.attribute.PrismPost;
-import com.mikechoch.prism.constants.Default;
+import com.mikechoch.prism.fire.DatabaseAction;
 import com.mikechoch.prism.helper.Helper;
 
 
@@ -69,13 +69,12 @@ public class PrismPostDetailActivity extends AppCompatActivity {
     private int screenWidth;
     private int screenHeight;
 
-//    private float viewTouchDownX;
-//    private float viewTouchDownY;
-//    private float viewMovingX;
-//    private float viewMovingY;
-//    private float viewAlpha;
-//    private float viewScale;
-//    private VelocityTracker velocityTracker = null;
+    private String postId;
+    private String postDate;
+    private Integer likeCount;
+    private Integer repostCount;
+    private boolean isPostLiked;
+    private boolean isPostReposted;
 
     private AppBarLayout appBarLayout;
     private CollapsingToolbarLayout collapsingToolbarLayout;
@@ -97,6 +96,7 @@ public class PrismPostDetailActivity extends AppCompatActivity {
     private TextView detailPrismPostDateTextView;
     private TextView detailPrismPostDescriptionTextView;
     private TextView detailPrismPostTagsTextView;
+    private ImageView collapsingToolbarCollapseUpButton;
 
     private PrismPost prismPost;
 
@@ -124,7 +124,7 @@ public class PrismPostDetailActivity extends AppCompatActivity {
                 break;
             case R.id.prism_post_detail_action_more:
                 boolean isCurrentUserThePostCreator = CurrentUser.firebaseUser.getUid().equals(prismPost.getPrismUser().getUid());
-                AlertDialog morePrismPostAlertDialog = InterfaceAction.createMorePrismPostAlertDialog(this, isCurrentUserThePostCreator);
+                AlertDialog morePrismPostAlertDialog = InterfaceAction.createMorePrismPostAlertDialog(this, prismPost, isCurrentUserThePostCreator);
                 morePrismPostAlertDialog.show();
                 break;
             default:
@@ -159,10 +159,10 @@ public class PrismPostDetailActivity extends AppCompatActivity {
         prismPostDetailNestedScrollView = findViewById(R.id.prism_post_detail_nested_scroll_view);
         prismPostDetailScrollView = findViewById(R.id.prism_post_detail_scroll_view);
         prismPostDetailsRelativeLayout = findViewById(R.id.prism_post_detail_relative_layout);
-        likeActionButton = findViewById(R.id.image_like_button);
-        likesCountTextView = findViewById(R.id.like_count);
-        repostActionButton = findViewById(R.id.image_repost_button);
-        repostCountTextView = findViewById(R.id.repost_count);
+        likeActionButton = findViewById(R.id.prism_post_detail_like_action_button);
+        likesCountTextView = findViewById(R.id.prism_post_detail_like_count);
+        repostActionButton = findViewById(R.id.prism_post_detail_repost_action_button);
+        repostCountTextView = findViewById(R.id.prism_post_detail_repost_count);
         detailImageView = findViewById(R.id.prism_post_detail_image_view);
         userRelativeLayout = findViewById(R.id.prism_post_detail_user_relative_layout);
         detailUserProfilePictureImageView = findViewById(R.id.prism_post_detail_user_profile_picture_image_view);
@@ -170,6 +170,7 @@ public class PrismPostDetailActivity extends AppCompatActivity {
         detailPrismPostDateTextView = findViewById(R.id.prism_post_detail_date_text_view);
         detailPrismPostDescriptionTextView = findViewById(R.id.prism_post_description);
         detailPrismPostTagsTextView = findViewById(R.id.prism_post_tags);
+        collapsingToolbarCollapseUpButton = findViewById(R.id.collapsing_toolbar_collapse_up_button);
 
         Bundle extras = getIntent().getExtras();
         prismPost = extras.getParcelable("PrismPostDetail");
@@ -179,6 +180,16 @@ public class PrismPostDetailActivity extends AppCompatActivity {
             String imageTransitionName = extras.getString("PrismPostDetailTransitionName");
             detailImageView.setTransitionName(imageTransitionName);
         }
+
+        postId = this.prismPost.getPostId();
+        postDate = Helper.getFancyDateDifferenceString(prismPost.getTimestamp() * -1);
+        likeCount = this.prismPost.getLikes();
+        repostCount = this.prismPost.getReposts();
+        isPostLiked = CurrentUser.hasLiked(prismPost);
+        isPostReposted = CurrentUser.hasReposted(prismPost);
+
+        if (likeCount == null) likeCount = 0;
+        if (repostCount == null) repostCount = 0;
 
         setupUIElements();
     }
@@ -227,10 +238,29 @@ public class PrismPostDetailActivity extends AppCompatActivity {
     /**
      *
      */
-    private void setupStatusBar() {
-        getWindow().setStatusBarColor(Color.TRANSPARENT);
-        getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+    private void setupAppBarLayout() {
+        appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
+            @Override
+            public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+
+//                System.out.println(Math.abs(verticalOffset));
+//                System.out.println(appBarLayout.getTotalScrollRange());
+
+                if ((Math.abs(verticalOffset) - appBarLayout.getTotalScrollRange()) == 0) {
+                    // Collapsed
+//                    toast("Collapsed");
+                    hideCollapseUpButton(0);
+                } else if (Math.abs(verticalOffset) == 0) {
+                    // Expanded
+//                    toast("Expanded");
+                    showCollapseUpButton(0);
+                } else {
+                    // Between
+//                    toast("Between");
+                    hideCollapseUpButton(0);
+                }
+            }
+        });
     }
 
     /**
@@ -242,6 +272,15 @@ public class PrismPostDetailActivity extends AppCompatActivity {
 
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
+
+    /**
+     *
+     */
+    private void setupStatusBar() {
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
     }
 
     /**
@@ -301,6 +340,8 @@ public class PrismPostDetailActivity extends AppCompatActivity {
                         toolbar.getLayoutParams().height = isToolbarHeightNegative ? getActionBarHeight() : toolbarHeight;
 
                         if (isScrollImage) {
+                            showCollapseUpButton(250);
+
                             CollapsingToolbarLayout.LayoutParams params = (CollapsingToolbarLayout.LayoutParams) toolbar.getLayoutParams();
                             params.setMargins(0, getStatusBarHeight(), 0, 0);
                             toolbar.setLayoutParams(params);
@@ -380,7 +421,15 @@ public class PrismPostDetailActivity extends AppCompatActivity {
      *
      */
     private void setupLikeActionButton() {
-        likesCountTextView.setText(prismPost.getLikes().toString());
+        InterfaceAction.setupLikeActionButton(this, null, likeActionButton, isPostLiked);
+        likeActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                handleLikeButtonClick();
+            }
+        });
+
+        likesCountTextView.setText(String.valueOf(likeCount));
         likesCountTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -394,10 +443,58 @@ public class PrismPostDetailActivity extends AppCompatActivity {
     }
 
     /**
+     * Check liked_posts_map HashMap if it contains the postId or not. If it contains
+     * the postId, then firebaseUser has already liked the post and perform UNLIKE operation
+     * If it doesn't exist, firebaseUser has not liked it yet, and perform LIKE operation
+     * Operation LIKE (performLIKE = true): does 3 things. First it adds the the firebaseUser's
+     * uid to the LIKED_USERS table under the post. Then it adds the postId to the
+     * USER_LIKES table under the firebaseUser. Then it adds the postId and timestamp to the
+     * local liked_posts_map HashMap so that recycler view can update
+     * Operation UNLIKE (performLike = false): undoes above 3 things
+     * TODO: update comments
+     */
+    private void handleLikeButtonClick() {
+        boolean performLike = !CurrentUser.hasLiked(prismPost);
+        performUIActivitiesForLike(performLike);
+
+        if (performLike) {
+            DatabaseAction.performLike(prismPost);
+        } else {
+            DatabaseAction.performUnlike(prismPost);
+        }
+    }
+
+    /**
+     *
+     * @param performLike
+     */
+    private void performUIActivitiesForLike(boolean performLike) {
+        InterfaceAction.startLikeActionButtonAnimation(this, likeActionButton, performLike);
+
+        likeCount = prismPost.getLikes() + (performLike ?  1 : -1);
+        prismPost.setLikes(likeCount);
+        likesCountTextView.setText(String.valueOf(likeCount));
+    }
+
+    /**
      *
      */
     private void setupRepostActionButton() {
-        repostCountTextView.setText(prismPost.getReposts().toString());
+        InterfaceAction.setupRepostActionButton(this, repostActionButton, isPostReposted);
+        repostActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean performRepost = !CurrentUser.hasReposted(prismPost);
+                if (performRepost) {
+                    AlertDialog repostConfirmationAlertDialog = InterfaceAction.createRepostConfirmationAlertDialog(PrismPostDetailActivity.this, prismPost, repostActionButton, repostCountTextView);
+                    repostConfirmationAlertDialog.show();
+                } else {
+                    handleRepostButtonClick(false);
+                }
+            }
+        });
+
+        repostCountTextView.setText(String.valueOf(repostCount));
         repostCountTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -411,6 +508,123 @@ public class PrismPostDetailActivity extends AppCompatActivity {
     }
 
     /**
+     * Check reposted_posts_map HashMap if it contains the postId or not. If it contains
+     * the postId, then firebaseUser has already reposted the post and perform UNREPOST operation
+     * If it doesn't exist, firebaseUser has not reposted it yet, and perform REPOST operation
+     * Operation REPOST (performRepost = true): does 3 things. First it adds the the firebaseUser's
+     * uid to the REPOSTED_USERS table under the post. Then it adds the postId to the
+     * USER_REPOSTS table under the firebaseUser. Then it adds the postId and timestamp to the
+     * local reposted_posts_map HashMap so that recycler view can update
+     * Operation UNREPOST (performRepost = false): undoes above 3 things
+     * TODO: update comments
+     * @param performRepost
+     */
+    private void handleRepostButtonClick(boolean performRepost) {
+        performUIActivitiesForRepost(performRepost);
+
+        if (performRepost) {
+            DatabaseAction.performRepost(prismPost);
+        } else {
+            DatabaseAction.performUnrepost(prismPost);
+        }
+    }
+
+    private void performUIActivitiesForRepost(boolean performRepost) {
+        InterfaceAction.startRepostActionButtonAnimation(this, repostActionButton, performRepost);
+
+        repostCount = prismPost.getReposts() + (performRepost ? 1 : -1);
+        prismPost.setReposts(repostCount);
+        repostCountTextView.setText(String.valueOf(repostCount));
+
+    }
+
+    //TODO: Handle other UI for deleting a post
+    private void handleDeletionOfPost() {
+//        if (getItemCount() == 0) {
+//            RelativeLayout noMainPostsRelativeLayout = ((Activity) context)
+//                    .findViewById(R.id.no_main_posts_relative_layout);
+//            noMainPostsRelativeLayout.setVisibility(View.VISIBLE);
+//        }
+    }
+
+    /**
+     *
+     */
+    private void setupCollapseUpButton() {
+        animateCollapseUpButton();
+        hideCollapseUpButton(4000);
+
+        collapsingToolbarCollapseUpButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                hideCollapseUpButton(0);
+                appBarLayout.setExpanded(false);
+            }
+        });
+    }
+
+    /**
+     *
+     */
+    private void animateCollapseUpButton() {
+        collapsingToolbarCollapseUpButton.animate()
+                .scaleX(1.2f)
+                .scaleY(1.2f)
+                .setDuration(200)
+                .setInterpolator(new AccelerateDecelerateInterpolator())
+                .withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        collapsingToolbarCollapseUpButton.animate()
+                                .scaleX(1)
+                                .scaleY(1)
+                                .setDuration(800)
+                                .setInterpolator(new AccelerateDecelerateInterpolator())
+                                .withEndAction(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        animateCollapseUpButton();
+                                    }
+                                });
+                    }
+                });
+    }
+
+    /**
+     *
+     */
+    private void showCollapseUpButton(int millis) {
+        collapsingToolbarCollapseUpButton.postDelayed(new Runnable() {
+            public void run() {
+                collapsingToolbarCollapseUpButton.setVisibility(View.VISIBLE);
+                collapsingToolbarCollapseUpButton.animate()
+                        .alpha(0.7f)
+                        .setDuration(250)
+                        .start();
+            }
+        }, millis);
+    }
+
+    /**
+     *
+     */
+    private void hideCollapseUpButton(int millis) {
+        collapsingToolbarCollapseUpButton.postDelayed(new Runnable() {
+            public void run() {
+                collapsingToolbarCollapseUpButton.animate()
+                        .alpha(0f)
+                        .setDuration(250)
+                        .withEndAction(new Runnable() {
+                            @Override
+                            public void run() {
+                                collapsingToolbarCollapseUpButton.setVisibility(View.GONE);
+                            }
+                        });
+            }
+        }, millis);
+    }
+
+    /**
      * Three action buttons are shown for each PrismPost
      * Like button likes the PrismPost
      * Repost button reposts the PrismPost to the users profile
@@ -419,6 +633,7 @@ public class PrismPostDetailActivity extends AppCompatActivity {
     private void setupActionButtons() {
         setupLikeActionButton();
         setupRepostActionButton();
+        setupCollapseUpButton();
     }
 
     /**
@@ -426,6 +641,7 @@ public class PrismPostDetailActivity extends AppCompatActivity {
      */
     @SuppressLint("ClickableViewAccessibility")
     private void setupUIElements() {
+        setupAppBarLayout();
         setupToolbar();
         setupStatusBar();
 
@@ -441,6 +657,13 @@ public class PrismPostDetailActivity extends AppCompatActivity {
         setupPrismPostUserInfo();
         setupPrismPostImageView();
         setupActionButtons();
+    }
+
+    /**
+     * Shortcut for toasting a message
+     */
+    private void toast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
 }

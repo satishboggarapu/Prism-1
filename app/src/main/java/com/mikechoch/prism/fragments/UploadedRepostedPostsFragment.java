@@ -104,7 +104,7 @@ public class UploadedRepostedPostsFragment extends Fragment {
                 LinearLayout.LayoutParams one_params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
                 recyclerViewLinearLayout.setLayoutParams(one_params);
 
-                RecyclerView currentUserUploadedPostsRecyclerView = (RecyclerView) LayoutInflater.from(getActivity()).inflate(R.layout.user_uploaded_posts_recycler_view_layout, null);
+                RecyclerView currentUserUploadedPostsRecyclerView = (RecyclerView) LayoutInflater.from(getActivity()).inflate(R.layout.user_posts_column_recycler_view, null);
                 LinearLayoutManager recyclerViewLinearLayoutManager = new LinearLayoutManager(getActivity());
                 currentUserUploadedPostsRecyclerView.setLayoutManager(recyclerViewLinearLayoutManager);
                 UserPostsColumnRecyclerViewAdapter recyclerViewAdapter = new UserPostsColumnRecyclerViewAdapter(getActivity(), userUploadedPostsArrayLists.get(i));

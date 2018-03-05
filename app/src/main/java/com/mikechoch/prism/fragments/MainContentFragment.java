@@ -48,7 +48,7 @@ public class MainContentFragment extends Fragment {
     private TextView noMainPostsTextView;
     private RecyclerView mainContentRecyclerView;
     public static PrismPostRecyclerViewAdapter mainContentRecyclerViewAdapter;
-    private ProgressBar mainProgressBar;
+    private ProgressBar mainContentProgressBar;
 
     private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
     private SwipeRefreshLayout mainContentSwipeRefreshLayout;
@@ -89,7 +89,7 @@ public class MainContentFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.main_content_fragment_layout, container, false);
 
-        mainProgressBar = getActivity().findViewById(R.id.main_activity_progress_bar);
+        mainContentProgressBar = view.findViewById(R.id.main_content_progress_bar);
         noMainPostsRelativeLayout = view.findViewById(R.id.no_main_posts_relative_layout);
         noMainPostsTextView = view.findViewById(R.id.no_main_posts_text_view);
         noMainPostsTextView.setTypeface(sourceSansProLight);
@@ -207,7 +207,7 @@ public class MainContentFragment extends Fragment {
                     Log.i(Default.TAG_DB, Message.NO_DATA);
                     noMainPostsRelativeLayout.setVisibility(View.VISIBLE);
                     mainContentSwipeRefreshLayout.setRefreshing(false);
-                    mainProgressBar.setVisibility(View.GONE);
+                    mainContentProgressBar.setVisibility(View.GONE);
                 }
             }
 
@@ -284,7 +284,7 @@ public class MainContentFragment extends Fragment {
 
                     // gets called inside refreshData()
                     if (updateRecyclerViewAdapter) {
-                        mainProgressBar.setVisibility(View.GONE);
+                        mainContentProgressBar.setVisibility(View.GONE);
                         mainContentRecyclerViewAdapter.notifyDataSetChanged();
                     }
                 } else {

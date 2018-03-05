@@ -30,7 +30,7 @@ public class ToolbarPullDownLayout extends RelativeLayout {
     private float viewScale;
     private VelocityTracker velocityTracker = null;
 
-    private View parentView;
+    private ViewGroup parentView;
     private ViewGroup[] parentsScrollViews;
 
 
@@ -57,7 +57,7 @@ public class ToolbarPullDownLayout extends RelativeLayout {
     /**
      * Give context and the parent view
      */
-    public void addParentView(Context context, View view) {
+    public void addParentView(Context context, ViewGroup view) {
         this.context = context;
         this.parentView = view;
     }
@@ -104,6 +104,7 @@ public class ToolbarPullDownLayout extends RelativeLayout {
 
                 // Since ACTION_DOWN, disable scroll views from intercepting touch events
                 toggleScrollViewIntercepts(true);
+                toggleClickEventsOfViewGroup(parentView,false);
                 break;
             case MotionEvent.ACTION_UP:
                 // Check that the screen drag Y percentage threshold and velocity threshold booleans
@@ -128,6 +129,7 @@ public class ToolbarPullDownLayout extends RelativeLayout {
 
                 // Since ACTION_UP, enable scroll views from intercepting touch events
                 toggleScrollViewIntercepts(false);
+                toggleClickEventsOfViewGroup(parentView,true);
                 break;
             case MotionEvent.ACTION_MOVE:
                 // Update the X and Y coordinate on the screen where ACTION_MOVE occurred
@@ -175,5 +177,19 @@ public class ToolbarPullDownLayout extends RelativeLayout {
 
         // Handle the action for the custom click here
         return true;
+    }
+
+    /**
+     * Enables/Disables all child views of a view group
+     */
+    private void toggleClickEventsOfViewGroup(ViewGroup viewGroup, boolean enableClick) {
+        int childCount = viewGroup.getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            View view = viewGroup.getChildAt(i);
+            view.setEnabled(enableClick);
+            if (view instanceof ViewGroup) {
+                toggleClickEventsOfViewGroup((ViewGroup) view, enableClick);
+            }
+        }
     }
 }
