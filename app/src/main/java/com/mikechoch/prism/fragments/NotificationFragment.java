@@ -17,7 +17,11 @@ import android.widget.TextView;
 
 import com.google.firebase.database.DatabaseReference;
 import com.mikechoch.prism.R;
+import com.mikechoch.prism.adapter.PrismNotificationRecyclerViewAdapter;
 import com.mikechoch.prism.adapter.PrismPostRecyclerViewAdapter;
+import com.mikechoch.prism.attribute.Notification;
+
+import java.util.ArrayList;
 
 /**
  * Created by mikechoch on 1/22/18.
@@ -34,7 +38,7 @@ public class NotificationFragment extends Fragment {
     private RelativeLayout noNotificationRelativeLayout;
     private TextView noNotificationTextView;
     private RecyclerView notificationRecyclerView;
-    public static PrismPostRecyclerViewAdapter notificationRecyclerViewAdapter;
+    public static PrismNotificationRecyclerViewAdapter notificationRecyclerViewAdapter;
     private ProgressBar notificationProgressBar;
 
     private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
@@ -44,7 +48,7 @@ public class NotificationFragment extends Fragment {
     private int screenWidth;
     private int screenHeight;
 
-//    public static ArrayList<Notification> notificationArrayList;
+    public static ArrayList<Notification> notificationArrayList;
 
     public static final NotificationFragment newInstance() {
         NotificationFragment notificationFragment = new NotificationFragment();
@@ -75,7 +79,7 @@ public class NotificationFragment extends Fragment {
          * The RecyclerView being created below will show all of the most recent notifications
          * The notifications shown will be for likes, reposts, and following related actions
          */
-        notificationRecyclerView = view.findViewById(R.id.main_content_recycler_view);
+        notificationRecyclerView = view.findViewById(R.id.notification_recycler_view);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
         DefaultItemAnimator defaultItemAnimator = new DefaultItemAnimator();
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(getActivity(),
@@ -85,6 +89,25 @@ public class NotificationFragment extends Fragment {
         notificationRecyclerView.setItemAnimator(defaultItemAnimator);
         notificationRecyclerView.addItemDecoration(dividerItemDecoration);
         notificationRecyclerView.setItemViewCacheSize(20);
+
+        notificationArrayList = new ArrayList<>();
+        notificationArrayList.add(new Notification());
+        notificationArrayList.add(new Notification());
+        notificationArrayList.add(new Notification());
+        notificationArrayList.add(new Notification());
+        notificationArrayList.add(new Notification());
+
+        notificationRecyclerViewAdapter = new PrismNotificationRecyclerViewAdapter(getContext(), notificationArrayList, new int[]{screenWidth, screenHeight});
+        notificationRecyclerView.setAdapter(notificationRecyclerViewAdapter);
+
+        notificationSwipeRefreshLayout = view.findViewById(R.id.notification_swipe_refresh_layout);
+        notificationSwipeRefreshLayout.setColorSchemeResources(swipeRefreshLayoutColors);
+        notificationSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                notificationSwipeRefreshLayout.setRefreshing(false);
+            }
+        });
 
         return view;
     }

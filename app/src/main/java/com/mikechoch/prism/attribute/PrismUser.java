@@ -4,6 +4,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.mikechoch.prism.constants.Default;
+import com.mikechoch.prism.helper.Helper;
 
 /**
  * Created by mikechoch on 1/30/18.
@@ -34,7 +35,7 @@ public class PrismUser implements Parcelable {
     }
 
     public String getUsername() {
-        return username.replace(Default.USERNAME_PERIOD_REPLACE, Default.USERNAME_PERIOD);
+        return Helper.getFirebaseDecodedUsername(username);
     }
 
     public String getFullName() {

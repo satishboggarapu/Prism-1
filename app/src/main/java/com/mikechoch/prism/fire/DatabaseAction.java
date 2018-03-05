@@ -31,7 +31,7 @@ import java.util.Map;
 
 public class DatabaseAction {
 
-    // using firebaseUser here instead of prismUser because CurrentUser.prismUser might not be created
+    // Using firebaseUser here instead of prismUser because CurrentUser.prismUser might not be created
     private static String currentUserId = CurrentUser.firebaseUser.getUid();
     private static String currentUsername = CurrentUser.firebaseUser.getDisplayName();
     private static DatabaseReference currentUserReference = Default.USERS_REFERENCE.child(currentUserId);
@@ -39,8 +39,9 @@ public class DatabaseAction {
     private static DatabaseReference usersReference = Default.USERS_REFERENCE;
 
     /**
-     *
-     * @param prismPost
+     * Adds prismPost to CurrentUser's USER_LIKES section
+     * Adds userId to prismPost's LIKED_USERS section
+     * Performs like locally on CurrentUser
      */
     public static void performLike(PrismPost prismPost) {
         String postId = prismPost.getPostId();
@@ -59,8 +60,9 @@ public class DatabaseAction {
     }
 
     /**
-     *
-     * @param prismPost
+     * Removes prismPost to CurrentUser's USER_LIKES section
+     * Removes userId to prismPost's LIKED_USERS section
+     * Performs unlike locally on CurrentUser*
      */
     public static void performUnlike(PrismPost prismPost) {
         String postId = prismPost.getPostId();
@@ -78,8 +80,9 @@ public class DatabaseAction {
     }
 
     /**
-     *
-     * @param prismPost
+     * Adds prismPost to CurrentUser's USER_REPOSTS section
+     * Adds userId to prismPost's REPOSTED_USERS section
+     * Performs repost locally on CurrentUser
      */
     public static void performRepost(PrismPost prismPost) {
         String postId = prismPost.getPostId();
@@ -98,8 +101,9 @@ public class DatabaseAction {
     }
 
     /**
-     *
-     * @param prismPost
+     * Removes prismPost to CurrentUser's USER_REPOSTS section
+     * Removes userId to prismPost's REPOSTED_USERS section
+     * Performs unrepost locally on CurrentUser
      */
     public static void performUnrepost(PrismPost prismPost) {
         String postId = prismPost.getPostId();
@@ -117,8 +121,12 @@ public class DatabaseAction {
     }
 
     /**
-     *
-     * @param prismPost
+     * Removes prismPost image from Firebase Storage. When that task is
+     * successfully completed, the likers and reposters for the post
+     * are fetched and the postId is deleted under each liker and reposter's
+     * USER_LIKES and USER_REPOSTS section. Then the post is deleted under
+     * USER_UPLOADS for the post owner. And then the post itself is
+     * deleted from ALL_POSTS. Finally, the mainRecyclerViewAdapter is refreshed
      */
     public static void deletePost(PrismPost prismPost) {
         FirebaseStorage.getInstance().getReferenceFromUrl(prismPost.getImage())
@@ -142,8 +150,9 @@ public class DatabaseAction {
 
                                 allPostsReference.child(postId).removeValue();
 
+                                CurrentUser.deletePost(prismPost);
                                 PrismPostRecyclerViewAdapter.prismPostArrayList.remove(prismPost);
-                                notifyDataSetChanged();
+                                refreshMainRecyclerViewAdapter();
 
                             } else {
                                 Log.wtf(Default.TAG_DB, Message.NO_DATA);
@@ -165,8 +174,8 @@ public class DatabaseAction {
     }
 
     /**
-     *
-     * @param prismUser
+     * Adds prismUser's uid to CurrentUser's FOLLOWERS section and then
+     * adds CurrentUser's uid to prismUser's FOLLOWINGS section
      */
     public static void followUser(PrismUser prismUser) {
         DatabaseReference userReference = usersReference.child(prismUser.getUid());
@@ -175,12 +184,12 @@ public class DatabaseAction {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     userReference.child(Key.DB_REF_USER_FOLLOWERS)
-                            .child(CurrentUser.prismUser.getUsername())
-                            .setValue(CurrentUser.prismUser.getUid());
+                            .child(CurrentUser.prismUser.getUid())
+                            .setValue(CurrentUser.prismUser.getUsername());
 
-                    userReference.child(Key.DB_REF_USER_FOLLOWINGS)
-                            .child(prismUser.getUsername())
-                            .setValue(prismUser.getUid());
+                    currentUserReference.child(Key.DB_REF_USER_FOLLOWINGS)
+                            .child(prismUser.getUid())
+                            .setValue(prismUser.getUsername());
 
                     CurrentUser.followUser(prismUser);
 
@@ -197,8 +206,8 @@ public class DatabaseAction {
     }
 
     /**
-     *
-     * @param prismUser
+     * Removes prismUser's uid from CurrentUser's FOLLOWERS section and then
+     * removes CurrentUser's uid from prismUser's FOLLOWINGS section
      */
     public static void unfollowUser(PrismUser prismUser) {
         DatabaseReference userReference = usersReference.child(prismUser.getUid());
@@ -207,11 +216,11 @@ public class DatabaseAction {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     userReference.child(Key.DB_REF_USER_FOLLOWERS)
-                            .child(CurrentUser.prismUser.getUsername())
+                            .child(CurrentUser.prismUser.getUid())
                             .removeValue();
 
-                    userReference.child(Key.DB_REF_USER_FOLLOWINGS)
-                            .child(prismUser.getUsername())
+                    currentUserReference.child(Key.DB_REF_USER_FOLLOWINGS)
+                            .child(prismUser.getUid())
                             .removeValue();
 
                     CurrentUser.unfollowUser(prismUser);
@@ -229,7 +238,9 @@ public class DatabaseAction {
     }
 
     /**
-     *
+     * Creates prismUser for CurrentUser
+     * Then fetches CurrentUser's liked, reposted and uploaded posts
+     * And then refresh the mainRecyclerViewAdapter
      */
     static void fetchUserProfile() {
         HashMap<String, Long> liked_posts_map = new HashMap<>();
@@ -265,16 +276,17 @@ public class DatabaseAction {
                     allPostsReference.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
-                            ArrayList<PrismPost> userLikes = getPostDetails(dataSnapshot, usersSnapshot, liked_posts_map);
-                            ArrayList<PrismPost> userReposts = getPostDetails(dataSnapshot, usersSnapshot, reposted_posts_map);
-                            ArrayList<PrismPost> userUploads = getPostDetails(dataSnapshot, usersSnapshot, uploaded_posts_map);
+                            ArrayList<PrismPost> userLikes = getListOfPrismPosts(dataSnapshot, usersSnapshot, liked_posts_map);
+                            ArrayList<PrismPost> userReposts = getListOfPrismPosts(dataSnapshot, usersSnapshot, reposted_posts_map);
+                            ArrayList<PrismPost> userUploads = getListOfPrismPosts(dataSnapshot, usersSnapshot, uploaded_posts_map);
 
                             CurrentUser.likePosts(userLikes, liked_posts_map);
                             CurrentUser.repostPosts(userReposts, reposted_posts_map);
                             CurrentUser.uploadPosts(userUploads, uploaded_posts_map);
 
+                            // TODO: @Mike Is it ok to call these methods here?
                             CurrentUser.updateUserProfilePageUI();
-                            notifyDataSetChanged();
+                            refreshMainRecyclerViewAdapter();
                         }
 
                         @Override
@@ -293,15 +305,14 @@ public class DatabaseAction {
     }
 
     /**
-     *
-     * @param allPostsRefSnapshot
-     * @param usersSnapshot
-     * @param mapOfPostIds
-     * @return
+     * Takes in a hashMap of prismPost postIds and also takes in dataSnapshot
+     * referencing to `ALL_POSTS` and `USERS` and constructs PrismPost objects
+     * for each postId in the hashMap and puts all prismPost objects in a list.
+     * Gets called for getting user liked_posts, reposted_posts, and uploaded_posts
      */
-    private static ArrayList<PrismPost> getPostDetails(DataSnapshot allPostsRefSnapshot,
-                                                       DataSnapshot usersSnapshot,
-                                                       HashMap<String, Long> mapOfPostIds) {
+    private static ArrayList<PrismPost> getListOfPrismPosts(DataSnapshot allPostsRefSnapshot,
+                                                            DataSnapshot usersSnapshot,
+                                                            HashMap<String, Long> mapOfPostIds) {
         ArrayList<PrismPost> listOfPrismPosts = new ArrayList<>();
         for (Object key : mapOfPostIds.keySet()) {
             String postId = (String) key;
@@ -320,9 +331,9 @@ public class DatabaseAction {
     }
 
     /**
-     *
+     * Refresh mainContentFragment's recyclerViewAdapter
      */
-    static void notifyDataSetChanged() {
+    static void refreshMainRecyclerViewAdapter() {
         MainContentFragment.mainContentRecyclerViewAdapter.notifyDataSetChanged();
     }
 
@@ -334,9 +345,8 @@ class DeleteHelper {
     private static DatabaseReference usersReference = Default.USERS_REFERENCE;
 
     /**
-     *
-     * @param postSnapshot
-     * @param post
+     * Helper method that goes to all users who have liked the given
+     * prismPost and deletes the postId under their USER_LIKES section
      */
     static void deleteLikedUsers(DataSnapshot postSnapshot, PrismPost post) {
         HashMap<String, String> likedUsers = new HashMap<>();
@@ -352,9 +362,8 @@ class DeleteHelper {
     }
 
     /**
-     *
-     * @param postSnapshot
-     * @param post
+     * Helper method that goes to all users who have reposted the given
+     * prismPost and deletes the postId under their USER_REPOSTS section
      */
     static void deleteRepostedUsers(DataSnapshot postSnapshot, PrismPost post) {
         HashMap<String, String> repostedUsers = new HashMap<>();

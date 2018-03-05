@@ -74,7 +74,6 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
     private final int PRISM_POST_VIEW_TYPE = 1;
 
     private Context context;
-    private PrismPost prismPost;
     public static ArrayList<PrismPost> prismPostArrayList;
 
     private float scale;
