@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.view.ViewCompat;
@@ -49,7 +48,7 @@ public class UserPostsColumnRecyclerViewAdapter extends RecyclerView.Adapter<Use
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return new ViewHolder(LayoutInflater.from(context).inflate(R.layout.user_uploaded_post_recycler_view_item_layout, null));
+        return new ViewHolder(LayoutInflater.from(context).inflate(R.layout.user_post_column_recycler_view_item_layout, null));
     }
 
     @Override

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BlurMaskFilter;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
@@ -73,7 +74,6 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
     private final int PRISM_POST_VIEW_TYPE = 1;
 
     private Context context;
-    private PrismPost prismPost;
     public static ArrayList<PrismPost> prismPostArrayList;
 
     private float scale;
@@ -359,7 +359,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                     // TODO: Show more menu
                     // TODO: Decide what goes in more
                     boolean isCurrentUserThePostCreator = CurrentUser.firebaseUser.getUid().equals(prismPost.getPrismUser().getUid());
-                    AlertDialog morePrismPostAlertDialog = InterfaceAction.createMorePrismPostAlertDialog(context, isCurrentUserThePostCreator);
+                    AlertDialog morePrismPostAlertDialog = InterfaceAction.createMorePrismPostAlertDialog(context, prismPost, isCurrentUserThePostCreator);
                     morePrismPostAlertDialog.show();
                 }
             });
@@ -380,7 +380,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                     boolean performRepost = !CurrentUser.hasReposted(prismPost);
                     if (performRepost) {
                         repostIrisAnimationImageView.setVisibility(View.INVISIBLE);
-                        AlertDialog repostConfirmationAlertDialog = InterfaceAction.createRepostConfirmationAlertDialog(context);
+                        AlertDialog repostConfirmationAlertDialog = InterfaceAction.createRepostConfirmationAlertDialog(context, prismPost, repostButton, repostsCountTextView);
                         repostConfirmationAlertDialog.show();
                     } else {
                         handleRepostButtonClick(false);
@@ -406,8 +406,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         private void setupLikeActionButton() {
             InterfaceAction.setupLikeActionButton(context, likeHeartAnimationImageView, likeButton, isPostLiked);
 
-            String likeStringTail = Helper.getSingularOrPluralText(" like", likeCount);
-            likesCountTextView.setText(likeCount + likeStringTail);
+            String likeString = likeCount + Helper.getSingularOrPluralText(" like", likeCount);
+            likesCountTextView.setText(likeString);
 
             likeButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -443,8 +443,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             setupActionButtons();
         }
 
+        //TODO: Handle other UI for deleting a post
         private void handleDeletionOfPost() {
-            DatabaseAction.deletePost(prismPost);
             if (getItemCount() == 0) {
                     RelativeLayout noMainPostsRelativeLayout = ((Activity) context)
                             .findViewById(R.id.no_main_posts_relative_layout);
@@ -475,13 +475,13 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         }
 
         private void performUIActivitiesForLike(boolean performLike) {
-            likeCount = performLike ? likeCount + 1 : likeCount - 1;
-            String likeStringTail = Helper.getSingularOrPluralText(" like", likeCount);
-
             InterfaceAction.startLikeActionButtonAnimation(context, likeButton, performLike);
             InterfaceAction.startLikeActionAnimation(context, likeHeartAnimationImageView, performLike);
 
-            likesCountTextView.setText(likeCount + likeStringTail);
+            likeCount = performLike ? likeCount + 1 : likeCount - 1;
+            prismPost.setLikes(likeCount);
+            String likeString = likeCount + Helper.getSingularOrPluralText(" like", likeCount);
+            likesCountTextView.setText(likeString);
         }
 
 
@@ -508,13 +508,12 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         }
 
         private void performUIActivitiesForRepost(boolean performRepost) {
-            repostCount = performRepost ? repostCount + 1 : repostCount - 1;
-            String repostStringTail = Helper.getSingularOrPluralText(" repost", repostCount);
-
             InterfaceAction.startRepostActionButtonAnimation(context, repostButton, performRepost);
-            InterfaceAction.startRepostActionAnimation(repostIrisAnimationImageView, performRepost);
 
-            repostsCountTextView.setText(repostCount + repostStringTail);
+            repostCount = prismPost.getReposts() + (performRepost ? 1 : -1);
+            prismPost.setReposts(repostCount);
+            String repostString = repostCount + Helper.getSingularOrPluralText(" repost", repostCount);
+            repostsCountTextView.setText(repostString);
         }
 
     }
