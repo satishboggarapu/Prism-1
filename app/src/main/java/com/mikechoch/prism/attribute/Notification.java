@@ -10,7 +10,9 @@ public class Notification {
 
     private NotificationType type;
     private PrismPost prismPost;
-    private long timestamp;
+    private long actionTimestamp;
+    private PrismUser mostRecentUser;
+    private int otherUserCount;
     private boolean viewed;
 
 
@@ -18,11 +20,13 @@ public class Notification {
 
     }
 
-    public Notification(NotificationType type, PrismPost prismPost, long timestamp, boolean viewed) {
+    public Notification(NotificationType type, PrismPost prismPost, PrismUser mostRecentUser, long actionTimestamp, boolean viewed) {
         this.type = type;
         this.prismPost = prismPost;
-        this.timestamp = timestamp;
+        this.mostRecentUser = mostRecentUser;
+        this.actionTimestamp = actionTimestamp;
         this.viewed = viewed;
+
     }
 
     public NotificationType getType() {
@@ -41,12 +45,12 @@ public class Notification {
         this.prismPost = prismPost;
     }
 
-    public long getTimestamp() {
-        return timestamp;
+    public long getActionTimestamp() {
+        return actionTimestamp;
     }
 
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
+    public void setActionTimestamp(long actionTimestamp) {
+        this.actionTimestamp = actionTimestamp;
     }
 
     public boolean isViewed() {
@@ -55,5 +59,25 @@ public class Notification {
 
     public void setViewed(boolean viewed) {
         this.viewed = viewed;
+    }
+
+
+    public PrismUser getMostRecentUser() {
+        return mostRecentUser;
+    }
+
+    public void setMostRecentUser(PrismUser mostRecentUser) {
+        this.mostRecentUser = mostRecentUser;
+    }
+
+    public Integer getOtherUserCount() {
+        switch (type) {
+            case LIKE:
+                return prismPost.getLikes() > 1 ? prismPost.getLikes() - 1 : 0;
+            case REPOST:
+                return  prismPost.getReposts() > 1 ? prismPost.getReposts() -1 : 0;
+            default:
+                return 0;
+        }
     }
 }

@@ -18,6 +18,7 @@ import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.constants.Message;
 import com.mikechoch.prism.fragments.MainContentFragment;
 import com.mikechoch.prism.helper.Helper;
+import com.mikechoch.prism.type.NotificationType;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -45,18 +46,72 @@ public class DatabaseAction {
      */
     public static void performLike(PrismPost prismPost) {
         String postId = prismPost.getPostId();
-        long timestamp = Calendar.getInstance().getTimeInMillis();
+        long actionTimestamp = Calendar.getInstance().getTimeInMillis();
         DatabaseReference postReference = allPostsReference.child(postId);
 
         postReference.child(Key.DB_REF_POST_LIKED_USERS)
                 .child(currentUserId)
-                .setValue(currentUsername);
+                .setValue(actionTimestamp);
 
         currentUserReference.child(Key.DB_REF_USER_LIKES)
                 .child(postId)
-                .setValue(timestamp);
+                .setValue(actionTimestamp);
 
         CurrentUser.likePost(prismPost);
+
+        updateNotification(NotificationType.LIKE, prismPost, actionTimestamp);
+    }
+
+    private static void updateNotification(NotificationType type, PrismPost prismPost, long actionTimestamp) {
+        String notificationId = prismPost.getPostId() + type.getNotifIdSuffix();
+        DatabaseReference notificationReference = usersReference.child(prismPost.getUid())
+                .child(Key.DB_REF_USER_NOTIFICATIONS).child(notificationId);
+        String DB_REF = type.getDatabaseRefKey();
+        switch (type) {
+            case LIKE:
+            case REPOST:
+                // like or repost
+                notificationReference.child(Key.NOTIFICATION_MOST_RECENT_USER)
+                        .setValue(CurrentUser.prismUser.getUid());
+                notificationReference.child(Key.NOTIFICATION_ACTION_TIMESTAMP)
+                        .setValue(actionTimestamp);
+                notificationReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (!dataSnapshot.hasChild(Key.NOTIFICATION_VIEWED_TIMESTAMP)) {
+                            notificationReference.child(Key.NOTIFICATION_VIEWED_TIMESTAMP)
+                                    .setValue(0);
+                        }
+                    }
+
+                    @Override public void onCancelled(DatabaseError databaseError) { }
+                });
+                break;
+            case UNLIKE:
+            case UNREPOST:
+                allPostsReference.child(prismPost.getPostId()).child(DB_REF).orderByValue().limitToLast(1)
+                        .addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                if (dataSnapshot.exists()) {
+                                    String previousRecentUid = dataSnapshot
+                                            .getChildren().iterator().next().getKey();
+                                    long previousActionTimestamp = (long) dataSnapshot
+                                            .getChildren().iterator().next().getValue();
+
+                                    notificationReference.child(Key.NOTIFICATION_MOST_RECENT_USER)
+                                            .setValue(previousRecentUid);
+                                    notificationReference.child(Key.NOTIFICATION_ACTION_TIMESTAMP)
+                                            .setValue(previousActionTimestamp);
+                                } else {
+                                    notificationReference.removeValue();
+                                }
+                            }
+
+                            @Override public void onCancelled(DatabaseError databaseError) { }
+                        });
+                break;
+        }
     }
 
     /**
@@ -67,7 +122,7 @@ public class DatabaseAction {
     public static void performUnlike(PrismPost prismPost) {
         String postId = prismPost.getPostId();
         DatabaseReference postReference = allPostsReference.child(postId);
-
+        long timestamp = Calendar.getInstance().getTimeInMillis();
         postReference.child(Key.DB_REF_POST_LIKED_USERS)
                 .child(currentUserId)
                 .removeValue();
@@ -77,6 +132,8 @@ public class DatabaseAction {
                 .removeValue();
 
         CurrentUser.unlikePost(prismPost);
+
+        updateNotification(NotificationType.UNLIKE, prismPost, timestamp);
     }
 
     /**
@@ -91,7 +148,7 @@ public class DatabaseAction {
 
         postReference.child(Key.DB_REF_POST_REPOSTED_USERS)
                 .child(currentUserId)
-                .setValue(currentUsername);
+                .setValue(timestamp);
 
         currentUserReference.child(Key.DB_REF_USER_REPOSTS)
                 .child(postId)
@@ -179,17 +236,18 @@ public class DatabaseAction {
      */
     public static void followUser(PrismUser prismUser) {
         DatabaseReference userReference = usersReference.child(prismUser.getUid());
+        long timestamp = Calendar.getInstance().getTimeInMillis();
         userReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     userReference.child(Key.DB_REF_USER_FOLLOWERS)
                             .child(CurrentUser.prismUser.getUid())
-                            .setValue(CurrentUser.prismUser.getUsername());
+                            .setValue(timestamp);
 
                     currentUserReference.child(Key.DB_REF_USER_FOLLOWINGS)
                             .child(prismUser.getUid())
-                            .setValue(prismUser.getUsername());
+                            .setValue(timestamp);
 
                     CurrentUser.followUser(prismUser);
 

@@ -136,4 +136,6 @@ public class Helper {
     public static String getFirebaseDecodedUsername(String encodedUsername) {
         return encodedUsername.replace(Default.USERNAME_PERIOD_REPLACE, Default.USERNAME_PERIOD);
     }
+
+
 }
