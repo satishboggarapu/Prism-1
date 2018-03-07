@@ -71,17 +71,18 @@ public class DatabaseAction {
             case LIKE:
             case REPOST:
                 // like or repost
-                notificationReference.child(Key.NOTIFICATION_MOST_RECENT_USER)
-                        .setValue(CurrentUser.prismUser.getUid());
-                notificationReference.child(Key.NOTIFICATION_ACTION_TIMESTAMP)
-                        .setValue(actionTimestamp);
                 notificationReference.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (!dataSnapshot.hasChild(Key.NOTIFICATION_VIEWED_TIMESTAMP)) {
-                            notificationReference.child(Key.NOTIFICATION_VIEWED_TIMESTAMP)
-                                    .setValue(0);
+                        long viewedTimestamp = 0;
+                        if (dataSnapshot.hasChild(Key.NOTIFICATION_VIEWED_TIMESTAMP)) {
+                            viewedTimestamp = (long) dataSnapshot.child(Key.NOTIFICATION_VIEWED_TIMESTAMP).getValue();
                         }
+                        HashMap<String, Object> notification = new HashMap<>();
+                        notification.put(Key.NOTIFICATION_MOST_RECENT_USER, CurrentUser.prismUser.getUid());
+                        notification.put(Key.NOTIFICATION_ACTION_TIMESTAMP, actionTimestamp);
+                        notification.put(Key.NOTIFICATION_VIEWED_TIMESTAMP, viewedTimestamp);
+                        notificationReference.setValue(notification);
                     }
 
                     @Override public void onCancelled(DatabaseError databaseError) { }
@@ -98,11 +99,10 @@ public class DatabaseAction {
                                             .getChildren().iterator().next().getKey();
                                     long previousActionTimestamp = (long) dataSnapshot
                                             .getChildren().iterator().next().getValue();
-
-                                    notificationReference.child(Key.NOTIFICATION_MOST_RECENT_USER)
-                                            .setValue(previousRecentUid);
-                                    notificationReference.child(Key.NOTIFICATION_ACTION_TIMESTAMP)
-                                            .setValue(previousActionTimestamp);
+                                    HashMap<String, Object> updatedNotification = new HashMap<>();
+                                    updatedNotification.put(Key.NOTIFICATION_MOST_RECENT_USER, previousRecentUid);
+                                    updatedNotification.put(Key.NOTIFICATION_ACTION_TIMESTAMP, actionTimestamp);
+                                    notificationReference.updateChildren(updatedNotification);
                                 } else {
                                     notificationReference.removeValue();
                                 }

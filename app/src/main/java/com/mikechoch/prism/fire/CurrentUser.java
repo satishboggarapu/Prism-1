@@ -25,6 +25,7 @@ import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.attribute.PrismUser;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
+import com.mikechoch.prism.fragments.NotificationFragment;
 import com.mikechoch.prism.helper.Helper;
 import com.mikechoch.prism.type.NotificationType;
 
@@ -240,95 +241,28 @@ public class CurrentUser {
         notifications = new ArrayList<>();
 
         currentUserReference.child(Key.DB_REF_USER_NOTIFICATIONS)
+                .orderByChild(Key.NOTIFICATION_ACTION_TIMESTAMP)
+                .limitToLast(50)
                 .addChildEventListener(new ChildEventListener() {
                     @Override
                     public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                        String notificationId = dataSnapshot.getKey();
-                        NotificationType type = NotificationType.getNotificationType(notificationId);
-                        if (type == null) return;   // safety check
-
-                        String postId = NotificationType.getNotificationPostId(type, notificationId);
-                        String mostRecentUid = (String) dataSnapshot.child(Key.NOTIFICATION_MOST_RECENT_USER).getValue();
-
-                        long actionTimestamp = (long) dataSnapshot
-                                .child(Key.NOTIFICATION_ACTION_TIMESTAMP).getValue();
-                        long viewedTimestamp = (long) dataSnapshot
-                                .child(Key.NOTIFICATION_VIEWED_TIMESTAMP).getValue();
-                        boolean viewed = viewedTimestamp > actionTimestamp;
-
-                        allPostReference.child(postId).addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot postSnapshot) {
-                                if (postSnapshot.exists()) {
-                                    PrismPost prismPost = Helper.constructPrismPostObject(postSnapshot);
-                                    prismPost.setPrismUser(CurrentUser.prismUser);
-                                    DatabaseReference mostRecentUserRef = Default.USERS_REFERENCE.child(mostRecentUid);
-                                    mostRecentUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(DataSnapshot userSnapshot) {
-                                            PrismUser mostRecentUser = Helper.constructPrismUserObject(userSnapshot);
-                                            Notification notification = new Notification(
-                                                    type, prismPost, mostRecentUser, actionTimestamp, viewed);
-
-                                            notifications_map.put(notificationId, notification);
-                                            notifications.add(notification);
-                                        }
-
-                                        @Override public void onCancelled(DatabaseError databaseError) { }
-                                    });
-
-                                }
-                            }
-
-                            @Override public void onCancelled(DatabaseError databaseError) { }
-                        });
+                       generateNotification(dataSnapshot, true);
 
                     }
 
                     @Override
                     public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                        String notificationId = dataSnapshot.getKey();
-                        NotificationType type = NotificationType.getNotificationType(notificationId);
-                        if (type == null) return;
-
-                        String mostRecentUid = (String) dataSnapshot.child(Key.NOTIFICATION_MOST_RECENT_USER).getValue();
-
-                        long actionTimestamp = (long) dataSnapshot
-                                .child(Key.NOTIFICATION_ACTION_TIMESTAMP).getValue();
-                        long viewedTimestamp = (long) dataSnapshot
-                                .child(Key.NOTIFICATION_VIEWED_TIMESTAMP).getValue();
-                        boolean viewed = viewedTimestamp > actionTimestamp;
-
-                        Notification oldNotification = notifications_map.get(notificationId);
-
-                        DatabaseReference mostRecentUserRef = Default.USERS_REFERENCE.child(mostRecentUid);
-                        mostRecentUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot userSnapshot) {
-                                PrismUser mostRecentUser = Helper.constructPrismUserObject(userSnapshot);
-
-                                Notification updatedNotification = new Notification();
-                                updatedNotification.setType(oldNotification.getType());
-                                updatedNotification.setPrismPost(oldNotification.getPrismPost());
-                                updatedNotification.setMostRecentUser(mostRecentUser);
-                                updatedNotification.setActionTimestamp(actionTimestamp);
-                                updatedNotification.setViewed(viewed);
-
-
-                                notifications_map.put(notificationId, updatedNotification);
-                                notifications.remove(oldNotification);
-                                notifications.add(updatedNotification);
-                            }
-
-                            @Override public void onCancelled(DatabaseError databaseError) { }
-                        });
-
+                        generateNotification(dataSnapshot, false);
 
                     }
 
                     @Override
                     public void onChildRemoved(DataSnapshot dataSnapshot) {
-                        dataSnapshot.exists();
+                        String notificationId = dataSnapshot.getKey();
+                        Notification notification = notifications_map.get(notificationId);
+                        notifications_map.remove(notificationId);
+                        notifications.remove(notification);
+                        refreshNotificationRecyclerViewAdapter();
                     }
 
                     @Override
@@ -341,6 +275,59 @@ public class CurrentUser {
                         Log.e(Default.TAG_DB, databaseError.getMessage(), databaseError.toException());
                     }
                 });
+    }
+
+    private static void refreshNotificationRecyclerViewAdapter() {
+        if (NotificationFragment.notificationRecyclerViewAdapter != null) {
+            NotificationFragment.notificationRecyclerViewAdapter.notifyDataSetChanged();
+        }
+    }
+
+    private static void generateNotification(DataSnapshot dataSnapshot, boolean isNewNotification) {
+        String notificationId = dataSnapshot.getKey();
+        NotificationType type = NotificationType.getNotificationType(notificationId);
+        String postId = NotificationType.getNotificationPostId(type, notificationId);
+        String mostRecentUid = (String) dataSnapshot.child(Key.NOTIFICATION_MOST_RECENT_USER).getValue();
+
+        allPostReference.child(postId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot postSnapshot) {
+                if (postSnapshot.exists()) {
+                    PrismPost prismPost = Helper.constructPrismPostObject(postSnapshot);
+                    prismPost.setPrismUser(CurrentUser.prismUser);
+                    DatabaseReference mostRecentUserRef = Default.USERS_REFERENCE.child(mostRecentUid);
+                    mostRecentUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot userSnapshot) {
+                            PrismUser mostRecentUser = Helper.constructPrismUserObject(userSnapshot);
+                            long mostRecentActionTimestamp = (long) postSnapshot
+                                    .child(type.getDatabaseRefKey())
+                                    .child(mostRecentUid).getValue();
+                            long viewedTimestamp = (long) dataSnapshot
+                                    .child(Key.NOTIFICATION_VIEWED_TIMESTAMP).getValue();
+                            boolean viewed = viewedTimestamp > mostRecentActionTimestamp;
+
+                            Notification notification = new Notification(
+                                    type, prismPost, mostRecentUser, mostRecentActionTimestamp, viewed);
+
+                            if (!isNewNotification) {
+                                Notification oldNotification = notifications_map.get(notificationId);
+                                notifications.remove(oldNotification);
+                            }
+                            notifications.add(0, notification);
+                            notifications_map.put(notificationId, notification);
+
+                            refreshNotificationRecyclerViewAdapter();
+                        }
+
+                        @Override public void onCancelled(DatabaseError databaseError) { }
+                    });
+
+                }
+            }
+
+            @Override public void onCancelled(DatabaseError databaseError) { }
+        });
     }
 
 
@@ -363,6 +350,14 @@ public class CurrentUser {
      */
     public static ArrayList<PrismPost> getUserReposts() {
         return reposted_posts;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public static ArrayList<Notification> getNotifications() {
+        return notifications;
     }
 
     /**

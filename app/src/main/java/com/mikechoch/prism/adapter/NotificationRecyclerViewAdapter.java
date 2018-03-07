@@ -1,45 +1,22 @@
 package com.mikechoch.prism.adapter;
 
-import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.Typeface;
-import android.support.annotation.Nullable;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.widget.RecyclerView;
-import android.view.GestureDetector;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.DataSource;
-import com.bumptech.glide.load.engine.GlideException;
-import com.bumptech.glide.request.RequestListener;
-import com.bumptech.glide.request.RequestOptions;
-import com.bumptech.glide.request.target.BitmapImageViewTarget;
-import com.bumptech.glide.request.target.Target;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.storage.StorageReference;
-import com.mikechoch.prism.InterfaceAction;
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.activity.DisplayUsersActivity;
-import com.mikechoch.prism.activity.PrismUserProfileActivity;
 import com.mikechoch.prism.attribute.Notification;
-import com.mikechoch.prism.attribute.PrismPost;
+import com.mikechoch.prism.attribute.PrismUser;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
-import com.mikechoch.prism.fire.CurrentUser;
-import com.mikechoch.prism.fire.DatabaseAction;
 import com.mikechoch.prism.helper.Helper;
 
 import java.util.ArrayList;
@@ -48,7 +25,7 @@ import java.util.ArrayList;
  * Created by mikechoch on 1/21/18.
  */
 
-public class PrismNotificationRecyclerViewAdapter extends RecyclerView.Adapter<PrismNotificationRecyclerViewAdapter.ViewHolder> {
+public class NotificationRecyclerViewAdapter extends RecyclerView.Adapter<NotificationRecyclerViewAdapter.ViewHolder> {
 
     /*
      * Global variables
@@ -63,7 +40,7 @@ public class PrismNotificationRecyclerViewAdapter extends RecyclerView.Adapter<P
     private int screenHeight;
 
 
-    public PrismNotificationRecyclerViewAdapter(Context context, ArrayList<Notification> notificationArrayList, int[] screenDimens) {
+    public NotificationRecyclerViewAdapter(Context context, ArrayList<Notification> notificationArrayList, int[] screenDimens) {
         this.context = context;
         this.notificationArrayList = notificationArrayList;
         this.screenWidth = screenDimens[0];
@@ -135,7 +112,8 @@ public class PrismNotificationRecyclerViewAdapter extends RecyclerView.Adapter<P
          *
          */
         private void populateUIElements() {
-
+            String notificationMessage = Helper.constructNotificationMessage(notification);
+            notificationDescriptionTextView.setText(notificationMessage);
         }
     }
 }
