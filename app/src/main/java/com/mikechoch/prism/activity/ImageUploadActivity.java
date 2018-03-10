@@ -44,12 +44,6 @@ public class ImageUploadActivity extends AppCompatActivity {
     /*
      * Global variables
      */
-
-    private String AUTHORITY = "media";
-    private String CONTENT_AUTHORITY_SLASH = "content://" + AUTHORITY + "/";
-    private Uri EXTERNAL_CONTENT_URI =
-            getContentUri("external");
-
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
     private int screenWidth;
@@ -238,74 +232,8 @@ public class ImageUploadActivity extends AppCompatActivity {
 //        ByteArrayOutputStream bytes = new ByteArrayOutputStream(inBitmap.getByteCount());
 //        inBitmap.compress(Bitmap.CompressFormat.PNG, 100, bytes);
 //        String path = MediaStore.Images.Media.insertImage(this.getContentResolver(), inBitmap, null, null);
-        String path = insertImage(this.getContentResolver(), inBitmap, null, null);
+        String path = BitmapHelper.insertImage(this.getContentResolver(), inBitmap, null, null);
         return Uri.parse(path);
-    }
-
-    /**
-     *
-     * @param volumeName
-     * @return
-     */
-    private Uri getContentUri(String volumeName) {
-        return Uri.parse(CONTENT_AUTHORITY_SLASH + volumeName +
-                "/images/media");
-    }
-
-    /**
-     *
-     * @param cr
-     * @param source
-     * @param title
-     * @param description
-     * @return
-     */
-    private String insertImage(ContentResolver cr, Bitmap source,
-                                String title, String description) {
-        ContentValues values = new ContentValues();
-        values.put(MediaStore.Images.Media.TITLE, title);
-        values.put(MediaStore.Images.Media.DESCRIPTION, description);
-        values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
-
-        Uri url = null;
-        String stringUrl = null;    /* value to be returned */
-
-        try {
-            url = cr.insert(EXTERNAL_CONTENT_URI, values);
-
-            if (source != null) {
-                OutputStream imageOut = cr.openOutputStream(url);
-                try {
-                    source.compress(Bitmap.CompressFormat.JPEG, 100, imageOut);
-                } finally {
-                    imageOut.close();
-                }
-
-                long id = ContentUris.parseId(url);
-                // Wait until MINI_KIND thumbnail is generated.
-                Bitmap miniThumb = MediaStore.Images.Thumbnails.getThumbnail(cr, id,
-                        MediaStore.Images.Thumbnails.MINI_KIND, null);
-                // This is for backward compatibility.
-//                Bitmap microThumb = StoreThumbnail(cr, miniThumb, id, 50F, 50F,
-//                        MediaStore.Images.Thumbnails.MICRO_KIND);
-            } else {
-//                Log.e(TAG, "Failed to create thumbnail, removing original");
-                cr.delete(url, null, null);
-                url = null;
-            }
-        } catch (Exception e) {
-//            Log.e(TAG, "Failed to insert image", e);
-            if (url != null) {
-                cr.delete(url, null, null);
-                url = null;
-            }
-        }
-
-        if (url != null) {
-            stringUrl = url.toString();
-        }
-
-        return stringUrl;
     }
 
     /**
