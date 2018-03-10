@@ -10,6 +10,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
@@ -20,13 +21,19 @@ import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
+import android.transition.Transition;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -46,6 +53,8 @@ import com.mikechoch.prism.fire.CurrentUser;
 import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.fire.DatabaseAction;
 import com.mikechoch.prism.helper.Helper;
+
+import java.text.DecimalFormat;
 
 
 /**
@@ -89,6 +98,7 @@ public class PrismPostDetailActivity extends AppCompatActivity {
     private TextView likesCountTextView;
     private ImageView repostActionButton;
     private TextView repostCountTextView;
+    private LinearLayout detailImageLinearLayout;
     private ImageView detailImageView;
     private RelativeLayout userRelativeLayout;
     private ImageView detailUserProfilePictureImageView;
@@ -97,8 +107,23 @@ public class PrismPostDetailActivity extends AppCompatActivity {
     private TextView detailPrismPostDescriptionTextView;
     private TextView detailPrismPostTagsTextView;
     private ImageView collapsingToolbarCollapseUpButton;
+    private ImageView collapsingToolbarDragArrow;
 
     private PrismPost prismPost;
+
+    private ScaleGestureDetector mScaleDetector;
+    private float startDistanceChange;
+    private float totalDistanceChange;
+    private boolean isZooming = false;
+
+    private Handler collapseUpButtonHandler = new Handler();
+    private Runnable showCollapseUpButtonRunnable;
+    private Runnable hideCollapseUpButtonRunnable;
+    private Handler dragArrowHandler = new Handler();
+    private Runnable showDragArrowRunnable;
+    private Runnable hideDragArrowRunnable;
+    private boolean shouldCollapseUpButtonShow = false;
+    private Menu menu;
 
 
     @Override
@@ -106,12 +131,14 @@ public class PrismPostDetailActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.prism_post_detail_menu, menu);
         for (int i = 0; i < menu.size(); i++) {
             MenuItem menuItem = menu.getItem(i);
+            menuItem.setVisible(false);
             Drawable drawable = menuItem.getIcon();
             if (drawable != null) {
                 drawable.mutate();
                 drawable.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
             }
         }
+        this.menu = menu;
         return true;
     }
 
@@ -163,6 +190,7 @@ public class PrismPostDetailActivity extends AppCompatActivity {
         likesCountTextView = findViewById(R.id.prism_post_detail_like_count);
         repostActionButton = findViewById(R.id.prism_post_detail_repost_action_button);
         repostCountTextView = findViewById(R.id.prism_post_detail_repost_count);
+        detailImageLinearLayout = findViewById(R.id.prism_post_detail_image_linear_layout);
         detailImageView = findViewById(R.id.prism_post_detail_image_view);
         userRelativeLayout = findViewById(R.id.prism_post_detail_user_relative_layout);
         detailUserProfilePictureImageView = findViewById(R.id.prism_post_detail_user_profile_picture_image_view);
@@ -171,6 +199,7 @@ public class PrismPostDetailActivity extends AppCompatActivity {
         detailPrismPostDescriptionTextView = findViewById(R.id.prism_post_description);
         detailPrismPostTagsTextView = findViewById(R.id.prism_post_tags);
         collapsingToolbarCollapseUpButton = findViewById(R.id.collapsing_toolbar_collapse_up_button);
+        collapsingToolbarDragArrow = findViewById(R.id.collapsing_toolbar_drag_arrow);
 
         Bundle extras = getIntent().getExtras();
         prismPost = extras.getParcelable("PrismPostDetail");
@@ -192,6 +221,42 @@ public class PrismPostDetailActivity extends AppCompatActivity {
         if (repostCount == null) repostCount = 0;
 
         setupUIElements();
+
+        Transition sharedElementEnterTransition = getWindow().getSharedElementEnterTransition();
+        sharedElementEnterTransition.addListener(new Transition.TransitionListener() {
+            @Override
+            public void onTransitionStart(Transition transition) {
+
+            }
+
+            @Override
+            public void onTransitionEnd(Transition transition) {
+                for (int i = 0; i < menu.size(); i++) {
+                    MenuItem menuItem = menu.getItem(i);
+                    menuItem.setVisible(true);
+                }
+
+                showCollapseUpButton(0);
+                showDragArrow(0);
+                hideCollapseUpButton(4000);
+                hideDragArrow(3000);
+            }
+
+            @Override
+            public void onTransitionCancel(Transition transition) {
+
+            }
+
+            @Override
+            public void onTransitionPause(Transition transition) {
+
+            }
+
+            @Override
+            public void onTransitionResume(Transition transition) {
+
+            }
+        });
     }
 
     @Override
@@ -253,10 +318,15 @@ public class PrismPostDetailActivity extends AppCompatActivity {
                 } else if (Math.abs(verticalOffset) == 0) {
                     // Expanded
 //                    toast("Expanded");
-                    showCollapseUpButton(0);
+                    if (shouldCollapseUpButtonShow) {
+                        shouldCollapseUpButtonShow = false;
+                        showCollapseUpButton(0);
+                        hideCollapseUpButton(4000);
+                    }
                 } else {
                     // Between
 //                    toast("Between");
+                    shouldCollapseUpButtonShow = true;
                     hideCollapseUpButton(0);
                 }
             }
@@ -337,16 +407,18 @@ public class PrismPostDetailActivity extends AppCompatActivity {
                         boolean isScrollImage = (resource.getHeight() + userInfoHeight) >= screenHeight;
                         int toolbarHeight = isScrollImage ? (screenHeight - getBottomNavigationBarHeight() - userInfoHeight) : resource.getHeight();
                         boolean isToolbarHeightNegative = toolbarHeight <= getActionBarHeight();
-                        toolbar.getLayoutParams().height = isToolbarHeightNegative ? getActionBarHeight() : toolbarHeight;
+//                        toolbar.getLayoutParams().height = isToolbarHeightNegative ? getActionBarHeight() : toolbarHeight;
 
+                        int toolbarTopMarginPadding = getStatusBarHeight();
                         if (isScrollImage) {
-                            showCollapseUpButton(250);
-
+                            toolbar.getLayoutParams().height = getActionBarHeight();
+                            int toolbarBottomMargin = (isToolbarHeightNegative ? getActionBarHeight() : toolbarHeight) - getActionBarHeight();
                             CollapsingToolbarLayout.LayoutParams params = (CollapsingToolbarLayout.LayoutParams) toolbar.getLayoutParams();
-                            params.setMargins(0, getStatusBarHeight(), 0, 0);
+                            params.setMargins(0, toolbarTopMarginPadding, 0, toolbarBottomMargin);
                             toolbar.setLayoutParams(params);
                         } else {
-                            toolbar.setPadding(0, getStatusBarHeight(), 0, 0);
+                            toolbar.getLayoutParams().height = getStatusBarHeight() + getActionBarHeight();
+                            toolbar.setPadding(0, toolbarTopMarginPadding, 0, 0);
                         }
 
                         // Set scroll flags for collapsingToolbarLayout containing the PrismPost image
@@ -359,6 +431,85 @@ public class PrismPostDetailActivity extends AppCompatActivity {
                     }
                 })
                 .into(detailImageView);
+
+        mScaleDetector = new ScaleGestureDetector(this, new MyPinchListener());
+        detailImageLinearLayout.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+//                        System.out.println("DOWN");
+                        break;
+                    case MotionEvent.ACTION_UP:
+//                        System.out.println("UP");
+                        isZooming = false;
+                        detailImageView.animate()
+                                .scaleX(1f)
+                                .scaleY(1f)
+                                .setDuration(150);
+                        totalDistanceChange = 0;
+                        toolbarPullDownLayout.disable(false);
+                        prismPostDetailScrollView.requestDisallowInterceptTouchEvent(false);
+                        prismPostDetailNestedScrollView.requestDisallowInterceptTouchEvent(false);
+                        break;
+                }
+
+                if (event.getPointerCount() == 2 && !isZooming) {
+                    toolbarPullDownLayout.disable(true);
+                    prismPostDetailScrollView.requestDisallowInterceptTouchEvent(true);
+                    prismPostDetailNestedScrollView.requestDisallowInterceptTouchEvent(true);
+                    isZooming = true;
+                    float firstTouchX = event.getX(0);
+                    float firstTouchY = event.getY(0);
+                    float secondTouchX = event.getX(1);
+                    float secondTouchY = event.getY(1);
+
+                    float pivotPointX;
+                    if (firstTouchX < secondTouchX) {
+                        pivotPointX = firstTouchX + Math.abs(firstTouchX - secondTouchX);
+                    } else {
+                        pivotPointX = firstTouchX - Math.abs(firstTouchX - secondTouchX);
+                    }
+
+                    float pivotPointY;
+                    if (firstTouchY < secondTouchY) {
+                        pivotPointY = firstTouchY + Math.abs(firstTouchY - secondTouchY);
+                    } else {
+                        pivotPointY = firstTouchY - Math.abs(firstTouchY - secondTouchY);
+                    }
+                    detailImageView.setPivotX(pivotPointX);
+                    detailImageView.setPivotY(pivotPointY);
+
+                    double distanceX = Math.pow(Math.abs(firstTouchX - secondTouchX), 2);
+                    double distanceY = Math.pow(Math.abs(firstTouchY - secondTouchY), 2);
+                    startDistanceChange = (float) Math.sqrt(distanceX + distanceY);
+                }
+
+                mScaleDetector.onTouchEvent(event);
+                return true;
+            }
+        });
+    }
+
+    /**
+     *
+     */
+    public class MyPinchListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+        @Override
+        public boolean onScale(ScaleGestureDetector detector) {
+//            Log.d("TAG", "PINCH! OUCH!");
+            totalDistanceChange += (detector.getCurrentSpan() - detector.getPreviousSpan());
+//            System.out.println(startDistanceChange);
+//            System.out.println(totalDistanceChange);
+            DecimalFormat df = new DecimalFormat("0.##");
+            float imageScale = Float.parseFloat(df.format((double) ((startDistanceChange + totalDistanceChange) / startDistanceChange)));
+//            System.out.println(imageScale);
+            if (imageScale >= 1) {
+                detailImageView.setScaleX(imageScale);
+                detailImageView.setScaleY(imageScale);
+            }
+            return true;
+        }
     }
 
     /**
@@ -551,9 +702,6 @@ public class PrismPostDetailActivity extends AppCompatActivity {
      *
      */
     private void setupCollapseUpButton() {
-        animateCollapseUpButton();
-        hideCollapseUpButton(4000);
-
         collapsingToolbarCollapseUpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -585,7 +733,7 @@ public class PrismPostDetailActivity extends AppCompatActivity {
                                     public void run() {
                                         animateCollapseUpButton();
                                     }
-                                });
+                                }).start();
                     }
                 });
     }
@@ -594,22 +742,30 @@ public class PrismPostDetailActivity extends AppCompatActivity {
      *
      */
     private void showCollapseUpButton(int millis) {
-        collapsingToolbarCollapseUpButton.postDelayed(new Runnable() {
+        collapseUpButtonHandler.removeCallbacks(showCollapseUpButtonRunnable);
+        showCollapseUpButtonRunnable = new Runnable() {
             public void run() {
                 collapsingToolbarCollapseUpButton.setVisibility(View.VISIBLE);
                 collapsingToolbarCollapseUpButton.animate()
                         .alpha(0.7f)
                         .setDuration(250)
-                        .start();
+                        .withEndAction(new Runnable() {
+                            @Override
+                            public void run() {
+                                animateCollapseUpButton();
+                            }
+                }).start();
             }
-        }, millis);
+        };
+        collapseUpButtonHandler.postDelayed(showCollapseUpButtonRunnable, millis);
     }
 
     /**
      *
      */
     private void hideCollapseUpButton(int millis) {
-        collapsingToolbarCollapseUpButton.postDelayed(new Runnable() {
+        collapseUpButtonHandler.removeCallbacks(hideCollapseUpButtonRunnable);
+        hideCollapseUpButtonRunnable = new Runnable() {
             public void run() {
                 collapsingToolbarCollapseUpButton.animate()
                         .alpha(0f)
@@ -619,9 +775,93 @@ public class PrismPostDetailActivity extends AppCompatActivity {
                             public void run() {
                                 collapsingToolbarCollapseUpButton.setVisibility(View.GONE);
                             }
-                        });
+                        }).start();
             }
-        }, millis);
+        };
+        collapseUpButtonHandler.postDelayed(hideCollapseUpButtonRunnable, millis);
+    }
+
+    /**
+     *
+     */
+    private void setupDragArrow() {
+        CollapsingToolbarLayout.LayoutParams params = (CollapsingToolbarLayout.LayoutParams) collapsingToolbarDragArrow.getLayoutParams();;
+        params.setMargins(0, getStatusBarHeight() + params.topMargin, 0, 0);
+        collapsingToolbarDragArrow.setLayoutParams(params);
+    }
+
+    /**
+     *
+     */
+    private void animateDragArrow() {
+        collapsingToolbarDragArrow.animate()
+                .translationYBy(200)
+                .scaleX(0.3f)
+                .scaleY(0.3f)
+                .alpha(0f)
+                .setDuration(1000)
+                .setInterpolator(new AccelerateDecelerateInterpolator())
+                .withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        collapsingToolbarDragArrow.animate()
+                                .translationYBy(-200)
+                                .scaleX(1f)
+                                .scaleY(1f)
+                                .alpha(0.7f)
+                                .setDuration(0)
+                                .setInterpolator(new AccelerateDecelerateInterpolator())
+                                .withEndAction(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        animateDragArrow();
+                                    }
+                                });
+                    }
+                }).start();
+    }
+
+    /**
+     *
+     */
+    private void showDragArrow(int millis) {
+        dragArrowHandler.removeCallbacks(showDragArrowRunnable);
+        showDragArrowRunnable = new Runnable() {
+            public void run() {
+                collapsingToolbarDragArrow.setVisibility(View.VISIBLE);
+                collapsingToolbarDragArrow.animate()
+                        .alpha(0.7f)
+                        .setDuration(250)
+                        .withEndAction(new Runnable() {
+                            @Override
+                            public void run() {
+                                animateDragArrow();
+                            }
+                        }).start();
+            }
+        };
+        dragArrowHandler.postDelayed(showDragArrowRunnable, millis);
+    }
+
+    /**
+     *
+     */
+    private void hideDragArrow(int millis) {
+        dragArrowHandler.removeCallbacks(hideDragArrowRunnable);
+        hideDragArrowRunnable = new Runnable() {
+            public void run() {
+                collapsingToolbarDragArrow.animate()
+                        .alpha(0f)
+                        .setDuration(250)
+                        .withEndAction(new Runnable() {
+                            @Override
+                            public void run() {
+                                collapsingToolbarDragArrow.setVisibility(View.GONE);
+                            }
+                        }).start();
+            }
+        };
+        dragArrowHandler.postDelayed(hideDragArrowRunnable, millis);
     }
 
     /**
@@ -634,6 +874,7 @@ public class PrismPostDetailActivity extends AppCompatActivity {
         setupLikeActionButton();
         setupRepostActionButton();
         setupCollapseUpButton();
+        setupDragArrow();
     }
 
     /**

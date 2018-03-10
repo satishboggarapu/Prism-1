@@ -3,30 +3,25 @@ package com.mikechoch.prism.adapter;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BlurMaskFilter;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
@@ -35,31 +30,23 @@ import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.bumptech.glide.request.target.Target;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
+import com.bumptech.glide.request.transition.Transition;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.mikechoch.prism.InterfaceAction;
 import com.mikechoch.prism.activity.PrismUserProfileActivity;
-import com.mikechoch.prism.constants.Message;
 import com.mikechoch.prism.fire.DatabaseAction;
-import com.mikechoch.prism.helper.AnimationBounceInterpolator;
 import com.mikechoch.prism.fire.CurrentUser;
 import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.activity.DisplayUsersActivity;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
+import com.mikechoch.prism.helper.BitmapHelper;
 import com.mikechoch.prism.helper.Helper;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by mikechoch on 1/21/18.
@@ -130,6 +117,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         private StorageReference storageReference;
         private DatabaseReference allPostsReference;
 
+        private RelativeLayout prismPostRelativeLayout;
         private ImageView userProfilePicImageView;
         private RelativeLayout postInformationRelativeLayout;
         private TextView prismUserTextView;
@@ -163,7 +151,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             allPostsReference = Default.ALL_POSTS_REFERENCE;
 
             // Image initializations
-            progressBar = itemView.findViewById(R.id.image_progress_bar);
+            progressBar = itemView.findViewById(R.id.prism_post_progress_bar);
+            prismPostRelativeLayout = itemView.findViewById(R.id.prism_post_item_relative_layout);
             userProfilePicImageView = itemView.findViewById(R.id.recycler_view_profile_pic_image_view);
             postInformationRelativeLayout = itemView.findViewById(R.id.recycler_view_post_info_relative_layout);
             prismUserTextView = itemView.findViewById(R.id.recycler_view_user_text_view);
@@ -275,8 +264,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
              */
             Glide.with(context)
                     .asBitmap()
-                    .thumbnail(0.05f)
                     .load(prismPost.getImage())
+                    .apply(new RequestOptions().fitCenter().override((int) (screenWidth * 0.9), (int) (screenHeight * 0.6)))
                     .listener(new RequestListener<Bitmap>() {
                         @Override
                         public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
@@ -288,11 +277,34 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                         @Override
                         public boolean onResourceReady(Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
                             // TODO: @Mike we should hide progressBar here as well and display a toast or something
-                            progressBar.setVisibility(View.GONE);
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    ((Activity) context).runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            prismPostRelativeLayout.setBackground(new BitmapDrawable(
+                                                    context.getResources(), BitmapHelper.blur(resource, 0.2f, 100)));
+                                            prismPostImageView.animate()
+                                                    .alpha(1f)
+                                                    .setDuration(250)
+                                                    .start();
+                                            progressBar.animate()
+                                                    .alpha(0f)
+                                                    .setDuration(0)
+                                                    .withEndAction(new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            progressBar.setVisibility(View.GONE);
+                                                        }
+                                                    }).start();
+                                        }
+                                    });
+                                }
+                            }).start();
                             return false;
                         }
-                    })
-                    .into(prismPostImageView);
+                    }).into(prismPostImageView);
 
             /*
              * GestureDetector used to replace the prismPostImageView TouchListener

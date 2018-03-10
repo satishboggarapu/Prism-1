@@ -20,6 +20,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:minHeight="?attr/actionBarSize"
+            android:descendantFocusability="blocksDescendants"
             app:titleEnabled="false"
             app:layout_scrollFlags="scroll|exitUntilCollapsed"
             app:contentScrim="@android:color/transparent">
@@ -30,6 +31,7 @@
                 android:layout_height="?attr/actionBarSize"
                 android:gravity="start|top"
                 android:layout_gravity="start|top"
+                android:elevation="5dp"
                 app:popupTheme="@style/AppTheme.PopupOverlay"
                 app:layout_collapseMode="pin">
 
@@ -49,17 +51,29 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
+                android:elevation="5dp"
                 app:layout_collapseMode="parallax">
 
                 <ImageView
                     android:id="@+id/prism_post_detail_image_view"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_alignParentTop="true"
-                    android:layout_centerHorizontal="true"
+                    android:layout_gravity="center"
                     app:layout_collapseMode="parallax"/>
 
             </LinearLayout>
+
+            <ImageView
+                android:id="@+id/collapsing_toolbar_drag_arrow"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_gravity="top|center_horizontal"
+                android:layout_marginTop="16dp"
+                android:src="@drawable/ic_chevron_double_down_white_36dp"
+                android:alpha="0"
+                android:visibility="gone"
+                android:elevation="5dp"
+                app:layout_collapseMode="pin"/>
 
             <ImageView
                 android:id="@+id/collapsing_toolbar_collapse_up_button"

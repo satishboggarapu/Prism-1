@@ -1,6 +1,5 @@
 package com.mikechoch.prism.activity;
 
-import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -13,7 +12,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,7 +23,7 @@ import android.widget.Toast;
 
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.helper.ExifUtil;
+import com.mikechoch.prism.helper.BitmapHelper;
 import com.mikechoch.prism.helper.FileChooser;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
@@ -190,7 +188,7 @@ public class ProfilePictureUploadActivity extends AppCompatActivity {
                     }
 
                     String imagePath = FileChooser.getPath(this, imageUri);
-                    bitmap = ExifUtil.rotateBitmap(imagePath, bitmap);
+                    bitmap = BitmapHelper.rotateBitmap(imagePath, bitmap);
                     imageUri = getImageUri(bitmap);
                     uploadedProfileImageView.setImageBitmap(bitmap);
                 } else {
