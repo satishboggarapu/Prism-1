@@ -33,7 +33,6 @@ public class BitmapHelper {
      * @return
      */
     public static String insertImage(ContentResolver cr, Bitmap source, String title, String description) {
-
         ContentValues values = new ContentValues();
         values.put(MediaStore.Images.Media.TITLE, title);
         values.put(MediaStore.Images.Media.DESCRIPTION, description);
