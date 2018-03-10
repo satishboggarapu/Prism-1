@@ -241,8 +241,19 @@ public class CurrentUser {
         notifications = new ArrayList<>();
 
         currentUserReference.child(Key.DB_REF_USER_NOTIFICATIONS)
-                .orderByChild(Key.NOTIFICATION_ACTION_TIMESTAMP)
-                .limitToLast(50)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        currentUserReference.child(Key.DB_REF_USER_NOTIFICATIONS)
                 .addChildEventListener(new ChildEventListener() {
                     @Override
                     public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -252,7 +263,7 @@ public class CurrentUser {
 
                     @Override
                     public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                        generateNotification(dataSnapshot, false);
+                        generateNotification(dataSnapshot, true);
 
                     }
 
@@ -289,6 +300,13 @@ public class CurrentUser {
         String postId = NotificationType.getNotificationPostId(type, notificationId);
         String mostRecentUid = (String) dataSnapshot.child(Key.NOTIFICATION_MOST_RECENT_USER).getValue();
 
+        long actionTimestamp = (long) dataSnapshot
+                .child(Key.NOTIFICATION_ACTION_TIMESTAMP).getValue();
+        long viewedTimestamp = (long) dataSnapshot
+                .child(Key.NOTIFICATION_VIEWED_TIMESTAMP).getValue();
+        boolean viewed = viewedTimestamp > actionTimestamp;
+
+
         allPostReference.child(postId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot postSnapshot) {
@@ -300,21 +318,18 @@ public class CurrentUser {
                         @Override
                         public void onDataChange(DataSnapshot userSnapshot) {
                             PrismUser mostRecentUser = Helper.constructPrismUserObject(userSnapshot);
-                            long mostRecentActionTimestamp = (long) postSnapshot
-                                    .child(type.getDatabaseRefKey())
-                                    .child(mostRecentUid).getValue();
-                            long viewedTimestamp = (long) dataSnapshot
-                                    .child(Key.NOTIFICATION_VIEWED_TIMESTAMP).getValue();
-                            boolean viewed = viewedTimestamp > mostRecentActionTimestamp;
 
                             Notification notification = new Notification(
-                                    type, prismPost, mostRecentUser, mostRecentActionTimestamp, viewed);
+                                    type, prismPost, mostRecentUser, actionTimestamp, viewed);
 
-                            if (!isNewNotification) {
+                            if (isNewNotification) {
+                                notifications.add(0, notification);
+                            } else {
                                 Notification oldNotification = notifications_map.get(notificationId);
                                 notifications.remove(oldNotification);
+                                notifications.add(0, notification);
                             }
-                            notifications.add(0, notification);
+
                             notifications_map.put(notificationId, notification);
 
                             refreshNotificationRecyclerViewAdapter();

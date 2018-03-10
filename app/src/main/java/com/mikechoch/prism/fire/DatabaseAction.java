@@ -101,7 +101,7 @@ public class DatabaseAction {
                                             .getChildren().iterator().next().getValue();
                                     HashMap<String, Object> updatedNotification = new HashMap<>();
                                     updatedNotification.put(Key.NOTIFICATION_MOST_RECENT_USER, previousRecentUid);
-                                    updatedNotification.put(Key.NOTIFICATION_ACTION_TIMESTAMP, actionTimestamp);
+                                    updatedNotification.put(Key.NOTIFICATION_ACTION_TIMESTAMP, previousActionTimestamp);
                                     notificationReference.updateChildren(updatedNotification);
                                 } else {
                                     notificationReference.removeValue();
