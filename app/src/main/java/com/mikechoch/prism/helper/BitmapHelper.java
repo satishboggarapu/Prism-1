@@ -5,19 +5,80 @@ package com.mikechoch.prism.helper;
  */
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
+import android.net.Uri;
 import android.os.Build;
+import android.provider.MediaStore;
 import android.util.Log;
 
 public class BitmapHelper {
 
+    /**
+     *
+     * @param cr
+     * @param source
+     * @param title
+     * @param description
+     * @return
+     */
+    public static String insertImage(ContentResolver cr, Bitmap source, String title, String description) {
+
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.Images.Media.TITLE, title);
+        values.put(MediaStore.Images.Media.DESCRIPTION, description);
+        values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+        Uri externalContentUri = Uri.parse("content://media/external/images/media");
+
+        Uri url = null;
+        String stringUrl = null;    /* value to be returned */
+
+        try {
+            url = cr.insert(externalContentUri, values);
+
+            if (source != null) {
+                OutputStream imageOut = cr.openOutputStream(url);
+                try {
+                    source.compress(Bitmap.CompressFormat.JPEG, 100, imageOut);
+                } finally {
+                    imageOut.close();
+                }
+            } else {
+                System.out.println("Failed to create thumbnail, removing original");
+                cr.delete(url, null, null);
+                url = null;
+            }
+        } catch (Exception e) {
+            System.out.println("Failed to insert image");
+            if (url != null) {
+                cr.delete(url, null, null);
+                url = null;
+            }
+        }
+
+        if (url != null) {
+            stringUrl = url.toString();
+        }
+
+        return stringUrl;
+    }
+
+    /**
+     *
+     * @param src
+     * @param bitmap
+     * @return
+     */
     public static Bitmap rotateBitmap(String src, Bitmap bitmap) {
         try {
             int orientation = getExifOrientation(src);
@@ -71,6 +132,12 @@ public class BitmapHelper {
         return bitmap;
     }
 
+    /**
+     *
+     * @param src
+     * @return
+     * @throws IOException
+     */
     private static int getExifOrientation(String src) throws IOException {
         int orientation = 1;
 
