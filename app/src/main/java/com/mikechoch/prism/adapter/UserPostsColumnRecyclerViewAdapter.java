@@ -95,9 +95,8 @@ public class UserPostsColumnRecyclerViewAdapter extends RecyclerView.Adapter<Use
 
             Glide.with(context)
                     .asBitmap()
-                    .thumbnail(0.20f)
                     .load(prismPost.getImage())
-                    .apply(new RequestOptions().fitCenter())
+                    .apply(new RequestOptions().fitCenter().override((int) (scale * 200)))
                     .listener(new RequestListener<Bitmap>() {
                         @Override
                         public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
