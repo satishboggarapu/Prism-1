@@ -17,9 +17,9 @@ import android.widget.TextView;
 
 import com.google.firebase.database.DatabaseReference;
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.adapter.PrismNotificationRecyclerViewAdapter;
-import com.mikechoch.prism.adapter.PrismPostRecyclerViewAdapter;
+import com.mikechoch.prism.adapter.NotificationRecyclerViewAdapter;
 import com.mikechoch.prism.attribute.Notification;
+import com.mikechoch.prism.fire.CurrentUser;
 
 import java.util.ArrayList;
 
@@ -38,7 +38,7 @@ public class NotificationFragment extends Fragment {
     private RelativeLayout noNotificationRelativeLayout;
     private TextView noNotificationTextView;
     private RecyclerView notificationRecyclerView;
-    public static PrismNotificationRecyclerViewAdapter notificationRecyclerViewAdapter;
+    public static NotificationRecyclerViewAdapter notificationRecyclerViewAdapter;
     private ProgressBar notificationProgressBar;
 
     private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
@@ -90,14 +90,9 @@ public class NotificationFragment extends Fragment {
         notificationRecyclerView.addItemDecoration(dividerItemDecoration);
         notificationRecyclerView.setItemViewCacheSize(20);
 
-        notificationArrayList = new ArrayList<>();
-        notificationArrayList.add(new Notification());
-        notificationArrayList.add(new Notification());
-        notificationArrayList.add(new Notification());
-        notificationArrayList.add(new Notification());
-        notificationArrayList.add(new Notification());
+        notificationArrayList = CurrentUser.getNotifications();
 
-        notificationRecyclerViewAdapter = new PrismNotificationRecyclerViewAdapter(getContext(), notificationArrayList, new int[]{screenWidth, screenHeight});
+        notificationRecyclerViewAdapter = new NotificationRecyclerViewAdapter(getContext(), notificationArrayList, new int[]{screenWidth, screenHeight});
         notificationRecyclerView.setAdapter(notificationRecyclerViewAdapter);
 
         notificationSwipeRefreshLayout = view.findViewById(R.id.notification_swipe_refresh_layout);

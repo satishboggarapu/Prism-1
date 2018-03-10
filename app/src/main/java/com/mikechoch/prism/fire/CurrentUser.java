@@ -14,15 +14,20 @@ import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 import com.mikechoch.prism.R;
+import com.mikechoch.prism.attribute.Notification;
 import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.attribute.PrismUser;
 import com.mikechoch.prism.constants.Default;
+import com.mikechoch.prism.constants.Key;
+import com.mikechoch.prism.fragments.NotificationFragment;
 import com.mikechoch.prism.helper.Helper;
+import com.mikechoch.prism.type.NotificationType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,44 +43,56 @@ public class CurrentUser {
      */
     private static FirebaseAuth auth;
     public static FirebaseUser firebaseUser;
-    private static DatabaseReference userReference;
+    private static DatabaseReference currentUserReference;
     private static DatabaseReference allPostReference;
 
     private static Context context;
     private static float scale;
 
+    public static PrismUser prismUser;
+
     /**
      * Key: String postId
      * Value: long timestamp
     **/
-    private static HashMap liked_posts_map;
-    private static HashMap reposted_posts_map;
-    private static HashMap uploaded_posts_map;
+    private static HashMap<String, Long> liked_posts_map;
+    private static HashMap<String, Long> reposted_posts_map;
+    private static HashMap<String, Long> uploaded_posts_map;
 
-    /* ArrayList of PrismPost object for above structures */
+    /** ArrayList of PrismPost objects for above structures **/
     private static ArrayList<PrismPost> liked_posts;
     private static ArrayList<PrismPost> reposted_posts;
     private static ArrayList<PrismPost> uploaded_posts;
 
     /**
+     * Key: String notificationId
+     * Value: Notification object
+     */
+    private static HashMap<String, Notification> notifications_map;
+
+    /** ArrayList of Notification objects for above structures **/
+    private static ArrayList<Notification> notifications;
+
+    /**
      * Key: String uid
      * Value: String username
      */
-    static HashMap followers;
-    static HashMap followings;
+    static HashMap<String, String> followers;
+    static HashMap<String, String> followings;
 
-    public static PrismUser prismUser;
+
 
     public CurrentUser(Context context) {
         auth = FirebaseAuth.getInstance();
         firebaseUser = auth.getCurrentUser();
-        userReference = Default.USERS_REFERENCE.child(firebaseUser.getUid());
+        currentUserReference = Default.USERS_REFERENCE.child(firebaseUser.getUid());
         allPostReference = Default.ALL_POSTS_REFERENCE;
 
         CurrentUser.context = context;
         scale = context.getResources().getDisplayMetrics().density;
 
         refreshUserProfile();
+        setupNotifications();
     }
 
     /**
@@ -153,7 +170,7 @@ public class CurrentUser {
      */
     static void repostPost(PrismPost prismPost) {
         reposted_posts.add(prismPost);
-        reposted_posts_map.put(prismPost.getPostId(), prismPost);
+        reposted_posts_map.put(prismPost.getPostId(), prismPost.getTimestamp());
     }
 
     /**
@@ -178,7 +195,7 @@ public class CurrentUser {
      */
     static void uploadPost(PrismPost prismPost) {
         uploaded_posts.add(prismPost);
-        uploaded_posts_map.put(prismPost, prismPost.getTimestamp());
+        uploaded_posts_map.put(prismPost.getPostId(), prismPost.getTimestamp());
     }
 
     /**
@@ -209,15 +226,110 @@ public class CurrentUser {
         reposted_posts = new ArrayList<>();
         uploaded_posts = new ArrayList<>();
 
-        liked_posts_map = new HashMap<String, Long>();
-        reposted_posts_map = new HashMap<String, Long>();
-        uploaded_posts_map = new HashMap<String, Long>();
+        liked_posts_map = new HashMap<>();
+        reposted_posts_map = new HashMap<>();
+        uploaded_posts_map = new HashMap<>();
 
-        followers = new HashMap<String, String>();
-        followings = new HashMap<String, String>();
+        followers = new HashMap<>();
+        followings = new HashMap<>();
 
         DatabaseAction.fetchUserProfile();
     }
+
+    private static void setupNotifications() {
+        notifications_map = new HashMap<>();
+        notifications = new ArrayList<>();
+
+        currentUserReference.child(Key.DB_REF_USER_NOTIFICATIONS)
+                .orderByChild(Key.NOTIFICATION_ACTION_TIMESTAMP)
+                .limitToLast(50)
+                .addChildEventListener(new ChildEventListener() {
+                    @Override
+                    public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                       generateNotification(dataSnapshot, true);
+
+                    }
+
+                    @Override
+                    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                        generateNotification(dataSnapshot, false);
+
+                    }
+
+                    @Override
+                    public void onChildRemoved(DataSnapshot dataSnapshot) {
+                        String notificationId = dataSnapshot.getKey();
+                        Notification notification = notifications_map.get(notificationId);
+                        notifications_map.remove(notificationId);
+                        notifications.remove(notification);
+                        refreshNotificationRecyclerViewAdapter();
+                    }
+
+                    @Override
+                    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+                        dataSnapshot.exists();
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.e(Default.TAG_DB, databaseError.getMessage(), databaseError.toException());
+                    }
+                });
+    }
+
+    private static void refreshNotificationRecyclerViewAdapter() {
+        if (NotificationFragment.notificationRecyclerViewAdapter != null) {
+            NotificationFragment.notificationRecyclerViewAdapter.notifyDataSetChanged();
+        }
+    }
+
+    private static void generateNotification(DataSnapshot dataSnapshot, boolean isNewNotification) {
+        String notificationId = dataSnapshot.getKey();
+        NotificationType type = NotificationType.getNotificationType(notificationId);
+        String postId = NotificationType.getNotificationPostId(type, notificationId);
+        String mostRecentUid = (String) dataSnapshot.child(Key.NOTIFICATION_MOST_RECENT_USER).getValue();
+
+        allPostReference.child(postId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot postSnapshot) {
+                if (postSnapshot.exists()) {
+                    PrismPost prismPost = Helper.constructPrismPostObject(postSnapshot);
+                    prismPost.setPrismUser(CurrentUser.prismUser);
+                    DatabaseReference mostRecentUserRef = Default.USERS_REFERENCE.child(mostRecentUid);
+                    mostRecentUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot userSnapshot) {
+                            PrismUser mostRecentUser = Helper.constructPrismUserObject(userSnapshot);
+                            long mostRecentActionTimestamp = (long) postSnapshot
+                                    .child(type.getDatabaseRefKey())
+                                    .child(mostRecentUid).getValue();
+                            long viewedTimestamp = (long) dataSnapshot
+                                    .child(Key.NOTIFICATION_VIEWED_TIMESTAMP).getValue();
+                            boolean viewed = viewedTimestamp > mostRecentActionTimestamp;
+
+                            Notification notification = new Notification(
+                                    type, prismPost, mostRecentUser, mostRecentActionTimestamp, viewed);
+
+                            if (!isNewNotification) {
+                                Notification oldNotification = notifications_map.get(notificationId);
+                                notifications.remove(oldNotification);
+                            }
+                            notifications.add(0, notification);
+                            notifications_map.put(notificationId, notification);
+
+                            refreshNotificationRecyclerViewAdapter();
+                        }
+
+                        @Override public void onCancelled(DatabaseError databaseError) { }
+                    });
+
+                }
+            }
+
+            @Override public void onCancelled(DatabaseError databaseError) { }
+        });
+    }
+
 
     /**
      * Returns list of CurrentUser.uploaded_posts
@@ -238,6 +350,14 @@ public class CurrentUser {
      */
     public static ArrayList<PrismPost> getUserReposts() {
         return reposted_posts;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public static ArrayList<Notification> getNotifications() {
+        return notifications;
     }
 
     /**

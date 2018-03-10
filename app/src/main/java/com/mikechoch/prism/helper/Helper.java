@@ -3,6 +3,7 @@ package com.mikechoch.prism.helper;
 import android.text.format.DateFormat;
 
 import com.google.firebase.database.DataSnapshot;
+import com.mikechoch.prism.attribute.Notification;
 import com.mikechoch.prism.fire.CurrentUser;
 import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.attribute.PrismUser;
@@ -10,6 +11,7 @@ import com.mikechoch.prism.attribute.ProfilePicture;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.constants.MyTimeUnit;
+import com.mikechoch.prism.type.NotificationType;
 
 import java.util.Calendar;
 import java.util.Locale;
@@ -136,4 +138,32 @@ public class Helper {
     public static String getFirebaseDecodedUsername(String encodedUsername) {
         return encodedUsername.replace(Default.USERNAME_PERIOD_REPLACE, Default.USERNAME_PERIOD);
     }
+
+
+    public static String constructNotificationMessage(Notification notification) {
+        String message = "";
+        String mostRecentUsername = notification.getMostRecentUser().getUsername();
+        int otherCount = notification.getOtherUserCount();
+        NotificationType type = notification.getType();
+
+        message += mostRecentUsername + " ";
+        if (otherCount > 0) {
+            message += " and " + otherCount + " others ";
+        }
+
+        switch (type) {
+            case LIKE:
+                message += " liked your post ";
+                break;
+            case REPOST:
+                message += " reposted your post ";
+                break;
+            case FOLLOW:
+                message += " started following you";
+                break;
+        }
+        message += notification.getPrismPost().getCaption();
+        return message;
+    }
+
 }

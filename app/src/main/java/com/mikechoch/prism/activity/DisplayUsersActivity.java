@@ -200,7 +200,7 @@ public class DisplayUsersActivity extends AppCompatActivity {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if (dataSnapshot.exists()) {
-                            HashMap<String, String> mapOfUsers = new HashMap<>();
+                            HashMap<String, Long> mapOfUsers = new HashMap<>();
                             mapOfUsers.putAll((Map) dataSnapshot.getValue());
                             fetchUserDetails(mapOfUsers);
                         } else {
@@ -226,7 +226,7 @@ public class DisplayUsersActivity extends AppCompatActivity {
      * firebaseUser in the hashMap and creates a PrismUser object for each firebaseUser
      * @param mapOfUsers
      */
-    private void fetchUserDetails(HashMap<String, String> mapOfUsers) {
+    private void fetchUserDetails(HashMap<String, Long> mapOfUsers) {
         DatabaseReference usersRef = Default.USERS_REFERENCE;
         usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
