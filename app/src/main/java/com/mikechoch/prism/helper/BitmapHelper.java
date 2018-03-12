@@ -48,7 +48,7 @@ public class BitmapHelper {
             if (source != null) {
                 OutputStream imageOut = cr.openOutputStream(url);
                 try {
-                    source.compress(Bitmap.CompressFormat.JPEG, 100, imageOut);
+                    source.compress(Bitmap.CompressFormat.JPEG, 50, imageOut);
                 } finally {
                     imageOut.close();
                 }

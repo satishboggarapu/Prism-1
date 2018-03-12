@@ -58,6 +58,11 @@
             android:screenOrientation="portrait"/>
 
         <activity
+            android:name=".activity.ShowUserProfilePictureActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/PullLayoutAppTheme"/>
+
+        <activity
             android:name=".activity.EditUserProfileActivity"
             android:screenOrientation="portrait"/>
 
