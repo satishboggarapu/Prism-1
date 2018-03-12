@@ -686,7 +686,6 @@ public class PrismPostDetailActivity extends AppCompatActivity {
         repostCount = prismPost.getReposts() + (performRepost ? 1 : -1);
         prismPost.setReposts(repostCount);
         repostCountTextView.setText(String.valueOf(repostCount));
-
     }
 
     //TODO: Handle other UI for deleting a post
