@@ -72,6 +72,7 @@
 
             <ImageView
                 android:id="@+id/recycler_view_image_image_view"
+                android:transitionName="prism_post_image"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"

@@ -12,15 +12,14 @@
        android:layout_width="match_parent"
        android:layout_height="wrap_content"
        android:background="@android:color/transparent"
-       android:theme="@style/AppTheme.AppBarOverlay">
+       app:elevation="0dp">
 
       <android.support.v7.widget.Toolbar
           android:id="@+id/toolbar"
           android:layout_width="match_parent"
           android:layout_height="50dp"
-          android:translationZ="0dp"
           android:background="@android:color/transparent"
-          app:popupTheme="@style/AppTheme.PopupOverlay">
+          android:elevation="0dp">
 
       </android.support.v7.widget.Toolbar>
 
@@ -39,7 +38,6 @@
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
        android:layout_centerInParent="true"
-       android:scaleType="fitCenter"
-       android:layout_gravity="center"/>
+       android:scaleType="fitCenter" />
 
 </RelativeLayout>

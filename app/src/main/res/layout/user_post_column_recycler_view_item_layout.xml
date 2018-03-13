@@ -20,6 +20,7 @@
 
     <ImageView
         android:id="@+id/user_post_image_view"
+        android:transitionName="prism_post_image"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:scaleType="centerCrop"
