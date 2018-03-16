@@ -11,8 +11,6 @@
 
 - Update/CleanUp `DisplayUsersActivity.getListOfUsers()`
 
-- Python Script --> make sure CurrentUser can't follow self
-
 ---------------------
 * BUGS TO FIX *
 ---------------------

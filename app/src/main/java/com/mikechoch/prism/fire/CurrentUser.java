@@ -257,7 +257,7 @@ public class CurrentUser {
                 .addChildEventListener(new ChildEventListener() {
                     @Override
                     public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                       generateNotification(dataSnapshot, true);
+                        generateNotification(dataSnapshot, true);
 
                     }
 

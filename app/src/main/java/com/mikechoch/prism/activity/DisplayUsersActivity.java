@@ -41,12 +41,13 @@ public class DisplayUsersActivity extends AppCompatActivity {
     /*
      * Global variables
      */
-    final private int LIKE_USERS = 0;
-    final private int REPOST_USERS = 1;
-    final private int FOLLOWER_USERS = 2;
-    final private int FOLLOWING_USERS = 3;
+    private final static int LIKE_USERS = 0;
+    private final static int REPOST_USERS = 1;
+    private final static int FOLLOWER_USERS = 2;
+    private final static int FOLLOWING_USERS = 3;
 
-    private DatabaseReference databaseReference;
+    private final DatabaseReference allPostsReference = Default.ALL_POSTS_REFERENCE;
+    private final DatabaseReference usersReference = Default.USERS_REFERENCE;
 
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
@@ -58,8 +59,8 @@ public class DisplayUsersActivity extends AppCompatActivity {
 
     private DisplayUsersRecyclerViewAdapter displayUsersRecyclerViewAdapter;
 
+    private Intent intent;
     private int activityCode;
-    private String usersDataId;
     private String toolbarTitle;
     private ArrayList<PrismUser> prismUserArrayList;
 
@@ -88,6 +89,8 @@ public class DisplayUsersActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.users_activity_layout);
 
+        // TODO better documentation and organize this method
+
         // Create two typefaces
         sourceSansProLight = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Light.ttf");
         sourceSansProBold = Typeface.createFromAsset(getAssets(), "fonts/SourceSansPro-Black.ttf");
@@ -104,10 +107,8 @@ public class DisplayUsersActivity extends AppCompatActivity {
         // getIntent and grab the String to populate the Toolbar title
         // This will be "Likes" or "Reposts"
         // Default being "Error"
-        Intent intent = getIntent();
+        intent = getIntent();
         activityCode = intent.getIntExtra("UsersInt", -1);
-        usersDataId = intent.getStringExtra("UsersDataId");
-        databaseReference = activityCode < 2 ? Default.ALL_POSTS_REFERENCE : Default.USERS_REFERENCE;
 
         setupUIElements();
     }
@@ -123,26 +124,27 @@ public class DisplayUsersActivity extends AppCompatActivity {
      * Decide if it was a likes or reposts click and set number of
      * Setup the toolbar and back button to return to MainActivity
      */
-    private void setupToolbar() {
+    private void setupPage() {
+        String id = intent.getStringExtra("UsersDataId");
         switch (activityCode) {
             case LIKE_USERS: {
                 toolbarTitle = "Like";
-                getListOfUsers(Key.DB_REF_POST_LIKED_USERS, usersDataId);
+                getLikedUsers(id);
                 break;
             }
             case REPOST_USERS: {
                 toolbarTitle = "Repost";
-                getListOfUsers(Key.DB_REF_POST_REPOSTED_USERS, usersDataId);
+                getRepostedUsers(id);
                 break;
             }
             case FOLLOWER_USERS: {
                 toolbarTitle = "Follower";
-                getListOfUsers(Key.DB_REF_USER_FOLLOWERS, usersDataId);
+                getFollowers(id);
                 break;
             }
             case FOLLOWING_USERS: {
                 toolbarTitle = "Following";
-                getListOfUsers(Key.DB_REF_USER_FOLLOWINGS, usersDataId);
+                getFollowings(id);
                 break;
             }
             default: {
@@ -180,7 +182,7 @@ public class DisplayUsersActivity extends AppCompatActivity {
      * Setup the toolbar and back button to return to MainActivity
      */
     private void setupUIElements() {
-        setupToolbar();
+        setupPage();
 
         // Setup Typefaces for all text based UI elements
         toolbarTextView.setTypeface(sourceSansProLight);
@@ -188,67 +190,128 @@ public class DisplayUsersActivity extends AppCompatActivity {
         setupLikeRepostRecyclerView();
     }
 
+
     /**
-     * Goes to the post in database and pulls list of users who have "liked" or "reposted"
-     * the post and then calls getUserDetails to get further details for all those users
-     * @param DB_REF_POST_GET_USERS_KEY: will be either LIKED_USERS or REPOSTED_USERS
-     * @param usersDataId: usersDataId for which information needs to be pulled
+     * Gets liked users for given postId
+     * and then fetches user details for each userId
      */
-    private void getListOfUsers(String DB_REF_POST_GET_USERS_KEY, String usersDataId) {
-        databaseReference.child(usersDataId).child(DB_REF_POST_GET_USERS_KEY)
+    private void getLikedUsers(String postId) {
+        allPostsReference.child(postId).child(Key.DB_REF_POST_LIKED_USERS)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if (dataSnapshot.exists()) {
-                            HashMap<String, Long> mapOfUsers = new HashMap<>();
-                            mapOfUsers.putAll((Map) dataSnapshot.getValue());
-                            fetchUserDetails(mapOfUsers);
+                            HashMap<String, Long> likedUsersMap = new HashMap<>();
+                            likedUsersMap.putAll((Map) dataSnapshot.getValue());
+                            fetchUserDetails(likedUsersMap);
                         } else {
                             Log.e(Default.TAG_DB, Message.NO_DATA);
-                            hideProgressBar();
-
-                            // Once data is populated set title to the number likes or reposts
-                            toolbarTitle = "0 " + toolbarTitle + (toolbarTitle.equals("Following") ? "" : "s");
-                            toolbarTextView.setText(toolbarTitle);
+                            finishUIActivities();
                         }
                     }
 
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
-                        Log.wtf(Default.TAG_DB, Message.FETCH_USERS_FAIL, databaseError.toException());
+                        Log.e(Default.TAG_DB, Message.FETCH_USERS_FAIL, databaseError.toException());
                     }
                 });
-
     }
 
     /**
-     * Goes over the list of users provided as parameter and pulls details for each
-     * firebaseUser in the hashMap and creates a PrismUser object for each firebaseUser
-     * @param mapOfUsers
+     * Gets reposted users for given postId
+     * and then fetches user details for each userId
      */
-    private void fetchUserDetails(HashMap<String, Long> mapOfUsers) {
-        DatabaseReference usersRef = Default.USERS_REFERENCE;
-        usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
+    private void getRepostedUsers(String postId) {
+        allPostsReference.child(postId).child(Key.DB_REF_POST_REPOSTED_USERS)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            HashMap<String, Long> repostedUsersMap = new HashMap<>();
+                            repostedUsersMap.putAll((Map) dataSnapshot.getValue());
+                            fetchUserDetails(repostedUsersMap);
+                        } else {
+                            Log.e(Default.TAG_DB, Message.NO_DATA);
+                            finishUIActivities();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.e(Default.TAG_DB, Message.FETCH_USERS_FAIL, databaseError.toException());
+                    }
+                });
+    }
+
+    /**
+     * Gets given user's followings
+     * and then fetches user details for each userId
+     */
+    private void getFollowings(String userId) {
+        usersReference.child(userId).child(Key.DB_REF_USER_FOLLOWINGS)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            HashMap<String, Long> userFollowings = new HashMap<>();
+                            userFollowings.putAll((Map) dataSnapshot.getValue());
+                            fetchUserDetails(userFollowings);
+                        } else {
+                            Log.e(Default.TAG_DB, Message.NO_DATA);
+                            finishUIActivities();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.e(Default.TAG_DB, Message.FETCH_USERS_FAIL, databaseError.toException());
+                    }
+                });
+    }
+
+    /**
+     * Gets give user's followers and then fetches user details for each userId
+     */
+    private void getFollowers(String userId) {
+        usersReference.child(userId).child(Key.DB_REF_USER_FOLLOWERS)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            HashMap<String, Long> userFollowers = new HashMap<>();
+                            userFollowers.putAll((Map) dataSnapshot.getValue());
+                            fetchUserDetails(userFollowers);
+                        } else {
+                            Log.e(Default.TAG_DB, Message.NO_DATA);
+                            finishUIActivities();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.e(Default.TAG_DB, Message.FETCH_USERS_FAIL, databaseError.toException());
+                    }
+                });
+    }
+
+
+    /**
+     * Goes over the map of users provided and pulls details for each
+     * firebaseUser in the hashMap and creates a PrismUser object for each user
+     */
+    private void fetchUserDetails(HashMap<String, Long> usersMap) {
+        usersReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    for (String userId : mapOfUsers.keySet()) {
+                    for (String userId : usersMap.keySet()) {
                         if (dataSnapshot.hasChild(userId)) {
                             PrismUser prismUser = Helper.constructPrismUserObject(dataSnapshot.child(userId));
                             prismUserArrayList.add(prismUser);
                         }
                     }
-                } else {
-                    Log.wtf(Default.TAG_DB, Message.NO_DATA);
                 }
-                displayUsersRecyclerViewAdapter.notifyDataSetChanged();
-                hideProgressBar();
-
-                // Once data is populated set title to the number likes or reposts
-                toolbarTitle = prismUserArrayList.size() + " " + toolbarTitle +
-                        (toolbarTitle.equals("Following") ? "" :
-                                (prismUserArrayList.size() == 1 ? "" : "s"));
-                toolbarTextView.setText(toolbarTitle);
+                finishUIActivities();
             }
 
             @Override
@@ -256,15 +319,25 @@ public class DisplayUsersActivity extends AppCompatActivity {
                 Log.e(Default.TAG_DB, Message.FETCH_USER_DETAILS_FAIL, databaseError.toException());
             }
         });
-
     }
 
+
     /**
-     * Method to hide the ProgressBar when loading likes, reposts, or error
+     * TODO: @Mike any way to sexify this
      */
-    private void hideProgressBar() {
+    private void finishUIActivities() {
         usersRecyclerView.setVisibility(View.VISIBLE);
         likeRepostProgressBar.setVisibility(View.GONE);
+
+        displayUsersRecyclerViewAdapter.notifyDataSetChanged();
+
+        // Once data is populated set title to the number likes or reposts
+        toolbarTitle = prismUserArrayList.size() + " " + toolbarTitle;
+        // Make it plural
+        if (!toolbarTitle.equals("Following") && prismUserArrayList.size() > 1) {
+            toolbarTitle += "s";
+        }
+        toolbarTextView.setText(toolbarTitle);
     }
 
 }
