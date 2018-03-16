@@ -498,15 +498,17 @@ public class PrismPostDetailActivity extends AppCompatActivity {
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
 //            Log.d("TAG", "PINCH! OUCH!");
-            totalDistanceChange += (detector.getCurrentSpan() - detector.getPreviousSpan());
+            if (startDistanceChange > 0) {
+                totalDistanceChange += (detector.getCurrentSpan() - detector.getPreviousSpan());
 //            System.out.println(startDistanceChange);
 //            System.out.println(totalDistanceChange);
-            DecimalFormat df = new DecimalFormat("0.##");
-            float imageScale = Float.parseFloat(df.format((double) ((startDistanceChange + totalDistanceChange) / startDistanceChange)));
+                DecimalFormat df = new DecimalFormat("0.##");
+                float imageScale = Float.parseFloat(df.format((double) ((startDistanceChange + totalDistanceChange) / startDistanceChange)));
 //            System.out.println(imageScale);
-            if (imageScale >= 1) {
-                detailImageView.setScaleX(imageScale);
-                detailImageView.setScaleY(imageScale);
+                if (imageScale >= 1) {
+                    detailImageView.setScaleX(imageScale);
+                    detailImageView.setScaleY(imageScale);
+                }
             }
             return true;
         }

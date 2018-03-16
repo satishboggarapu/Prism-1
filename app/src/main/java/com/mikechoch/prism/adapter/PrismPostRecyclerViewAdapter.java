@@ -9,8 +9,10 @@ import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
@@ -35,6 +37,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.storage.StorageReference;
 import com.mikechoch.prism.InterfaceAction;
+import com.mikechoch.prism.activity.PrismPostDetailActivity;
 import com.mikechoch.prism.activity.PrismUserProfileActivity;
 import com.mikechoch.prism.fire.DatabaseAction;
 import com.mikechoch.prism.fire.CurrentUser;
@@ -314,7 +317,18 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                 @Override
                 public boolean onSingleTapConfirmed(MotionEvent e) {
                     System.out.println("Image Single Tapped");
-                    // TODO: Intent to new Activity for image
+                    Intent prismPostDetailIntent = new Intent(context, PrismPostDetailActivity.class);
+
+                    prismPostDetailIntent.putExtra("PrismPostDetail", prismPost);
+                    prismPostDetailIntent.putExtra("PrismPostDetailTransitionName", ViewCompat.getTransitionName(prismPostImageView));
+
+                    ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
+                            (Activity) context,
+                            prismPostImageView,
+                            ViewCompat.getTransitionName(prismPostImageView));
+
+                    context.startActivity(prismPostDetailIntent, options.toBundle());
+//                    ((Activity) context).overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
 
                     return true;
                 }
