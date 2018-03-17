@@ -9,7 +9,8 @@
 
 - Make sure post author/owner cannot repost the prismPost
 
-- Update/CleanUp `DisplayUsersActivity.getListOfUsers()`
+- Revamp `DisplayUsersActivity.getListOfUsers()`
+- Revamp `PrismUserProfileActivity`
 
 ---------------------
 * BUGS TO FIX *

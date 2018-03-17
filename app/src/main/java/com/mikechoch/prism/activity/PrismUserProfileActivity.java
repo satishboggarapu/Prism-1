@@ -61,6 +61,8 @@ import com.mikechoch.prism.fire.DatabaseAction;
 import com.mikechoch.prism.helper.Helper;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -112,7 +114,7 @@ public class PrismUserProfileActivity extends AppCompatActivity {
     private PrismUser prismUser;
     private Uri profilePictureUri;
     private boolean isCurrentUser;
-    private ArrayList<PrismPost> prismUserUploadedPostsArrayList;
+    private ArrayList<PrismPost> prismUserUploadedAndRepostedPostsArrayList;
 
 
     @Override
@@ -180,7 +182,7 @@ public class PrismUserProfileActivity extends AppCompatActivity {
         //
         Intent intent = getIntent();
         prismUser = intent.getParcelableExtra("PrismUser");
-        prismUserUploadedPostsArrayList = new ArrayList<>();
+        prismUserUploadedAndRepostedPostsArrayList = new ArrayList<>();
 
         isCurrentUser = prismUser.getUid().equals(CurrentUser.prismUser.getUid());
 
@@ -263,22 +265,29 @@ public class PrismUserProfileActivity extends AppCompatActivity {
      *
      */
     private void pullUserDetails() {
-        if (Helper.isPrismUserCurrentUser(prismUser)) {
-            prismUserUploadedPostsArrayList.addAll(CurrentUser.getUserUploads());
+        if (isCurrentUser) {
+            // prismUserUploadedAndRepostedPostsArrayList.addAll(CurrentUser.getUserUploads());
+            prismUserUploadedAndRepostedPostsArrayList.addAll(CurrentUser.getUserUploadsAndReposts());
+            setupUserPostsUIElements();
+
             return;
         }
         usersReference.child(prismUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                HashMap<String, Long> prismUserUploadedAndRepostedPostIds = new HashMap<>();
                 if (dataSnapshot.hasChild(Key.DB_REF_USER_UPLOADS)) {
-                    HashMap<String, Long> prismUserUploadedPostIds = new HashMap<>();
                     Object userUploadedPosts = dataSnapshot.child(Key.DB_REF_USER_UPLOADS).getValue();
-                    prismUserUploadedPostIds.putAll((Map) userUploadedPosts);
-                    fetchUserUploadedPrismPosts(prismUserUploadedPostIds);
-
-                } else {
-                    Log.wtf(Default.TAG_DB, "No user details exist");
+                    prismUserUploadedAndRepostedPostIds.putAll((Map) userUploadedPosts);
                 }
+                if (dataSnapshot.hasChild(Key.DB_REF_USER_REPOSTS)) {
+                    Object userRepostedPosts = dataSnapshot.child(Key.DB_REF_USER_REPOSTS).getValue();
+                    prismUserUploadedAndRepostedPostIds.putAll((Map) userRepostedPosts);
+                }
+                if (!prismUserUploadedAndRepostedPostIds.isEmpty()) {
+                    fetchUserUploadedAndRepostedPrismPosts(prismUserUploadedAndRepostedPostIds);
+                }
+
             }
 
             @Override
@@ -290,20 +299,58 @@ public class PrismUserProfileActivity extends AppCompatActivity {
 
     /**
      * Fetches user uploaded prismPosts with given map of prismPostIds
+     * TODO Update comments
      */
-    private void fetchUserUploadedPrismPosts(HashMap<String, Long> prismUserUploadedPostIds) {
+    private void fetchUserUploadedAndRepostedPrismPosts(HashMap<String, Long> prismUserUploadedAndRepostedPostIds) {
         allPostsReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    for (String postId : prismUserUploadedPostIds.keySet()) {
+                    for (String postId : prismUserUploadedAndRepostedPostIds.keySet()) {
                         DataSnapshot postSnapshot = dataSnapshot.child(postId);
                         if (postSnapshot.exists()) {
                             PrismPost prismPost = Helper.constructPrismPostObject(postSnapshot);
-                            prismPost.setPrismUser(prismUser);
-                            prismUserUploadedPostsArrayList.add(prismPost);
+                            prismUserUploadedAndRepostedPostsArrayList.add(prismPost);
                         }
                     }
+
+                    /*
+                     * Go through all the posts in the uploadedAndReposted arrayList
+                     * and check to see if the post is reposted or not. If not then set
+                     * the prismUser as the prismPost.prismUser but if the post is reposted
+                     * by another user then pull the information of that prismUser and set
+                     * that as the post's prismUser
+                     */
+                    usersReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.exists()) {
+                                for (PrismPost prismPost : prismUserUploadedAndRepostedPostsArrayList) {
+                                    if (Helper.isPostReposted(prismPost, prismUser)) {
+                                        DataSnapshot userSnapshot = dataSnapshot.child(prismPost.getUid());
+                                        if (userSnapshot.exists()) {
+                                            PrismUser prismUser = Helper.constructPrismUserObject(userSnapshot);
+                                            prismPost.setPrismUser(prismUser);
+                                        }
+                                    } else {
+                                        prismPost.setPrismUser(prismUser);
+                                    }
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
+
+                    Collections.sort(prismUserUploadedAndRepostedPostsArrayList, new Comparator<PrismPost>() {
+                        @Override
+                        public int compare(PrismPost p1, PrismPost p2) {
+                            return (int) (p1.getTimestamp() - p2.getTimestamp());
+                        }
+                    });
                     setupUserPostsUIElements();
                 }
             }
@@ -571,11 +618,11 @@ public class PrismUserProfileActivity extends AppCompatActivity {
 //        ArrayList<ArrayList<PrismPost>> userUploadedPostsArrayLists = new ArrayList<>(Collections.nCopies(userUploadedColumns, new ArrayList<>()));
         // TODO: figure out how to initialize an ArrayList of ArrayLists without using while loop inside of populating for-loop
         ArrayList<ArrayList<PrismPost>> userUploadedPostsArrayLists = new ArrayList<>();
-        for (int i = 0; i < prismUserUploadedPostsArrayList.size(); i++) {
+        for (int i = 0; i < prismUserUploadedAndRepostedPostsArrayList.size(); i++) {
             while (userUploadedPostsArrayLists.size() != Default.USER_UPLOADED_POSTS_COLUMNS) {
                 userUploadedPostsArrayLists.add(new ArrayList<>());
             }
-            userUploadedPostsArrayLists.get((i % Default.USER_UPLOADED_POSTS_COLUMNS)).add(prismUserUploadedPostsArrayList.get(i));
+            userUploadedPostsArrayLists.get((i % Default.USER_UPLOADED_POSTS_COLUMNS)).add(prismUserUploadedAndRepostedPostsArrayList.get(i));
         }
 
         for (int i = 0; i < Default.USER_UPLOADED_POSTS_COLUMNS; i++) {

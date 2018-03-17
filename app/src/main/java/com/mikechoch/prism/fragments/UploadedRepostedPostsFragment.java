@@ -86,7 +86,9 @@ public class UploadedRepostedPostsFragment extends Fragment {
     private void setupUploadedRepostedRecyclerViewColumns() {
         userUploadedPostsLinearLayout.removeAllViews();
         userUploadedPostsLinearLayout.setWeightSum((float) Default.USER_UPLOADED_POSTS_COLUMNS);
-        ArrayList<PrismPost> userUploadedPosts = CurrentUser.getUserUploads();
+//        ArrayList<PrismPost> userUploadedPosts = CurrentUser.getUserUploads();
+        ArrayList<PrismPost> userUploadedPosts = CurrentUser.getUserUploadsAndReposts();
+
         if (userUploadedPosts.size() > 0) {
 //        ArrayList<ArrayList<PrismPost>> userUploadedPostsArrayLists = new ArrayList<>(Collections.nCopies(userUploadedColumns, new ArrayList<>()));
             // TODO: figure out how to initialize an ArrayList of ArrayLists without using while loop inside of populating for-loop

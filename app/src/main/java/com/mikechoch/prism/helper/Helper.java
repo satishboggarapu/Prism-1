@@ -166,4 +166,14 @@ public class Helper {
         return message;
     }
 
+    /**
+     * Checks to see if given prismPost has been reposted by given
+     * prismUser by comparing the uid of prismPost author by given
+     * prismUser. If uid's match, post author = given prismUser and
+     * hence it's an upload, otherwise it is a repost
+     */
+    public static boolean isPostReposted(PrismPost prismPost, PrismUser prismUser) {
+        return !prismPost.getUid().equals(prismUser.getUid());
+    }
+
 }
