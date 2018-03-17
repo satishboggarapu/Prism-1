@@ -1,18 +1,15 @@
 package com.mikechoch.prism.activity;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityOptionsCompat;
@@ -40,13 +37,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.DataSource;
-import com.bumptech.glide.load.engine.GlideException;
-import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
-import com.bumptech.glide.request.target.Target;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -64,7 +58,6 @@ import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.constants.Message;
 import com.mikechoch.prism.fire.DatabaseAction;
-import com.mikechoch.prism.helper.BitmapHelper;
 import com.mikechoch.prism.helper.Helper;
 
 import java.util.ArrayList;
@@ -251,12 +244,11 @@ public class PrismUserProfileActivity extends AppCompatActivity {
                 if (task.isSuccessful()) {
                     Uri downloadUrl = task.getResult().getDownloadUrl();
                     DatabaseReference userRef = currentUserReference.child(Key.USER_PROFILE_PIC);
-                    userRef.setValue(downloadUrl.toString()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    userRef.setValue(downloadUrl.toString()).addOnFailureListener(new OnFailureListener() {
                         @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (!task.isSuccessful()) {
-                                Log.wtf(Default.TAG_DB, Message.PROFILE_PIC_UPDATE_FAIL, task.getException());
-                            }
+                        public void onFailure(@NonNull Exception e) {
+                            Log.wtf(Default.TAG_DB, Message.PROFILE_PIC_UPDATE_FAIL, task.getException());
+                            toast("Unable to update profile picture");
                         }
                     });
                 } else {
@@ -271,17 +263,18 @@ public class PrismUserProfileActivity extends AppCompatActivity {
      *
      */
     private void pullUserDetails() {
+        if (Helper.isPrismUserCurrentUser(prismUser)) {
+            prismUserUploadedPostsArrayList.addAll(CurrentUser.getUserUploads());
+            return;
+        }
         usersReference.child(prismUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-//                    prismUser = Helper.constructPrismUserObject(dataSnapshot);
+                if (dataSnapshot.hasChild(Key.DB_REF_USER_UPLOADS)) {
                     HashMap<String, Long> prismUserUploadedPostIds = new HashMap<>();
-                    Object data = dataSnapshot.child(Key.DB_REF_USER_UPLOADS).getValue();
-                    if (data != null) {
-                        prismUserUploadedPostIds.putAll((Map) data);
-                    }
-                    pullUserUploadedPrismPosts(prismUserUploadedPostIds);
+                    Object userUploadedPosts = dataSnapshot.child(Key.DB_REF_USER_UPLOADS).getValue();
+                    prismUserUploadedPostIds.putAll((Map) userUploadedPosts);
+                    fetchUserUploadedPrismPosts(prismUserUploadedPostIds);
 
                 } else {
                     Log.wtf(Default.TAG_DB, "No user details exist");
@@ -296,9 +289,9 @@ public class PrismUserProfileActivity extends AppCompatActivity {
     }
 
     /**
-     *
+     * Fetches user uploaded prismPosts with given map of prismPostIds
      */
-    private void pullUserUploadedPrismPosts(HashMap<String, Long> prismUserUploadedPostIds) {
+    private void fetchUserUploadedPrismPosts(HashMap<String, Long> prismUserUploadedPostIds) {
         allPostsReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -309,18 +302,9 @@ public class PrismUserProfileActivity extends AppCompatActivity {
                             PrismPost prismPost = Helper.constructPrismPostObject(postSnapshot);
                             prismPost.setPrismUser(prismUser);
                             prismUserUploadedPostsArrayList.add(prismPost);
-                        } else {
-                            // TODO LOG this: this should never happen
-                            usersReference.child(prismUser.getUid())
-                                    .child(Key.DB_REF_USER_UPLOADS)
-                                    .child(postId).removeValue();
                         }
                     }
-
                     setupUserPostsUIElements();
-
-                } else {
-                    Log.wtf(Default.TAG_DB, "No Posts Exist???");
                 }
             }
 

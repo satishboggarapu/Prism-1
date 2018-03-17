@@ -341,6 +341,7 @@ public class DatabaseAction {
                             CurrentUser.likePosts(userLikes, liked_posts_map);
                             CurrentUser.repostPosts(userReposts, reposted_posts_map);
                             CurrentUser.uploadPosts(userUploads, uploaded_posts_map);
+                            CurrentUser.combineUploadsAndReposts();
 
                             // TODO: @Mike Is it ok to call these methods here?
                             CurrentUser.updateUserProfilePageUI();

@@ -30,6 +30,8 @@ import com.mikechoch.prism.helper.Helper;
 import com.mikechoch.prism.type.NotificationType;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 
 /**
@@ -63,6 +65,7 @@ public class CurrentUser {
     private static ArrayList<PrismPost> liked_posts;
     private static ArrayList<PrismPost> reposted_posts;
     private static ArrayList<PrismPost> uploaded_posts;
+    private static ArrayList<PrismPost> uploaded_and_reposted_posts;
 
     /**
      * Key: String notificationId
@@ -225,6 +228,7 @@ public class CurrentUser {
         liked_posts = new ArrayList<>();
         reposted_posts = new ArrayList<>();
         uploaded_posts = new ArrayList<>();
+        uploaded_and_reposted_posts = new ArrayList<>();
 
         liked_posts_map = new HashMap<>();
         reposted_posts_map = new HashMap<>();
@@ -365,6 +369,26 @@ public class CurrentUser {
      */
     public static ArrayList<PrismPost> getUserReposts() {
         return reposted_posts;
+    }
+
+    public static ArrayList<PrismPost> getUserUploadsAndReposts() {
+        return uploaded_and_reposted_posts;
+    }
+
+    /**
+     * Prepares combined list of CurrentUser's uploaded
+     * and reposted prismPosts
+     */
+    static void combineUploadsAndReposts() {
+        uploaded_and_reposted_posts.addAll(uploaded_posts);
+        uploaded_and_reposted_posts.addAll(reposted_posts);
+
+        Collections.sort(uploaded_and_reposted_posts, new Comparator<PrismPost>() {
+            @Override
+            public int compare(PrismPost p1, PrismPost p2) {
+                return (int) (p1.getTimestamp() - p2.getTimestamp());
+            }
+        });
     }
 
     /**
