@@ -47,7 +47,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.mikechoch.prism.attribute.CurrentUser;
+import com.mikechoch.prism.fire.CurrentUser;
+import com.mikechoch.prism.InterfaceAction;
 import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.adapter.MainViewPagerAdapter;
@@ -100,8 +101,6 @@ public class MainActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity_layout);
 
-        // Generates current firebaseUser's details
-        new CurrentUser(this);
         auth = FirebaseAuth.getInstance();
         storageReference = Default.STORAGE_REFERENCE;
         databaseReference = Default.ALL_POSTS_REFERENCE;
@@ -149,6 +148,10 @@ public class MainActivity extends FragmentActivity {
         imageUploadProgressBar = findViewById(R.id.image_upload_progress_bar);
 
         setupUIElements();
+
+        // Generates current firebaseUser's details
+        new CurrentUser(this);
+        new InterfaceAction(this);
     }
 
     @Override
@@ -209,33 +212,6 @@ public class MainActivity extends FragmentActivity {
                                 }
                             });
                     uploadImageToCloud();
-                }
-                break;
-            // If requestCode is for ProfilePictureUploadActivity
-            case Default.PROFILE_PIC_UPLOAD_INTENT_REQUEST_CODE:
-                if (resultCode == RESULT_OK) {
-                    profilePictureUri = Uri.parse(data.getStringExtra("CroppedProfilePicture"));
-
-                    ImageView profilePictureImageView = findViewById(R.id.user_profile_profile_picture_image_view);
-                    Glide.with(this)
-                            .asBitmap()
-                            .thumbnail(0.05f)
-                            .load(profilePictureUri)
-                            .apply(new RequestOptions().fitCenter())
-                            .into(new BitmapImageViewTarget(profilePictureImageView) {
-                                @Override
-                                protected void setResource(Bitmap resource) {
-                                    RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), resource);
-                                    drawable.setCircular(true);
-                                    profilePictureImageView.setImageDrawable(drawable);
-
-                                    int whiteOutlinePadding = (int) (2 * scale);
-                                    profilePictureImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
-                                    profilePictureImageView.setBackground(getResources().getDrawable(R.drawable.circle_profile_frame));
-                                }
-                            });
-
-                    uploadProfilePictureToCloud();
                 }
                 break;
             default:
@@ -390,6 +366,7 @@ public class MainActivity extends FragmentActivity {
 
         TabLayout.Tab currentTab = prismTabLayout.getTabAt(prismViewPager.getCurrentItem());
         currentTab.select();
+
     }
 
     /**
@@ -409,35 +386,6 @@ public class MainActivity extends FragmentActivity {
         Intent imageUploadIntent = new Intent( MainActivity.this, ImageUploadActivity.class);
         startActivityForResult(imageUploadIntent, Default.IMAGE_UPLOAD_INTENT_REQUEST_CODE);
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
-    }
-
-    /**
-     * Takes the profilePicUriString and stores the image to cloud. Once the image file is
-     * successfully uploaded to cloud successfully, it adds the profilePicUriString to
-     * the firebaseUser's profile details section
-     */
-    private void uploadProfilePictureToCloud() {
-        StorageReference profilePicRef = storageReference.child(Key.STORAGE_USER_PROFILE_IMAGE_REF).child(profilePictureUri.getLastPathSegment());
-        profilePicRef.putFile(profilePictureUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-                if (task.isSuccessful()) {
-                    Uri downloadUrl = task.getResult().getDownloadUrl();
-                    DatabaseReference userRef = userReference.child(Key.USER_PROFILE_PIC);
-                    userRef.setValue(downloadUrl.toString()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (!task.isSuccessful()) {
-                                Log.wtf(Default.TAG_DB, Message.PROFILE_PIC_UPDATE_FAIL, task.getException());
-                            }
-                        }
-                    });
-                } else {
-                    Log.e(Default.TAG_DB, Message.FILE_UPLOAD_FAIL, task.getException());
-                    toast("Unable to update profile picture");
-                }
-            }
-        });
     }
 
     /**

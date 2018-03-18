@@ -3,30 +3,27 @@ package com.mikechoch.prism.adapter;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.RecyclerView;
-import android.text.format.DateFormat;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
@@ -35,35 +32,24 @@ import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.bumptech.glide.request.target.Target;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
+import com.bumptech.glide.request.transition.Transition;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.MutableData;
-import com.google.firebase.database.Transaction;
-import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.mikechoch.prism.InterfaceAction;
+import com.mikechoch.prism.activity.PrismPostDetailActivity;
 import com.mikechoch.prism.activity.PrismUserProfileActivity;
-import com.mikechoch.prism.constants.Message;
-import com.mikechoch.prism.helper.AnimationBounceInterpolator;
-import com.mikechoch.prism.attribute.CurrentUser;
+import com.mikechoch.prism.fire.DatabaseAction;
+import com.mikechoch.prism.fire.CurrentUser;
 import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.activity.LikeRepostActivity;
+import com.mikechoch.prism.activity.DisplayUsersActivity;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
-import com.mikechoch.prism.constants.MyTimeUnit;
+import com.mikechoch.prism.helper.BitmapHelper;
 import com.mikechoch.prism.helper.Helper;
 
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by mikechoch on 1/21/18.
@@ -78,16 +64,13 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
     private final int PRISM_POST_VIEW_TYPE = 1;
 
     private Context context;
-    private PrismPost prismPost;
-    private ArrayList<PrismPost> prismPostArrayList;
+    public static ArrayList<PrismPost> prismPostArrayList;
 
     private float scale;
     private Typeface sourceSansProLight;
     private Typeface sourceSansProBold;
     private int screenWidth;
     private int screenHeight;
-    private String[] morePostOptionsCurrentUser = {"Report post", "Share", "Delete"};
-    private String[] morePostOptions = {"Report post", "Share"};
 
 
     public PrismPostRecyclerViewAdapter(Context context, ArrayList<PrismPost> prismPostArrayList, int[] screenDimens) {
@@ -137,14 +120,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         private StorageReference storageReference;
         private DatabaseReference allPostsReference;
 
-        private Animation likeHeartBounceAnimation;
-        private Animation repostIrisBounceAnimation;
-        private Animation unrepostIrisBounceAnimation;
-        private Animation likeButtonBounceAnimation;
-        private Animation shareButtonBounceAnimation;
-        private Animation moreButtonBounceAnimation;
-        private AnimationBounceInterpolator interpolator;
-
+        private RelativeLayout prismPostRelativeLayout;
         private ImageView userProfilePicImageView;
         private RelativeLayout postInformationRelativeLayout;
         private TextView prismUserTextView;
@@ -164,8 +140,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         private String postDate;
         private Integer likeCount;
         private Integer repostCount;
-        private boolean postLiked;
-        private boolean postReposted;
+        private boolean isPostLiked;
+        private boolean isPostReposted;
 
 
         public ViewHolder(View itemView) {
@@ -177,16 +153,9 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             storageReference = Default.STORAGE_REFERENCE.child(Key.STORAGE_POST_IMAGES_REF);
             allPostsReference = Default.ALL_POSTS_REFERENCE;
 
-            // Animation initializations
-            likeHeartBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.like_animation);
-            repostIrisBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.repost_animation);
-            unrepostIrisBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.unrepost_animation);
-            likeButtonBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.button_bounce_animation);
-            shareButtonBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.button_bounce_animation);
-            moreButtonBounceAnimation = AnimationUtils.loadAnimation(context, R.anim.button_bounce_animation);
-
             // Image initializations
-            progressBar = itemView.findViewById(R.id.image_progress_bar);
+            progressBar = itemView.findViewById(R.id.prism_post_progress_bar);
+            prismPostRelativeLayout = itemView.findViewById(R.id.prism_post_item_relative_layout);
             userProfilePicImageView = itemView.findViewById(R.id.recycler_view_profile_pic_image_view);
             postInformationRelativeLayout = itemView.findViewById(R.id.recycler_view_post_info_relative_layout);
             prismUserTextView = itemView.findViewById(R.id.recycler_view_user_text_view);
@@ -214,8 +183,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             postDate = Helper.getFancyDateDifferenceString(prismPost.getTimestamp() * -1);
             likeCount = this.prismPost.getLikes();
             repostCount = this.prismPost.getReposts();
-            postLiked = CurrentUser.liked_posts_map.containsKey(postId);
-            postReposted = CurrentUser.reposted_posts_map.containsKey(postId);
+            isPostLiked = CurrentUser.hasLiked(prismPost);
+            isPostReposted = CurrentUser.hasReposted(prismPost);
 
             if (likeCount == null) likeCount = 0;
             if (repostCount == null) repostCount = 0;
@@ -298,8 +267,8 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
              */
             Glide.with(context)
                     .asBitmap()
-                    .thumbnail(0.05f)
                     .load(prismPost.getImage())
+                    .apply(new RequestOptions().fitCenter().override((int) (screenWidth * 0.9), (int) (screenHeight * 0.6)))
                     .listener(new RequestListener<Bitmap>() {
                         @Override
                         public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
@@ -311,11 +280,34 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                         @Override
                         public boolean onResourceReady(Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
                             // TODO: @Mike we should hide progressBar here as well and display a toast or something
-                            progressBar.setVisibility(View.GONE);
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    ((Activity) context).runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            prismPostRelativeLayout.setBackground(new BitmapDrawable(
+                                                    context.getResources(), BitmapHelper.blur(resource, 0.2f, 100)));
+                                            prismPostImageView.animate()
+                                                    .alpha(1f)
+                                                    .setDuration(250)
+                                                    .start();
+                                            progressBar.animate()
+                                                    .alpha(0f)
+                                                    .setDuration(0)
+                                                    .withEndAction(new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            progressBar.setVisibility(View.GONE);
+                                                        }
+                                                    }).start();
+                                        }
+                                    });
+                                }
+                            }).start();
                             return false;
                         }
-                    })
-                    .into(prismPostImageView);
+                    }).into(prismPostImageView);
 
             /*
              * GestureDetector used to replace the prismPostImageView TouchListener
@@ -325,7 +317,18 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
                 @Override
                 public boolean onSingleTapConfirmed(MotionEvent e) {
                     System.out.println("Image Single Tapped");
-                    // TODO: Intent to new Activity for image
+                    Intent prismPostDetailIntent = new Intent(context, PrismPostDetailActivity.class);
+
+                    prismPostDetailIntent.putExtra("PrismPostDetail", prismPost);
+                    prismPostDetailIntent.putExtra("PrismPostDetailTransitionName", ViewCompat.getTransitionName(prismPostImageView));
+
+                    ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
+                            (Activity) context,
+                            prismPostImageView,
+                            ViewCompat.getTransitionName(prismPostImageView));
+
+                    context.startActivity(prismPostDetailIntent, options.toBundle());
+//                    ((Activity) context).overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
 
                     return true;
                 }
@@ -341,23 +344,7 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
                 @Override
                 public boolean onDoubleTap(MotionEvent e) {
-                    System.out.println("Image Double Tapped");
-                    String postId = prismPost.getPostId();
-                    boolean postLiked = !CurrentUser.liked_posts_map.containsKey(postId);
-
-                    Drawable heartButtonDrawable = createLikeDrawable(postLiked);
-                    likeButton.setImageDrawable(heartButtonDrawable);
-                    Drawable heartDrawable = context.getResources().getDrawable(
-                            postLiked ? R.drawable.like_heart : R.drawable.unlike_heart);
-                    likeHeartAnimationImageView.setImageDrawable(heartDrawable);
-                    likeButton.startAnimation(likeButtonBounceAnimation);
-                    likeHeartAnimationImageView.startAnimation(likeHeartBounceAnimation);
-
-                    likeCount += postLiked ? 1 : -1;
-                    String likeStringTail = likeCount == 1 ? " like" : " likes";
-                    likesCountTextView.setText(likeCount + likeStringTail);
-
-                    handleLikeButtonClick(prismPost);
+                    handleLikeButtonClick();
                     return super.onDoubleTap(e);
                 }
             });
@@ -376,141 +363,53 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
         }
 
         /**
-         * Setup animations for actionButtons below prismPostImageView and like/repost ImageView
-         */
-        private void setupUIAnimations() {
-            /*
-             * Use bounce interpolator with amplitude 0.2 and frequency 20
-             * Gives the bounce affect on buttons
-             */
-            interpolator = new AnimationBounceInterpolator(0.2, 20);
-            likeButtonBounceAnimation.setInterpolator(interpolator);
-            shareButtonBounceAnimation.setInterpolator(interpolator);
-            moreButtonBounceAnimation.setInterpolator(interpolator);
-
-            /*
-             * Setup animation for liking and reposting a PrismPost
-             * The animations take place inside the same environment as the prismPostImageView
-             */
-            likeHeartAnimationImageView.setVisibility(View.INVISIBLE);
-            likeHeartBounceAnimation.setInterpolator(interpolator);
-            likeHeartBounceAnimation.setAnimationListener(new Animation.AnimationListener() {
-                @Override
-                public void onAnimationStart(Animation animation) {
-                    likeHeartAnimationImageView.setVisibility(View.VISIBLE);
-                }
-
-                @Override
-                public void onAnimationEnd(Animation animation) {
-                    likeHeartAnimationImageView.setVisibility(View.INVISIBLE);
-                }
-
-                @Override
-                public void onAnimationRepeat(Animation animation) {
-
-                }
-            });
-
-            repostIrisAnimationImageView.setVisibility(View.INVISIBLE);
-            repostIrisBounceAnimation.setAnimationListener(new Animation.AnimationListener() {
-                @Override
-                public void onAnimationStart(Animation animation) {
-                    repostIrisAnimationImageView.setVisibility(View.VISIBLE);
-                }
-
-                @Override
-                public void onAnimationEnd(Animation animation) {
-                    repostIrisAnimationImageView.setVisibility(View.INVISIBLE);
-                }
-
-                @Override
-                public void onAnimationRepeat(Animation animation) {
-
-                }
-            });
-        }
-
-        /**
          * Three action buttons are shown for each PrismPost
          * Like button likes the PrismPost
          * Repost button reposts the PrismPost to the users profile
          * More button offers a few options
          */
         private void setupActionButtons() {
-            /*
-             * Like action button
-             */
-            Drawable heartButtonDrawable = createLikeDrawable(postLiked);
-            likeButton.setImageDrawable(heartButtonDrawable);
-            Drawable heartDrawable = context.getResources().getDrawable(
-                    postLiked ?  R.drawable.unlike_heart : R.drawable.like_heart);
-            likeHeartAnimationImageView.setImageDrawable(heartDrawable);
+            setupLikeActionButton();
+            setupRepostActionButton();
+            setupMoreActionButton();
+        }
 
-            String likeStringTail = likeCount == 1 ? " like" : " likes";
-            likesCountTextView.setText(likeCount + likeStringTail);
-
-            likeButton.setOnClickListener(new View.OnClickListener() {
+        /**
+         *
+         */
+        private void setupMoreActionButton() {
+            moreButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    String postId = prismPost.getPostId();
-                    boolean postLiked = !CurrentUser.liked_posts_map.containsKey(postId);
-
-                    Drawable heartButtonDrawable = createLikeDrawable(postLiked);
-                    likeButton.setImageDrawable(heartButtonDrawable);
-                    Drawable heartDrawable = context.getResources().getDrawable(
-                            postLiked ? R.drawable.like_heart : R.drawable.unlike_heart);
-                    likeHeartAnimationImageView.setImageDrawable(heartDrawable);
-                    likeButton.startAnimation(likeButtonBounceAnimation);
-                    likeHeartAnimationImageView.startAnimation(likeHeartBounceAnimation);
-
-                    likeCount += postLiked ? 1 : -1;
-                    String likeStringTail = likeCount == 1 ? " like" : " likes";
-                    likesCountTextView.setText(likeCount + likeStringTail);
-
-                    handleLikeButtonClick(prismPost);
+                    InterfaceAction.startMoreActionButtonAnimation(moreButton);
+                    // TODO: Show more menu
+                    // TODO: Decide what goes in more
+                    boolean isCurrentUserThePostCreator = CurrentUser.firebaseUser.getUid().equals(prismPost.getPrismUser().getUid());
+                    AlertDialog morePrismPostAlertDialog = InterfaceAction.createMorePrismPostAlertDialog(context, prismPost, isCurrentUserThePostCreator);
+                    morePrismPostAlertDialog.show();
                 }
             });
+        }
 
-            likesCountTextView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent userLikesIntent = new Intent(context, LikeRepostActivity.class);
-                    userLikesIntent.putExtra("LikeRepostBoolean", 1); // Like = 1, Repost = 0
-                    userLikesIntent.putExtra("LikeRepostPostId", postId);
-                    context.startActivity(userLikesIntent);
-                    ((Activity) context).overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
-                }
-            });
+        /**
+         *
+         */
+        private void setupRepostActionButton() {
+            InterfaceAction.setupRepostActionButton(context, repostButton, isPostReposted);
 
-            /*
-             * Repost action button
-             */
-            Drawable repostDrawable = createRepostDrawable(postReposted);
-            repostButton.setImageDrawable(repostDrawable);
-
-            String repostStringTail = repostCount == 1 ? " repost" : " reposts";
+            String repostStringTail = Helper.getSingularOrPluralText(" repost", repostCount);
             repostsCountTextView.setText(repostCount + repostStringTail);
 
             repostButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    String postId = prismPost.getPostId();
-                    boolean postReposted = !CurrentUser.reposted_posts_map.containsKey(postId);
-                    if (!postReposted) {
-                        Drawable repostDrawable = createRepostDrawable(postReposted);
-                        repostButton.setImageDrawable(repostDrawable);
-                        repostButton.startAnimation(shareButtonBounceAnimation);
-                        repostIrisAnimationImageView.startAnimation(unrepostIrisBounceAnimation);
-
-                        repostCount--;
-                        String repostStringTail = repostCount == 1 ? " repost" : " reposts";
-                        repostsCountTextView.setText(repostCount + repostStringTail);
-
-                        handleRepostButtonClick(prismPost);
-                    } else {
+                    boolean performRepost = !CurrentUser.hasReposted(prismPost);
+                    if (performRepost) {
                         repostIrisAnimationImageView.setVisibility(View.INVISIBLE);
-                        AlertDialog repostConfirmationAlertDialog = createRepostConfirmationAlertDialog();
+                        AlertDialog repostConfirmationAlertDialog = InterfaceAction.createRepostConfirmationAlertDialog(context, prismPost, repostButton, repostsCountTextView);
                         repostConfirmationAlertDialog.show();
+                    } else {
+                        handleRepostButtonClick(false);
                     }
                 }
             });
@@ -518,26 +417,39 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
             repostsCountTextView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent userRepostsIntent = new Intent(context, LikeRepostActivity.class);
-                    userRepostsIntent.putExtra("LikeRepostBoolean", 0); // Like = 1, Repost = 0
-                    userRepostsIntent.putExtra("LikeRepostPostId", postId);
+                    Intent userRepostsIntent = new Intent(context, DisplayUsersActivity.class);
+                    userRepostsIntent.putExtra("UsersInt", 1);
+                    userRepostsIntent.putExtra("UsersDataId", postId);
                     context.startActivity(userRepostsIntent);
                     ((Activity) context).overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
                 }
             });
+        }
 
-            /*
-             * More action button
-             */
-            moreButton.setOnClickListener(new View.OnClickListener() {
+        /**
+         *
+         */
+        private void setupLikeActionButton() {
+            InterfaceAction.setupLikeActionButton(context, likeHeartAnimationImageView, likeButton, isPostLiked);
+
+            String likeString = likeCount + Helper.getSingularOrPluralText(" like", likeCount);
+            likesCountTextView.setText(likeString);
+
+            likeButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    moreButton.startAnimation(moreButtonBounceAnimation);
-                    // TODO: Show more menu
-                    // TODO: Decide what goes in more
-                    boolean isCurrentUserThePostCreator =  CurrentUser.firebaseUser.getUid().equals(prismPost.getPrismUser().getUid());
-                    AlertDialog morePrismPostAlertDialog = createMorePrismPostAlertDialog(isCurrentUserThePostCreator);
-                    morePrismPostAlertDialog.show();
+                    handleLikeButtonClick();
+                }
+            });
+
+            likesCountTextView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent userLikesIntent = new Intent(context, DisplayUsersActivity.class);
+                    userLikesIntent.putExtra("UsersInt", 0);
+                    userLikesIntent.putExtra("UsersDataId", postId);
+                    context.startActivity(userLikesIntent);
+                    ((Activity) context).overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
                 }
             });
         }
@@ -554,193 +466,16 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
 
             setupPostUserUIElements();
             setupPostImageView();
-            setupUIAnimations();
             setupActionButtons();
         }
 
-        /**
-         * Pass in a boolean that toggles the icon and color of the like button
-         */
-        private Drawable createLikeDrawable(boolean isLiked) {
-            int heart = isLiked ? R.drawable.ic_heart_black_36dp : R.drawable.ic_heart_outline_black_36dp;
-            int color = isLiked ? R.color.colorAccent : android.R.color.white;
-            Drawable heartDrawable = context.getResources().getDrawable(heart);
-            int heartColor = context.getResources().getColor(color);
-            heartDrawable.setTint(heartColor);
-            return heartDrawable;
-        }
-
-        /**
-         * Pass in a boolean that toggles the color of the repost button
-         */
-        private Drawable createRepostDrawable(boolean isReposted) {
-            int repost = R.drawable.ic_camera_iris_black_36dp;
-            Drawable repostDrawable = context.getResources().getDrawable(repost);
-            int color = isReposted ? R.color.colorAccent : android.R.color.white;
-            int repostColor = context.getResources().getColor(color);
-            repostDrawable.setTint(repostColor);
-            return repostDrawable;
-        }
-
-        /**
-         * AlertDialog to confirm the repost of a post
-         */
-        private AlertDialog createRepostConfirmationAlertDialog() {
-            AlertDialog.Builder repostConfirmationAlertDialogBuilder = new AlertDialog.Builder(context);
-            repostConfirmationAlertDialogBuilder.setTitle("This post will be shown on your profile, do you want to repost?");
-            repostConfirmationAlertDialogBuilder
-                    .setPositiveButton("REPOST", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            dialogInterface.dismiss();
-                            handleRepostButtonClick(prismPost);
-                            Drawable repostDrawable = createRepostDrawable(true);
-                            repostButton.setImageDrawable(repostDrawable);
-                            repostButton.startAnimation(shareButtonBounceAnimation);
-                            repostIrisAnimationImageView.startAnimation(repostIrisBounceAnimation);
-
-                            repostCount++;
-                            String repostStringTail = repostCount == 1 ? " repost" : " reposts";
-                            repostsCountTextView.setText(repostCount + repostStringTail);
-
-                        }
-                    }).setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.cancel();
-                }
-            });
-            return repostConfirmationAlertDialogBuilder.create();
-        }
-
-        /**
-         * AlertDialog that shows several options to the user when the moreActionButton is clicked
-         * Report and SHare will show for all users
-         * Delete will only show for user who posted the post
-         */
-        private AlertDialog createMorePrismPostAlertDialog(boolean isCurrentUser) {
-            AlertDialog.Builder profilePictureAlertDialog = new AlertDialog.Builder(context);
-            profilePictureAlertDialog.setItems(isCurrentUser ? morePostOptionsCurrentUser : morePostOptions, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                    switch (which) {
-                        case 0:
-                            // Report post
-                            break;
-                        case 1:
-                            // Share
-
-                            break;
-                        case 2:
-                            // Delete
-                            AlertDialog deleteConfirmationAlertDialog = createDeleteConfirmationAlertDialog();
-                            deleteConfirmationAlertDialog.show();
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            });
-            return profilePictureAlertDialog.create();
-        }
-
-        /**
-         * AlertDialog to confirm the deletion of a post
-         */
-        private AlertDialog createDeleteConfirmationAlertDialog() {
-            AlertDialog.Builder exitAlertDialogBuilder = new AlertDialog.Builder(context);
-            exitAlertDialogBuilder.setTitle("Are you sure you want to delete this post?");
-            exitAlertDialogBuilder.setPositiveButton("DELETE", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.dismiss();
-                    handleDeletionOfPost();
-
-                }
-            }).setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.cancel();
-                }
-            });
-            return exitAlertDialogBuilder.create();
-        }
-
+        //TODO: Handle other UI for deleting a post
         private void handleDeletionOfPost() {
-            // Remove the post image from storage
-            FirebaseStorage.getInstance().getReferenceFromUrl(prismPost.getImage())
-                    .delete().addOnCompleteListener(new OnCompleteListener<Void>() {
-                @Override
-                public void onComplete(@NonNull Task<Void> task) {
-                    if (task.isSuccessful()) {
-                        String postId = prismPost.getPostId();
-                        String postUserId = prismPost.getPrismUser().getUid();
-                        allPostsReference.child(postId).addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot dataSnapshot) {
-                                if (dataSnapshot.exists()) {
-                                    HashMap<String, String> likedUsers = new HashMap<>();
-                                    HashMap<String, String> repostedUsers = new HashMap<>();
-                                    DatabaseReference usersReference = Default.USERS_REFERENCE;
-                                    // Removes postId from all user's USER_LIKES section
-                                    if (dataSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getChildrenCount() > 0) {
-                                        likedUsers.putAll((Map) dataSnapshot.child(Key.DB_REF_POST_LIKED_USERS).getValue());
-                                        for (String userId : likedUsers.values()) {
-                                            usersReference.child(userId)
-                                                    .child(Key.DB_REF_USER_LIKES)
-                                                    .child(postId).removeValue();
-                                        }
-                                        Toast.makeText(context, "Removed Liked Users", Toast.LENGTH_SHORT).show();
-                                    }
-
-                                    // Removes postId from all users's USER_REPOSTS section
-                                    if (dataSnapshot.child(Key.DB_REF_POST_REPOSTED_USERS).getChildrenCount() > 0) {
-                                        repostedUsers.putAll((Map) dataSnapshot.child(Key.DB_REF_POST_REPOSTED_USERS).getValue());
-                                        for (String userId : repostedUsers.values()) {
-                                            usersReference.child(userId)
-                                                    .child(Key.DB_REF_USER_REPOSTS)
-                                                    .child(postId).removeValue();
-                                        }
-                                        Toast.makeText(context, "Removed Reposted Users", Toast.LENGTH_SHORT).show();
-                                    }
-
-                                    // Removes postId from author user's USER_UPLOADS section
-                                    postAuthorUserReference
-                                            .child(Key.DB_REF_USER_UPLOADS)
-                                            .child(postId).removeValue();
-                                    Toast.makeText(context, "Removed author of post", Toast.LENGTH_SHORT).show();
-
-                                    // Removes the entire post from ALL_POSTS section
-                                    allPostsReference.child(postId).removeValue();
-                                    Toast.makeText(context, "Removed Post From ALL_POSTS", Toast.LENGTH_SHORT).show();
-
-                                    // Remove post from local hashMap
-                                    prismPostArrayList.remove(prismPost);
-                                    notifyDataSetChanged();
-
-                                } else {
-                                    Log.wtf(Default.TAG_DB, Message.NO_DATA);
-                                }
-                            }
-
-                            @Override
-                            public void onCancelled(DatabaseError databaseError) {
-                                databaseError.toException().printStackTrace();
-                                Log.e(Default.TAG_DB, databaseError.getMessage(), databaseError.toException());
-                            }
-                        });
-
-                        if (getItemCount() == 0) {
-                            RelativeLayout noMainPostsRelativeLayout = ((Activity) context).findViewById(R.id.no_main_posts_relative_layout);
-                            noMainPostsRelativeLayout.setVisibility(View.VISIBLE);
-                        }
-                    } else {
-                        // TODO error log
-                        Toast.makeText(context, "Unable to delete", Toast.LENGTH_SHORT).show();
-                    }
-                }
-            });
+            if (getItemCount() == 0) {
+                    RelativeLayout noMainPostsRelativeLayout = ((Activity) context)
+                            .findViewById(R.id.no_main_posts_relative_layout);
+                    noMainPostsRelativeLayout.setVisibility(View.VISIBLE);
+            }
         }
 
         /**
@@ -752,56 +487,29 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
          * USER_LIKES table under the firebaseUser. Then it adds the postId and timestamp to the
          * local liked_posts_map HashMap so that recycler view can update
          * Operation UNLIKE (performLike = false): undoes above 3 things
+         * TODO: update comments
          */
-        private void handleLikeButtonClick(PrismPost prismPost) {
-            String postId = prismPost.getPostId();
-            long timestamp = Calendar.getInstance().getTimeInMillis();
-            boolean performLike = !CurrentUser.liked_posts_map.containsKey(postId);
+        private void handleLikeButtonClick() {
+            boolean performLike = !CurrentUser.hasLiked(prismPost);
+            performUIActivitiesForLike(performLike);
 
-            DatabaseReference postReference = Default.ALL_POSTS_REFERENCE.child(postId);
-            postReference.runTransaction(new Transaction.Handler() {
-                @Override
-                public Transaction.Result doTransaction(MutableData mutableData) {
-                    PrismPost post = mutableData.getValue(PrismPost.class);
-                    if (post != null) {
-                        if (performLike) {
-
-                            // Add the firebaseUser to LIKED_USERS list for this post
-                            postReference.child(Key.DB_REF_POST_LIKED_USERS)
-                                    .child(CurrentUser.firebaseUser.getDisplayName())
-                                    .setValue(CurrentUser.firebaseUser.getUid());
-
-                            // Add postId to firebaseUser's liked section
-                            postAuthorUserReference.child(Key.DB_REF_USER_LIKES)
-                                    .child(postId).setValue(timestamp);
-
-                            // Add postId and timestamp to liked_posts_map hashMap
-                            CurrentUser.liked_posts_map.put(postId, timestamp);
-
-                        } else {
-
-                            // Remove the firebaseUser from LIKED_USERS list for this post
-                            postReference.child(Key.DB_REF_POST_LIKED_USERS)
-                                    .child(CurrentUser.firebaseUser.getDisplayName())
-                                    .removeValue();
-
-                            // Remove postId from firebaseUser's liked section
-                            postAuthorUserReference.child(Key.DB_REF_USER_LIKES)
-                                    .child(postId).removeValue();
-
-                            // Remove the postId and timestamp from liked_posts_map hashMap
-                            CurrentUser.liked_posts_map.remove(postId);
-                        }
-                    }
-                    return Transaction.success(mutableData);
-                }
-
-                @Override
-                public void onComplete(DatabaseError databaseError, boolean b, DataSnapshot dataSnapshot) {
-
-                }
-            });
+            if (performLike) {
+                DatabaseAction.performLike(prismPost);
+            } else {
+                DatabaseAction.performUnlike(prismPost);
+            }
         }
+
+        private void performUIActivitiesForLike(boolean performLike) {
+            InterfaceAction.startLikeActionButtonAnimation(context, likeButton, performLike);
+            InterfaceAction.startLikeActionAnimation(context, likeHeartAnimationImageView, performLike);
+
+            likeCount = performLike ? likeCount + 1 : likeCount - 1;
+            prismPost.setLikes(likeCount);
+            String likeString = likeCount + Helper.getSingularOrPluralText(" like", likeCount);
+            likesCountTextView.setText(likeString);
+        }
+
 
         /**
          * Check reposted_posts_map HashMap if it contains the postId or not. If it contains
@@ -812,55 +520,27 @@ public class PrismPostRecyclerViewAdapter extends RecyclerView.Adapter<PrismPost
          * USER_REPOSTS table under the firebaseUser. Then it adds the postId and timestamp to the
          * local reposted_posts_map HashMap so that recycler view can update
          * Operation UNREPOST (performRepost = false): undoes above 3 things
+         * TODO: update comments
+         * @param performRepost
          */
-        private void handleRepostButtonClick(PrismPost prismPost) {
-            String postId = prismPost.getPostId();
-            long timestamp = Calendar.getInstance().getTimeInMillis();
-            boolean performRepost = !CurrentUser.reposted_posts_map.containsKey(postId);
+        private void handleRepostButtonClick(boolean performRepost) {
+            performUIActivitiesForRepost(performRepost);
 
-            DatabaseReference postReference = Default.ALL_POSTS_REFERENCE.child(postId);
-            postReference.runTransaction(new Transaction.Handler() {
-                @Override
-                public Transaction.Result doTransaction(MutableData mutableData) {
-                    PrismPost post = mutableData.getValue(PrismPost.class);
-                    if (post != null) {
-                        if (performRepost) {
-
-                            // Add postId to firebaseUser's reposts section
-                            postAuthorUserReference.child(Key.DB_REF_USER_REPOSTS)
-                                    .child(postId).setValue(timestamp);
-
-                            // Add postId and timestamp to reposted_posts_map hashMap
-                            CurrentUser.reposted_posts_map.put(postId, timestamp);
-
-                            // Add the firebaseUser to REPOSTED_USERS list for this post
-                            postReference.child(Key.DB_REF_POST_REPOSTED_USERS)
-                                    .child(CurrentUser.firebaseUser.getDisplayName())
-                                    .setValue(CurrentUser.firebaseUser.getUid());
-
-                        } else {
-
-                            // Remove postId from firebaseUser's reposts section
-                            postAuthorUserReference.child(Key.DB_REF_USER_LIKES)
-                                    .child(postId).removeValue();
-
-                            // Remove the postId and timestamp from reposted_posts_map hashMap
-                            CurrentUser.reposted_posts_map.remove(postId);
-
-                            // Remove the firebaseUser from REPOSTED_USERS list for this post
-                            postReference.child(Key.DB_REF_POST_REPOSTED_USERS)
-                                    .child(CurrentUser.firebaseUser.getDisplayName())
-                                    .removeValue();
-                        }
-                    }
-                    return Transaction.success(mutableData);
-                }
-
-                @Override
-                public void onComplete(DatabaseError databaseError, boolean b, DataSnapshot dataSnapshot) {
-
-                }
-            });
+            if (performRepost) {
+                DatabaseAction.performRepost(prismPost);
+            } else {
+                DatabaseAction.performUnrepost(prismPost);
+            }
         }
+
+        private void performUIActivitiesForRepost(boolean performRepost) {
+            InterfaceAction.startRepostActionButtonAnimation(context, repostButton, performRepost);
+
+            repostCount = prismPost.getReposts() + (performRepost ? 1 : -1);
+            prismPost.setReposts(repostCount);
+            String repostString = repostCount + Helper.getSingularOrPluralText(" repost", repostCount);
+            repostsCountTextView.setText(repostString);
+        }
+
     }
 }

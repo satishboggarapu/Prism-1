@@ -3,11 +3,15 @@ package com.mikechoch.prism.helper;
 import android.text.format.DateFormat;
 
 import com.google.firebase.database.DataSnapshot;
+import com.mikechoch.prism.attribute.Notification;
+import com.mikechoch.prism.fire.CurrentUser;
 import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.attribute.PrismUser;
 import com.mikechoch.prism.attribute.ProfilePicture;
+import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.constants.MyTimeUnit;
+import com.mikechoch.prism.type.NotificationType;
 
 import java.util.Calendar;
 import java.util.Locale;
@@ -23,6 +27,7 @@ public class Helper {
     /**
      * Takes in a dataSnapshot object and parses its contents
      * and returns a prismPost object
+     * @return PrismPost object
      */
     public static PrismPost constructPrismPostObject(DataSnapshot postSnapshot) {
         PrismPost prismPost = postSnapshot.getValue(PrismPost.class);
@@ -55,9 +60,21 @@ public class Helper {
             prismUser.setFollowingCount(0);
         }
         return prismUser;
-
     }
 
+    /**
+     *
+     */
+    public static boolean isPrismUserCurrentUser(PrismUser prismUser) {
+        return CurrentUser.prismUser.getUid().equals(prismUser.getUid());
+    }
+
+    /**
+     *
+     */
+    public static String getSingularOrPluralText(String string, int count) {
+        return count == 1 ? string : string + "s";
+    }
 
     /**
      * Takes in the time of the post and creates a fancy string difference
@@ -105,4 +122,58 @@ public class Helper {
         }
         return fancyDateString;
     }
+
+    /**
+     * Takes the user inputted formatted usernmae and replaces the
+     * period `.` character with a dash `-` so that it can be saved in firebase
+     */
+    public static String getFirebaseEncodedUsername(String inputUsername) {
+        return inputUsername.replace(Default.USERNAME_PERIOD, Default.USERNAME_PERIOD_REPLACE);
+    }
+
+    /**
+     * Takes the username stored in firebase and replaces the dash `-`
+     * character with the period `.` so
+     */
+    public static String getFirebaseDecodedUsername(String encodedUsername) {
+        return encodedUsername.replace(Default.USERNAME_PERIOD_REPLACE, Default.USERNAME_PERIOD);
+    }
+
+
+    public static String constructNotificationMessage(Notification notification) {
+        String message = "";
+        String mostRecentUsername = notification.getMostRecentUser().getUsername();
+        int otherCount = notification.getOtherUserCount();
+        NotificationType type = notification.getType();
+
+        message += mostRecentUsername + " ";
+        if (otherCount > 0) {
+            message += " and " + otherCount + " others ";
+        }
+
+        switch (type) {
+            case LIKE:
+                message += " liked your post ";
+                break;
+            case REPOST:
+                message += " reposted your post ";
+                break;
+            case FOLLOW:
+                message += " started following you";
+                break;
+        }
+        message += notification.getPrismPost().getCaption();
+        return message;
+    }
+
+    /**
+     * Checks to see if given prismPost has been reposted by given
+     * prismUser by comparing the uid of prismPost author by given
+     * prismUser. If uid's match, post author = given prismUser and
+     * hence it's an upload, otherwise it is a repost
+     */
+    public static boolean isPostReposted(PrismPost prismPost, PrismUser prismUser) {
+        return !prismPost.getUid().equals(prismUser.getUid());
+    }
+
 }

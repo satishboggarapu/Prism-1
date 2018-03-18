@@ -21,6 +21,10 @@ public class Key {
     public static final String DB_REF_USER_REPOSTS = "USER_REPOSTS";
     public static final String DB_REF_USER_FOLLOWERS = "USER_FOLLOWERS";
     public static final String DB_REF_USER_FOLLOWINGS = "USER_FOLLOWINGS";
+    public static final String DB_REF_USER_NOTIFICATIONS = "USER_NOTIFICATIONS";
+    public static final String NOTIFICATION_MOST_RECENT_USER = "mostRecentUid";
+    public static final String NOTIFICATION_ACTION_TIMESTAMP = "actionTimestamp";
+    public static final String NOTIFICATION_VIEWED_TIMESTAMP = "viewedTimestamp";
     public static final String USER_PROFILE_FULL_NAME = "fullname";
     public static final String USER_PROFILE_USERNAME = "username";
     public static final String USER_PROFILE_PIC = "profilepic";

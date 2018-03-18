@@ -1,24 +1,39 @@
 package com.mikechoch.prism.adapter;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
+import com.mikechoch.prism.activity.PrismUserProfileActivity;
+import com.mikechoch.prism.fire.CurrentUser;
 import com.mikechoch.prism.attribute.PrismUser;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.constants.Default;
+import com.mikechoch.prism.constants.Key;
+import com.mikechoch.prism.constants.Message;
+import com.mikechoch.prism.fire.DatabaseAction;
+import com.mikechoch.prism.helper.Helper;
 
 import java.util.ArrayList;
 
@@ -26,7 +41,7 @@ import java.util.ArrayList;
  * Created by mikechoch on 1/21/18.
  */
 
-public class LikeRepostUsersRecyclerViewAdapter extends RecyclerView.Adapter<LikeRepostUsersRecyclerViewAdapter.ViewHolder> {
+public class DisplayUsersRecyclerViewAdapter extends RecyclerView.Adapter<DisplayUsersRecyclerViewAdapter.ViewHolder> {
 
     /*
      * Global variables
@@ -39,7 +54,7 @@ public class LikeRepostUsersRecyclerViewAdapter extends RecyclerView.Adapter<Lik
     private Typeface sourceSansProBold;
 
 
-    public LikeRepostUsersRecyclerViewAdapter(Context context, ArrayList<PrismUser> prismUserArrayList) {
+    public DisplayUsersRecyclerViewAdapter(Context context, ArrayList<PrismUser> prismUserArrayList) {
         this.context = context;
         this.prismUserArrayList = prismUserArrayList;
 
@@ -54,7 +69,7 @@ public class LikeRepostUsersRecyclerViewAdapter extends RecyclerView.Adapter<Lik
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(
-                R.layout.like_repost_users_recycler_view_item_layout, parent, false));
+                R.layout.users_recycler_view_item_layout, parent, false));
     }
 
     @Override
@@ -73,21 +88,26 @@ public class LikeRepostUsersRecyclerViewAdapter extends RecyclerView.Adapter<Lik
         private DatabaseReference userReference;
 
         private PrismUser prismUser;
+        private RelativeLayout userRelativeLayout;
         private ImageView userProfilePicture;
         private TextView usernameTextView;
         private TextView userFullNameText;
+        private Button userFollowButton;
+
 
         public ViewHolder(View itemView) {
             super(itemView);
 
             // Cloud database initializations
             auth = FirebaseAuth.getInstance();
-            userReference = Default.USERS_REFERENCE.child(auth.getCurrentUser().getUid());
+            userReference = Default.USERS_REFERENCE;
 
             // Initialize all UI elements
+            userRelativeLayout = itemView.findViewById(R.id.display_user_relative_layout);
             userProfilePicture = itemView.findViewById(R.id.user_profile_picture_image_view);
             usernameTextView = itemView.findViewById(R.id.username_text_view);
             userFullNameText = itemView.findViewById(R.id.full_name_text_view);
+            userFollowButton = itemView.findViewById(R.id.small_follow_user_button);
         }
 
         /**
@@ -96,6 +116,80 @@ public class LikeRepostUsersRecyclerViewAdapter extends RecyclerView.Adapter<Lik
         public void setData(PrismUser prismUser) {
             this.prismUser = prismUser;
             setupUIElements();
+        }
+
+        /**
+         *
+         */
+        private void setupUserRelativeLayout() {
+            userRelativeLayout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    intentToUserProfileActivity();
+                }
+            });
+        }
+
+        /**
+         * Intent from the current clicked PrismPost user to their PrismUserProfileActivity
+         */
+        private void intentToUserProfileActivity() {
+            Intent prismUserProfileIntent = new Intent(context, PrismUserProfileActivity.class);
+            prismUserProfileIntent.putExtra("PrismUser", prismUser);
+            context.startActivity(prismUserProfileIntent);
+            ((Activity) context).overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+        }
+
+        /**
+         *
+         */
+        private void setupUserFollowButton() {
+            if (!Helper.isPrismUserCurrentUser(prismUser)) {
+                userFollowButton.setVisibility(View.VISIBLE);
+
+                toggleFollowButtons(CurrentUser.isFollowingPrismUser(prismUser));
+
+                userFollowButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        boolean performFollow = !CurrentUser.isFollowingPrismUser(prismUser);
+                        handleFollowButtonClick(performFollow);
+                    }
+                });
+            }
+        }
+
+        /**
+         *
+         */
+        private void toggleFollowButtons(boolean showFollowing) {
+            int buttonWidth = (int) (scale * (showFollowing ? 80 : 60));
+            String followButtonString = showFollowing ? "Following" : "Follow";
+            int followButtonInt = showFollowing ? R.drawable.button_selector_selected : R.drawable.button_selector;
+            Drawable followingButtonDrawable = context.getResources().getDrawable(followButtonInt);
+            Drawable followingToolbarButtonDrawable = context.getResources().getDrawable(followButtonInt);
+
+            userFollowButton.setText(followButtonString);
+            userFollowButton.setBackground(followingButtonDrawable);
+
+            userFollowButton.getLayoutParams().width = buttonWidth;
+            userFollowButton.setText(followButtonString);
+            userFollowButton.setBackground(followingToolbarButtonDrawable);
+            userFollowButton.requestLayout();
+        }
+
+        /**
+         *
+         * @param performFollow
+         */
+        private void handleFollowButtonClick(boolean performFollow) {
+            if (performFollow) {
+                toggleFollowButtons(true);
+                DatabaseAction.followUser(prismUser);
+            } else {
+                toggleFollowButtons(false);
+                DatabaseAction.unfollowUser(prismUser);
+            }
         }
 
         /**
@@ -142,9 +236,12 @@ public class LikeRepostUsersRecyclerViewAdapter extends RecyclerView.Adapter<Lik
             // Setup Typefaces for all text based UI elements
             usernameTextView.setTypeface(sourceSansProBold);
             userFullNameText.setTypeface(sourceSansProLight);
+            userFollowButton.setTypeface(sourceSansProLight);
 
             setupUserProfilePicImageView();
             setupUsernameAndFullNameTextView();
+            setupUserFollowButton();
+            setupUserRelativeLayout();
         }
     }
 }

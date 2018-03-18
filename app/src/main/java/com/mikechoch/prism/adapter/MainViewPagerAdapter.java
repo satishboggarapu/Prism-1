@@ -6,7 +6,7 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.fragments.MainContentFragment;
-import com.mikechoch.prism.fragments.NotificationsFragment;
+import com.mikechoch.prism.fragments.NotificationFragment;
 import com.mikechoch.prism.fragments.ProfileFragment;
 import com.mikechoch.prism.fragments.SearchFragment;
 
@@ -41,7 +41,7 @@ public class MainViewPagerAdapter extends FragmentStatePagerAdapter {
             case 2 - 1:
                 return new SearchFragment().newInstance();
             case 3 - 1:
-                return new NotificationsFragment().newInstance();
+                return new NotificationFragment().newInstance();
             case 4 - 1:
                 return new ProfileFragment().newInstance();
             default:

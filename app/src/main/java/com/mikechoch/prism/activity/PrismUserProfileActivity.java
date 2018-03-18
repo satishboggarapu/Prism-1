@@ -3,16 +3,19 @@ package com.mikechoch.prism.activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
+import android.support.v4.view.ViewCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -36,23 +39,30 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.mikechoch.prism.R;
 import com.mikechoch.prism.adapter.ProfileViewPagerAdapter;
 import com.mikechoch.prism.adapter.UserPostsColumnRecyclerViewAdapter;
-import com.mikechoch.prism.attribute.CurrentUser;
+import com.mikechoch.prism.fire.CurrentUser;
 import com.mikechoch.prism.attribute.PrismPost;
 import com.mikechoch.prism.attribute.PrismUser;
-import com.mikechoch.prism.attribute.ProfilePicture;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.constants.Message;
+import com.mikechoch.prism.fire.DatabaseAction;
 import com.mikechoch.prism.helper.Helper;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,6 +75,8 @@ public class PrismUserProfileActivity extends AppCompatActivity {
     /*
      * Globals
      */
+    private StorageReference storageReference;
+    private DatabaseReference currentUserReference;
     private DatabaseReference usersReference;
     private DatabaseReference allPostsReference;
 
@@ -73,7 +85,7 @@ public class PrismUserProfileActivity extends AppCompatActivity {
     private Typeface sourceSansProBold;
 
     private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
-    private String[] setProfilePicStrings = {"Choose from gallery", "Take a selfie"};
+    private String[] setProfilePicStrings = {"Choose from gallery", "Take a selfie", "View profile picture"};
 
     private AppBarLayout appBarLayout;
     private Toolbar toolbar;
@@ -86,10 +98,12 @@ public class PrismUserProfileActivity extends AppCompatActivity {
     private NestedScrollView profileNestedScrollView;
     private ImageView userProfilePicImageView;
     private Button followUserButton;
+    private RelativeLayout followersRelativeLayout;
     private TextView followersCountTextView;
     private TextView followersLabelTextView;
     private TextView postsCountTextView;
     private TextView postsLabelTextView;
+    private RelativeLayout followingRelativeLayout;
     private TextView followingCountTextView;
     private TextView followingLabelTextView;
     private TextView userUsernameTextView;
@@ -98,8 +112,9 @@ public class PrismUserProfileActivity extends AppCompatActivity {
     private ViewPager userPostsViewPager;
 
     private PrismUser prismUser;
+    private Uri profilePictureUri;
     private boolean isCurrentUser;
-    private ArrayList<PrismPost> prismUserUploadedPostsArrayList;
+    private ArrayList<PrismPost> prismUserUploadedAndRepostedPostsArrayList;
 
 
     @Override
@@ -127,6 +142,8 @@ public class PrismUserProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.prism_user_profile_activity_layout);
 
+        storageReference = Default.STORAGE_REFERENCE;
+        currentUserReference = Default.USERS_REFERENCE.child(CurrentUser.prismUser.getUid());
         usersReference = Default.USERS_REFERENCE;
         allPostsReference = Default.ALL_POSTS_REFERENCE;
 
@@ -149,10 +166,12 @@ public class PrismUserProfileActivity extends AppCompatActivity {
         profileNestedScrollView = findViewById(R.id.profile_scroll_view);
         userProfilePicImageView = findViewById(R.id.user_profile_profile_picture_image_view);
         followUserButton = findViewById(R.id.follow_user_button);
+        followersRelativeLayout = findViewById(R.id.followers_relative_layout);
         followersCountTextView = findViewById(R.id.followers_count_text_view);
         followersLabelTextView = findViewById(R.id.followers_label_text_view);
         postsCountTextView = findViewById(R.id.posts_count_text_view);
         postsLabelTextView = findViewById(R.id.posts_label_text_view);
+        followingRelativeLayout = findViewById(R.id.following_relative_layout);
         followingCountTextView = findViewById(R.id.following_count_text_view);
         followingLabelTextView = findViewById(R.id.following_label_text_view);
         userUsernameTextView = findViewById(R.id.user_profile_username_text_view);
@@ -163,7 +182,7 @@ public class PrismUserProfileActivity extends AppCompatActivity {
         //
         Intent intent = getIntent();
         prismUser = intent.getParcelableExtra("PrismUser");
-        prismUserUploadedPostsArrayList = new ArrayList<>();
+        prismUserUploadedAndRepostedPostsArrayList = new ArrayList<>();
 
         isCurrentUser = prismUser.getUid().equals(CurrentUser.prismUser.getUid());
 
@@ -178,21 +197,97 @@ public class PrismUserProfileActivity extends AppCompatActivity {
     }
 
     /**
+     * Called when an activity is intent with startActivityForResult and the result is intent back
+     * This allows you to check the requestCode that came back and do something
+     */
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch(requestCode) {
+            // If requestCode is for ProfilePictureUploadActivity
+            case Default.PROFILE_PIC_UPLOAD_INTENT_REQUEST_CODE:
+                if (resultCode == RESULT_OK) {
+                    profilePictureUri = Uri.parse(data.getStringExtra("CroppedProfilePicture"));
+
+                    Glide.with(this)
+                            .asBitmap()
+                            .thumbnail(0.05f)
+                            .load(profilePictureUri)
+                            .apply(new RequestOptions().fitCenter())
+                            .into(new BitmapImageViewTarget(userProfilePicImageView) {
+                                @Override
+                                protected void setResource(Bitmap resource) {
+                                    RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), resource);
+                                    drawable.setCircular(true);
+                                    userProfilePicImageView.setImageDrawable(drawable);
+
+                                    int whiteOutlinePadding = (int) (2 * scale);
+                                    userProfilePicImageView.setPadding(whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding, whiteOutlinePadding);
+                                    userProfilePicImageView.setBackground(getResources().getDrawable(R.drawable.circle_profile_frame));
+                                }
+                            });
+
+                    uploadProfilePictureToCloud();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
+     * Takes the profilePicUriString and stores the image to cloud. Once the image file is
+     * successfully uploaded to cloud successfully, it adds the profilePicUriString to
+     * the firebaseUser's profile details section
+     */
+    private void uploadProfilePictureToCloud() {
+        StorageReference profilePicRef = storageReference.child(Key.STORAGE_USER_PROFILE_IMAGE_REF).child(profilePictureUri.getLastPathSegment());
+        profilePicRef.putFile(profilePictureUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+                if (task.isSuccessful()) {
+                    Uri downloadUrl = task.getResult().getDownloadUrl();
+                    DatabaseReference userRef = currentUserReference.child(Key.USER_PROFILE_PIC);
+                    userRef.setValue(downloadUrl.toString()).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.wtf(Default.TAG_DB, Message.PROFILE_PIC_UPDATE_FAIL, task.getException());
+                            toast("Unable to update profile picture");
+                        }
+                    });
+                } else {
+                    Log.e(Default.TAG_DB, Message.FILE_UPLOAD_FAIL, task.getException());
+                    toast("Unable to update profile picture");
+                }
+            }
+        });
+    }
+
+    /**
      *
      */
     private void pullUserDetails() {
+        if (isCurrentUser) {
+            // prismUserUploadedAndRepostedPostsArrayList.addAll(CurrentUser.getUserUploads());
+            prismUserUploadedAndRepostedPostsArrayList.addAll(CurrentUser.getUserUploadsAndReposts());
+            setupUserPostsUIElements();
+
+            return;
+        }
         usersReference.child(prismUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-//                    prismUser = Helper.constructPrismUserObject(dataSnapshot);
-                    HashMap<String, Long> prismUserUploadedPostIds = new HashMap<>();
-                    prismUserUploadedPostIds.putAll((Map) dataSnapshot.child(Key.DB_REF_USER_UPLOADS).getValue());
-                    pullUserUploadedPrismPosts(prismUserUploadedPostIds);
-
-                } else {
-                    Log.wtf(Default.TAG_DB, "No user details exist");
+                HashMap<String, Long> prismUserUploadedAndRepostedPostIds = new HashMap<>();
+                if (dataSnapshot.hasChild(Key.DB_REF_USER_UPLOADS)) {
+                    Object userUploadedPosts = dataSnapshot.child(Key.DB_REF_USER_UPLOADS).getValue();
+                    prismUserUploadedAndRepostedPostIds.putAll((Map) userUploadedPosts);
                 }
+                if (dataSnapshot.hasChild(Key.DB_REF_USER_REPOSTS)) {
+                    Object userRepostedPosts = dataSnapshot.child(Key.DB_REF_USER_REPOSTS).getValue();
+                    prismUserUploadedAndRepostedPostIds.putAll((Map) userRepostedPosts);
+                }
+                if (!prismUserUploadedAndRepostedPostIds.isEmpty()) {
+                    fetchUserUploadedAndRepostedPrismPosts(prismUserUploadedAndRepostedPostIds);
+                }
+
             }
 
             @Override
@@ -203,31 +298,60 @@ public class PrismUserProfileActivity extends AppCompatActivity {
     }
 
     /**
-     *
+     * Fetches user uploaded prismPosts with given map of prismPostIds
+     * TODO Update comments
      */
-    private void pullUserUploadedPrismPosts(HashMap<String, Long> prismUserUploadedPostIds) {
+    private void fetchUserUploadedAndRepostedPrismPosts(HashMap<String, Long> prismUserUploadedAndRepostedPostIds) {
         allPostsReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    for (String postId : prismUserUploadedPostIds.keySet()) {
+                    for (String postId : prismUserUploadedAndRepostedPostIds.keySet()) {
                         DataSnapshot postSnapshot = dataSnapshot.child(postId);
                         if (postSnapshot.exists()) {
                             PrismPost prismPost = Helper.constructPrismPostObject(postSnapshot);
-                            prismPost.setPrismUser(prismUser);
-                            prismUserUploadedPostsArrayList.add(prismPost);
-                        } else {
-                            // TODO LOG this: this should never happen
-                            usersReference.child(prismUser.getUid())
-                                    .child(Key.DB_REF_USER_UPLOADS)
-                                    .child(postId).removeValue();
+                            prismUserUploadedAndRepostedPostsArrayList.add(prismPost);
                         }
                     }
 
-                    setupUserPostsUIElements();
+                    /*
+                     * Go through all the posts in the uploadedAndReposted arrayList
+                     * and check to see if the post is reposted or not. If not then set
+                     * the prismUser as the prismPost.prismUser but if the post is reposted
+                     * by another user then pull the information of that prismUser and set
+                     * that as the post's prismUser
+                     */
+                    usersReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.exists()) {
+                                for (PrismPost prismPost : prismUserUploadedAndRepostedPostsArrayList) {
+                                    if (Helper.isPostReposted(prismPost, prismUser)) {
+                                        DataSnapshot userSnapshot = dataSnapshot.child(prismPost.getUid());
+                                        if (userSnapshot.exists()) {
+                                            PrismUser prismUser = Helper.constructPrismUserObject(userSnapshot);
+                                            prismPost.setPrismUser(prismUser);
+                                        }
+                                    } else {
+                                        prismPost.setPrismUser(prismUser);
+                                    }
+                                }
+                            }
+                        }
 
-                } else {
-                    Log.wtf(Default.TAG_DB, "No Posts Exist???");
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
+
+                    Collections.sort(prismUserUploadedAndRepostedPostsArrayList, new Comparator<PrismPost>() {
+                        @Override
+                        public int compare(PrismPost p1, PrismPost p2) {
+                            return (int) (p1.getTimestamp() - p2.getTimestamp());
+                        }
+                    });
+                    setupUserPostsUIElements();
                 }
             }
 
@@ -255,7 +379,29 @@ public class PrismUserProfileActivity extends AppCompatActivity {
         userFullNameTextView.setText(prismUser.getFullName());
         userUsernameTextView.setText(prismUser.getUsername());
         followersCountTextView.setText(String.valueOf(prismUser.getFollowerCount()));
+        followersRelativeLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent userFollowersIntent = new Intent(PrismUserProfileActivity.this, DisplayUsersActivity.class);
+                userFollowersIntent.putExtra("UsersInt", 2);
+                userFollowersIntent.putExtra("UsersDataId", prismUser.getUid());
+                startActivity(userFollowersIntent);
+                overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+            }
+        });
+
         followingCountTextView.setText(String.valueOf(prismUser.getFollowingCount()));
+        followingRelativeLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent userFollowingIntent = new Intent(PrismUserProfileActivity.this, DisplayUsersActivity.class);
+                userFollowingIntent.putExtra("UsersInt", 3);
+                userFollowingIntent.putExtra("UsersDataId", prismUser.getUid());
+                startActivity(userFollowingIntent);
+                overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+            }
+        });
+
         Glide.with(this)
                 .asBitmap()
                 .thumbnail(0.05f)
@@ -286,7 +432,7 @@ public class PrismUserProfileActivity extends AppCompatActivity {
                     AlertDialog setProfilePictureAlertDialog = createSetProfilePictureAlertDialog();
                     setProfilePictureAlertDialog.show();
                 } else {
-                    // TODO: show hi-res profile pic
+                    intentToShowUserProfilePictureActivity();
                 }
             }
         });
@@ -315,6 +461,24 @@ public class PrismUserProfileActivity extends AppCompatActivity {
                 });
 
         toolbarUserUsernameTextView.setText(prismUser.getUsername());
+
+    }
+
+    /**
+     *
+     */
+    private void intentToShowUserProfilePictureActivity() {
+        Intent showProfilePictureIntent = new Intent(PrismUserProfileActivity.this, ShowUserProfilePictureActivity.class);
+        showProfilePictureIntent.putExtra("PrismUser", prismUser);
+        showProfilePictureIntent.putExtra("PrismUserProfilePictureTransitionName", ViewCompat.getTransitionName(userProfilePicImageView));
+
+        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
+                this,
+                userProfilePicImageView,
+                ViewCompat.getTransitionName(userProfilePicImageView));
+
+        startActivity(showProfilePictureIntent, options.toBundle());
+//        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
     }
 
     /**
@@ -335,6 +499,9 @@ public class PrismUserProfileActivity extends AppCompatActivity {
                         break;
                     case 1:
                         // TODO: Figure out camera feature
+                        break;
+                    case 2:
+                        intentToShowUserProfilePictureActivity();
                         break;
                     default:
                         break;
@@ -434,7 +601,7 @@ public class PrismUserProfileActivity extends AppCompatActivity {
         TextView postsTabTextView = new TextView(this);
         postsTabTextView.setText(tabTitle);
         postsTabTextView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        postsTabTextView.setTextSize((int) (6 * scale));
+        postsTabTextView.setTextSize(16);
         postsTabTextView.setTextColor(Color.WHITE);
         postsTabTextView.setTypeface(sourceSansProBold);
         return postsTabTextView;
@@ -451,11 +618,11 @@ public class PrismUserProfileActivity extends AppCompatActivity {
 //        ArrayList<ArrayList<PrismPost>> userUploadedPostsArrayLists = new ArrayList<>(Collections.nCopies(userUploadedColumns, new ArrayList<>()));
         // TODO: figure out how to initialize an ArrayList of ArrayLists without using while loop inside of populating for-loop
         ArrayList<ArrayList<PrismPost>> userUploadedPostsArrayLists = new ArrayList<>();
-        for (int i = 0; i < prismUserUploadedPostsArrayList.size(); i++) {
+        for (int i = 0; i < prismUserUploadedAndRepostedPostsArrayList.size(); i++) {
             while (userUploadedPostsArrayLists.size() != Default.USER_UPLOADED_POSTS_COLUMNS) {
                 userUploadedPostsArrayLists.add(new ArrayList<>());
             }
-            userUploadedPostsArrayLists.get((i % Default.USER_UPLOADED_POSTS_COLUMNS)).add(prismUserUploadedPostsArrayList.get(i));
+            userUploadedPostsArrayLists.get((i % Default.USER_UPLOADED_POSTS_COLUMNS)).add(prismUserUploadedAndRepostedPostsArrayList.get(i));
         }
 
         for (int i = 0; i < Default.USER_UPLOADED_POSTS_COLUMNS; i++) {
@@ -463,7 +630,7 @@ public class PrismUserProfileActivity extends AppCompatActivity {
             LinearLayout.LayoutParams one_params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT,1f);
             recyclerViewLinearLayout.setLayoutParams(one_params);
 
-            RecyclerView userUploadedPostsRecyclerView = (RecyclerView) LayoutInflater.from(this).inflate(R.layout.user_uploaded_posts_recycler_view_layout, null);
+            RecyclerView userUploadedPostsRecyclerView = (RecyclerView) LayoutInflater.from(this).inflate(R.layout.user_posts_column_recycler_view, null);
             LinearLayoutManager recyclerViewLinearLayoutManager = new LinearLayoutManager(this);
             userUploadedPostsRecyclerView.setLayoutManager(recyclerViewLinearLayoutManager);
             UserPostsColumnRecyclerViewAdapter recyclerViewAdapter = new UserPostsColumnRecyclerViewAdapter(this, userUploadedPostsArrayLists.get(i));
@@ -525,13 +692,14 @@ public class PrismUserProfileActivity extends AppCompatActivity {
      *
      */
     private void setupFollowUserButton() {
-        boolean isFollowing = CurrentUser.followings.containsKey(prismUser.getUsername());
-        changeFollowButtons(isFollowing);
+        boolean isFollowing = CurrentUser.isFollowingPrismUser(prismUser);
+        toggleFollowButtons(isFollowing);
 
         followUserButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                toggleFollowUser();
+                boolean performFollow = !CurrentUser.isFollowingPrismUser(prismUser);
+                handleFollowButtonClick(performFollow);
             }
         });
 
@@ -539,7 +707,8 @@ public class PrismUserProfileActivity extends AppCompatActivity {
         toolbarFollowButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                toggleFollowUser();
+                boolean performFollow = !CurrentUser.isFollowingPrismUser(prismUser);
+                handleFollowButtonClick(performFollow);
             }
         });
     }
@@ -547,10 +716,10 @@ public class PrismUserProfileActivity extends AppCompatActivity {
     /**
      *
      */
-    private void changeFollowButtons(boolean isFollowing) {
-        int buttonWidth = (int) (scale * (isFollowing ? 80 : 60));
-        String followButtonString = isFollowing ? "Following" : "Follow";
-        int followButtonInt = isFollowing ? R.drawable.button_selector_selected : R.drawable.button_selector;
+    private void toggleFollowButtons(boolean showFollowing) {
+        int buttonWidth = (int) (scale * (showFollowing ? 80 : 60));
+        String followButtonString = showFollowing ? "Following" : "Follow";
+        int followButtonInt = showFollowing ? R.drawable.button_selector_selected : R.drawable.button_selector;
         Drawable followingButtonDrawable = getResources().getDrawable(followButtonInt);
         Drawable followingToolbarButtonDrawable = getResources().getDrawable(followButtonInt);
 
@@ -565,53 +734,16 @@ public class PrismUserProfileActivity extends AppCompatActivity {
 
     /**
      *
+     * @param performFollow
      */
-    private void toggleFollowUser() {
-        boolean performFollow = !(CurrentUser.followings.containsKey(prismUser.getUsername()));
-        usersReference.child(prismUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    if (performFollow) {
-                        usersReference.child(prismUser.getUid())
-                                .child(Key.DB_REF_USER_FOLLOWERS)
-                                .child(CurrentUser.prismUser.getUsername())
-                                .setValue(CurrentUser.prismUser.getUid());
-
-                        usersReference.child(CurrentUser.prismUser.getUid())
-                                .child(Key.DB_REF_USER_FOLLOWINGS)
-                                .child(prismUser.getUsername())
-                                .setValue(prismUser.getUid());
-
-                        // Add prismUser to local followers HashMap
-                        CurrentUser.followings.put(prismUser.getUsername(), prismUser.getUid());
-                        toast("Following " + prismUser.getUsername());
-                    } else {
-                        usersReference.child(prismUser.getUid())
-                                .child(Key.DB_REF_USER_FOLLOWERS)
-                                .child(CurrentUser.prismUser.getUsername())
-                                .removeValue();
-
-                        usersReference.child(CurrentUser.prismUser.getUid())
-                                .child(Key.DB_REF_USER_FOLLOWINGS)
-                                .child(prismUser.getUsername())
-                                .removeValue();
-
-                        // Add prismUser to local followers HashMap
-                        CurrentUser.followings.remove(prismUser.getUsername());
-                        toast("Unfollowed " + prismUser.getUsername());
-                    }
-                    changeFollowButtons(performFollow);
-                } else {
-                    Log.e(Default.TAG_DB, Message.FETCH_USER_DETAILS_FAIL);
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.wtf(Default.TAG_DB, databaseError.getMessage(), databaseError.toException());
-            }
-        });
+    private void handleFollowButtonClick(boolean performFollow) {
+        if (performFollow) {
+            toggleFollowButtons(true);
+            DatabaseAction.followUser(prismUser);
+        } else {
+            toggleFollowButtons(false);
+            DatabaseAction.unfollowUser(prismUser);
+        }
     }
 
     /**

@@ -44,7 +44,7 @@
             android:screenOrientation="portrait"/>
 
         <activity
-            android:name=".activity.LikeRepostActivity"
+            android:name=".activity.DisplayUsersActivity"
             android:screenOrientation="portrait"/>
 
         <activity
@@ -56,6 +56,11 @@
         <activity
             android:name=".activity.PrismUserProfileActivity"
             android:screenOrientation="portrait"/>
+
+        <activity
+            android:name=".activity.ShowUserProfilePictureActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/PullLayoutAppTheme"/>
 
         <activity
             android:name=".activity.EditUserProfileActivity"

@@ -1,17 +1,18 @@
 package com.mikechoch.prism.activity;
 
-import android.annotation.SuppressLint;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,14 +24,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.R;
-import com.mikechoch.prism.helper.ExifUtil;
+import com.mikechoch.prism.constants.Default;
+import com.mikechoch.prism.helper.BitmapHelper;
 import com.mikechoch.prism.helper.FileChooser;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
+
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+
 
 /**
  * Created by mikechoch on 1/21/18.
@@ -198,12 +201,13 @@ public class ImageUploadActivity extends AppCompatActivity {
                     try {
                         InputStream inputStream = getContentResolver().openInputStream(imageUri);
                         bitmap = BitmapFactory.decodeStream(inputStream);
-                    } catch (FileNotFoundException e) {
+//                        bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
 
                     String imagePath = FileChooser.getPath(this, imageUri);
-                    bitmap = ExifUtil.rotateBitmap(imagePath, bitmap);
+                    bitmap = BitmapHelper.rotateBitmap(imagePath, bitmap);
                     imageUri = getImageUri(bitmap);
                     Glide.with(this)
                             .asBitmap()
@@ -225,9 +229,10 @@ public class ImageUploadActivity extends AppCompatActivity {
      * Pass in a local Bitmap from Gallery and get the URI of the Bitmap
      */
     private Uri getImageUri(Bitmap inBitmap) {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        inBitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-        String path = MediaStore.Images.Media.insertImage(getContentResolver(), inBitmap, "Title", null);
+//        ByteArrayOutputStream bytes = new ByteArrayOutputStream(inBitmap.getByteCount());
+//        inBitmap.compress(Bitmap.CompressFormat.PNG, 100, bytes);
+//        String path = MediaStore.Images.Media.insertImage(this.getContentResolver(), inBitmap, null, null);
+        String path = BitmapHelper.insertImage(this.getContentResolver(), inBitmap, null, null);
         return Uri.parse(path);
     }
 

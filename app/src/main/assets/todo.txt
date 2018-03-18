@@ -5,16 +5,17 @@
     Also there should be MAX limit on how many user uploaded/liked posts I pull from cloud
     and pull more as user scrolls down the list
 
-- Try to fetch user posts without negative timestamp (maybe do get `limitToLast`)
+- Try to fetch user posts without negative actionTimestamp (maybe do get `limitToLast`)
 
 - Make sure post author/owner cannot repost the prismPost
 
-- Make method that takes in DataSnapshot object and parses it and creates PrismUser object
+- Revamp `DisplayUsersActivity.getListOfUsers()`
+- Revamp `PrismUserProfileActivity`
 
 ---------------------
 * BUGS TO FIX *
 ---------------------
-- Repost UI glitch
+-
 
 
 

@@ -6,10 +6,6 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.fragments.LikedPostsFragment;
-import com.mikechoch.prism.fragments.MainContentFragment;
-import com.mikechoch.prism.fragments.NotificationsFragment;
-import com.mikechoch.prism.fragments.ProfileFragment;
-import com.mikechoch.prism.fragments.SearchFragment;
 import com.mikechoch.prism.fragments.UploadedRepostedPostsFragment;
 
 /**

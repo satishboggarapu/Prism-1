@@ -23,9 +23,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-import com.mikechoch.prism.attribute.CurrentUser;
+import com.mikechoch.prism.fire.CurrentUser;
 import com.mikechoch.prism.attribute.PrismUser;
-import com.mikechoch.prism.attribute.ProfilePicture;
 import com.mikechoch.prism.constants.Default;
 import com.mikechoch.prism.constants.Key;
 import com.mikechoch.prism.attribute.PrismPost;
@@ -48,8 +47,8 @@ public class MainContentFragment extends Fragment {
     private RelativeLayout noMainPostsRelativeLayout;
     private TextView noMainPostsTextView;
     private RecyclerView mainContentRecyclerView;
-    private PrismPostRecyclerViewAdapter mainContentRecyclerViewAdapter;
-    private ProgressBar mainContentProgress;
+    public static PrismPostRecyclerViewAdapter mainContentRecyclerViewAdapter;
+    private ProgressBar mainContentProgressBar;
 
     private int[] swipeRefreshLayoutColors = {R.color.colorAccent};
     private SwipeRefreshLayout mainContentSwipeRefreshLayout;
@@ -90,7 +89,7 @@ public class MainContentFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.main_content_fragment_layout, container, false);
 
-        mainContentProgress = view.findViewById(R.id.main_content_progress_bar);
+        mainContentProgressBar = view.findViewById(R.id.main_content_progress_bar);
         noMainPostsRelativeLayout = view.findViewById(R.id.no_main_posts_relative_layout);
         noMainPostsTextView = view.findViewById(R.id.no_main_posts_text_view);
         noMainPostsTextView.setTypeface(sourceSansProLight);
@@ -113,8 +112,8 @@ public class MainContentFragment extends Fragment {
 
         /*
          * The OnScrollListener is handling the toggling of the isLoading boolean
-         * Bottom of the RecyclerView will set isLoading to true and fetchOldData() will be called
-         * Otherwise a threshold is set to call fetchOldData() again and isLoading will become false
+         * Bottom of the RecyclerView will set isLoading to true and fetchMorePosts() will be called
+         * Otherwise a threshold is set to call fetchMorePosts() again and isLoading will become false
          * As new data is pulled this threshold is met
          * This avoids conflicts with swipe refreshing while pulling old data
          */
@@ -126,7 +125,7 @@ public class MainContentFragment extends Fragment {
                 int lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
                 if (!isLoading && (totalItemCount - Default.IMAGE_LOAD_THRESHOLD == lastVisibleItem)) {
                     isLoading = true;
-                    fetchOldData();
+                    fetchMorePosts();
                 } else if (totalItemCount > lastVisibleItem + Default.IMAGE_LOAD_THRESHOLD) {
                     isLoading = false;
                 }
@@ -160,7 +159,7 @@ public class MainContentFragment extends Fragment {
             @Override
             public void onRefresh() {
                 if (!isLoading || !(mainContentRecyclerViewAdapter.getItemCount() < Default.IMAGE_LOAD_THRESHOLD)) {
-                    CurrentUser.refreshUserRelatedEverything();
+                    CurrentUser.refreshUserProfile();
                     refreshData();
                 } else {
                     mainContentSwipeRefreshLayout.setRefreshing(false);
@@ -208,7 +207,7 @@ public class MainContentFragment extends Fragment {
                     Log.i(Default.TAG_DB, Message.NO_DATA);
                     noMainPostsRelativeLayout.setVisibility(View.VISIBLE);
                     mainContentSwipeRefreshLayout.setRefreshing(false);
-                    mainContentProgress.setVisibility(View.GONE);
+                    mainContentProgressBar.setVisibility(View.GONE);
                 }
             }
 
@@ -226,7 +225,7 @@ public class MainContentFragment extends Fragment {
      *  the list and then queries more images starting from that last timestamp and
      *  appends them back to the end of the arrayList and the HashMap
      */
-    private void fetchOldData() {
+    private void fetchMorePosts() {
         long lastPostTimestamp = prismPostArrayList.get(prismPostArrayList.size() - 1).getTimestamp();
         //toast("Fetching more pics");
         databaseReferenceAllPosts
@@ -285,7 +284,7 @@ public class MainContentFragment extends Fragment {
 
                     // gets called inside refreshData()
                     if (updateRecyclerViewAdapter) {
-                        mainContentProgress.setVisibility(View.GONE);
+                        mainContentProgressBar.setVisibility(View.GONE);
                         mainContentRecyclerViewAdapter.notifyDataSetChanged();
                     }
                 } else {

@@ -4,6 +4,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <ProgressBar
+        android:id="@+id/main_content_progress_bar"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_gravity="center"
+        android:indeterminate="true"
+        android:indeterminateDrawable="@drawable/circle_progress_foreground"
+        android:visibility="visible" />
+
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/main_content_swipe_refresh_layout"
         android:layout_width="match_parent"
@@ -47,14 +56,5 @@
             android:textColor="@android:color/white"/>
 
     </RelativeLayout>
-
-    <ProgressBar
-        android:id="@+id/main_content_progress_bar"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_gravity="center"
-        android:indeterminate="true"
-        android:indeterminateDrawable="@drawable/circle_progress_foreground"
-        android:visibility="visible" />
 
 </android.support.design.widget.CoordinatorLayout>
